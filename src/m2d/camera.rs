@@ -27,6 +27,7 @@ pub struct Camera {
     work_size: Vec2,
 
     projection: Mat4,
+    ratio: Vec2,
     transform: Mat3,
 
     mode: CameraMode,
@@ -43,6 +44,7 @@ impl Default for Camera {
             rotation: 0.0,
             dirty: true,
             projection: Mat4::IDENTITY,
+            ratio: vec2(1.0, 1.0),
             transform: Mat3::IDENTITY,
             mode: CameraMode::Basic,
             style: CameraStyle::LockOn,
@@ -156,21 +158,12 @@ impl Camera {
     }
 
     fn calculate_projection(&mut self) {
-        let (projection, ratio) = match self.mode {
+        match self.mode {
             CameraMode::Basic => self.calculate_ortho_projection(),
             CameraMode::Fill(work_size) => self.calculate_fill_projection(work_size),
             CameraMode::AspectFit(work_size) => self.calculate_aspect_fit_projection(work_size),
             CameraMode::AspectFill(work_size) => self.calculate_aspect_fill_projection(work_size),
-        };
-    }
-
-    fn calculate_ortho_projection(&mut self) {
-        let Vec2 {
-            x: right,
-            y: bottom,
-        } = self.size;
-        self.projection = Mat4::orthographic_rh_gl(0.0, right, bottom, 0.0, -1.0, 1.0);
-        // (projection, vec2(1.0, 1.0))
+        }
     }
 
     fn calculate_transform(&mut self) {
@@ -179,9 +172,33 @@ impl Camera {
         let scale = Mat3::from_scale(self.scale);
         self.transform = scale * translate;
     }
+
+    fn calculate_ortho_projection(&mut self) {
+        let (projection, ratio) = calculate_ortho_projection(self.size);
+        self.projection = projection;
+        self.ratio = ratio;
+    }
+
+    fn calculate_fill_projection(&mut self, work_size: Vec2) {
+        let (projection, ratio) = calculate_fill_projection(self.size, work_size);
+        self.projection = projection;
+        self.ratio = ratio;
+    }
+
+    fn calculate_aspect_fit_projection(&mut self, work_size: Vec2) {
+        let (projection, ratio) = calculate_aspect_fit_projection(self.size, work_size);
+        self.projection = projection;
+        self.ratio = ratio;
+    }
+
+    fn calculate_aspect_fill_projection(&mut self, work_size: Vec2) {
+        let (projection, ratio) = calculate_aspect_fill_projection(self.size, work_size);
+        self.projection = projection;
+        self.ratio = ratio;
+    }
 }
 
-fn calculate_otrho_projection(win_size: Vec2) -> (Mat4, Vec2) {
+fn calculate_ortho_projection(win_size: Vec2) -> (Mat4, Vec2) {
     let projection = Mat4::orthographic_rh_gl(0.0, win_size.x, win_size.y, 0.0, -1.0, 1.0);
     (projection, vec2(1.0, 1.0))
 }

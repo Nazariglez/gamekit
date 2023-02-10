@@ -1,4 +1,4 @@
-use nogg::n2d::*;
+use gamekit::m2d::*;
 use notan::draw::*;
 use notan::math::*;
 use notan::prelude::*;
@@ -11,8 +11,10 @@ struct State {
 
 impl State {
     fn new() -> Self {
+        let mut camera = Camera::new(vec2(800.0, 600.0));
+        camera.set_mode(CameraMode::AspectFit(vec2(800.0, 600.0)));
         Self {
-            camera: Camera::new(vec2(800.0, 600.0)),
+            camera,
             entity: vec2(0.0, 0.0),
         }
     }
