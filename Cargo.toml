@@ -3,13 +3,13 @@ name = "gamekit"
 version = "0.1.0"
 authors = ["Nazarí González <nazari.nz@gmail.com>"]
 edition = "2021"
-categories = []
-keywords = ["notan", "engine", "gamedev"]
+categories = ["game-engines", "game-development"]
+keywords = ["notan", "game", "engine", "gamedev", "2d"]
 readme = "README.md"
 homepage = "https://github.com/Nazariglez/gamekit"
 repository = "https://github.com/Nazariglez/gamekit"
 license = "MIT OR Apache-2.0"
-description = ""
+description = "A set of helpers for making games with notan"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]

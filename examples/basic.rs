@@ -3,6 +3,8 @@ use notan::draw::*;
 use notan::math::*;
 use notan::prelude::*;
 
+const WORK_SIZE: Vec2 = Vec2::new(300.0, 300.0);
+
 #[derive(AppState, Default)]
 struct State {
     camera: Camera,
@@ -12,7 +14,7 @@ struct State {
 impl State {
     fn new() -> Self {
         let mut camera = Camera::new(vec2(800.0, 600.0));
-        camera.set_mode(CameraMode::AspectFit(vec2(800.0, 600.0)));
+        camera.set_mode(CameraMode::AspectFit(WORK_SIZE));
         Self {
             camera,
             entity: vec2(0.0, 0.0),
@@ -49,7 +51,13 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
         state.entity.x -= speed * app.timer.delta_f32();
     }
 
-    state.camera.set_position(state.entity.x, state.entity.y);
+    if app.keyboard.is_down(KeyCode::W) {
+        state.entity.y += speed * app.timer.delta_f32();
+    } else if app.keyboard.is_down(KeyCode::S) {
+        state.entity.y -= speed * app.timer.delta_f32();
+    }
+
+    // state.camera.set_position(state.entity.x, state.entity.y);
     state.camera.update();
 
     let projection = state.camera.projection();
@@ -60,7 +68,8 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
     draw.transform().push(transform);
     draw.clear(Color::BLACK);
 
-    draw.rect((-400.0, -300.0), (800.0, 600.0))
+    let start: (f32, f32) = ((WORK_SIZE * 0.5 * -1.0) + state.entity).into();
+    draw.rect(start, WORK_SIZE.into())
         .stroke_color(Color::ORANGE)
         .stroke(4.0);
 

@@ -1,4 +1,4 @@
-use notan::math::{vec2, Mat3, Mat4, Vec2};
+use notan::math::{vec2, vec3, Mat3, Mat4, Vec2};
 
 #[derive(Default, Clone, Copy, PartialEq)]
 pub enum CameraMode {
@@ -19,7 +19,8 @@ pub enum CameraStyle {
 }
 
 pub struct Camera {
-    dirty: bool,
+    dirty_projection: bool,
+    dirty_transform: bool,
     position: Vec2,
     rotation: f32,
     scale: Vec2,
@@ -42,7 +43,8 @@ impl Default for Camera {
             position: vec2(0.0, 0.0),
             scale: vec2(1.0, 1.0),
             rotation: 0.0,
-            dirty: true,
+            dirty_projection: true,
+            dirty_transform: true,
             projection: Mat4::IDENTITY,
             ratio: vec2(1.0, 1.0),
             transform: Mat3::IDENTITY,
@@ -65,7 +67,7 @@ impl Camera {
     pub fn set_mode(&mut self, mode: CameraMode) {
         if self.mode != mode {
             self.mode = mode;
-            self.dirty = true;
+            self.dirty_projection = true;
         }
     }
 
@@ -76,7 +78,7 @@ impl Camera {
     pub fn set_style(&mut self, style: CameraStyle) {
         if self.style != style {
             self.style = style;
-            self.dirty = true;
+            self.dirty_projection = true;
         }
     }
 
@@ -88,7 +90,7 @@ impl Camera {
         let size = vec2(x, y);
         if self.size != size {
             self.size = size;
-            self.dirty = true;
+            self.dirty_projection = true;
         }
     }
 
@@ -100,7 +102,7 @@ impl Camera {
         let pos = vec2(x, y);
         if self.position != pos {
             self.position = pos;
-            self.dirty = true;
+            self.dirty_projection = true;
         }
     }
 
@@ -111,7 +113,7 @@ impl Camera {
     pub fn set_rotation(&mut self, angle: f32) {
         if self.rotation != angle {
             self.rotation = angle;
-            self.dirty = true;
+            self.dirty_projection = true;
         }
     }
 
@@ -123,7 +125,7 @@ impl Camera {
         let scale = vec2(x, y);
         if self.scale != scale {
             self.scale = scale;
-            self.dirty = true;
+            self.dirty_projection = true;
         }
     }
 
@@ -148,11 +150,14 @@ impl Camera {
     }
 
     pub fn update(&mut self) {
-        if !self.dirty {
+        if !self.dirty_projection {
             return;
         }
 
-        self.dirty = false;
+        // dirty_projection
+        // dirty_transform
+
+        self.dirty_projection = false;
         self.calculate_projection();
         self.calculate_transform();
     }
@@ -211,7 +216,13 @@ fn calculate_fill_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
 fn calculate_aspect_fit_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
     let ratio = (win_size.x / work_size.x).min(win_size.y / work_size.y);
     let ratio = Vec2::splat(ratio);
-    (Mat4::IDENTITY, ratio)
+    let scale = Mat4::from_scale(vec3(ratio.x, ratio.y, 1.0));
+    let pos = (win_size - work_size * ratio) * 0.5;
+    let position = vec3(pos.x, pos.y, 1.0);
+    let translation = Mat4::from_translation(position);
+    let projection = Mat4::orthographic_rh_gl(0.0, win_size.x, win_size.y, 0.0, -1.0, 1.0);
+    let final_projection = projection * translation * scale;
+    (final_projection, ratio)
 }
 
 fn calculate_aspect_fill_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
@@ -219,3 +230,21 @@ fn calculate_aspect_fill_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, V
     let ratio = Vec2::splat(ratio);
     (Mat4::IDENTITY, ratio)
 }
+
+// This returns a projection that keeps the aspect ratio while scaling
+// and fitting the content in our window
+// It also returns the ratio in case we need it to calculate positions
+// or manually scale something
+// fn calc_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, f32) {
+//     let ratio = (win_size.x / work_size.x).min(win_size.y / work_size.y);
+
+//     let projection = Mat4::orthographic_rh_gl(0.0, win_size.x, win_size.y, 0.0, -1.0, 1.0);
+//     let scale = Mat4::from_scale(vec3(ratio, ratio, 1.0));
+//     let position = vec3(
+//         (win_size.x - work_size.x * ratio) * 0.5,
+//         (win_size.y - work_size.y * ratio) * 0.5,
+//         1.0,
+//     );
+//     let translation = Mat4::from_translation(position);
+//     (projection * translation * scale, ratio)
+// }
