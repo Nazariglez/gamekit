@@ -9,17 +9,6 @@ pub enum CameraMode {
     AspectFill(Vec2),
 }
 
-impl CameraMode {
-    fn work_size(&self) -> Option<Vec2> {
-        Some(match self {
-            CameraMode::Basic => return None,
-            CameraMode::Fill(w) => *w,
-            CameraMode::AspectFit(w) => *w,
-            CameraMode::AspectFill(w) => *w,
-        })
-    }
-}
-
 #[derive(Default, Clone, Copy, PartialEq)]
 pub enum CameraStyle {
     #[default]
@@ -219,25 +208,32 @@ fn calculate_ortho_projection(win_size: Vec2) -> (Mat4, Vec2) {
     (final_projection, vec2(1.0, 1.0))
 }
 
-fn calculate_fill_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
-    let ratio = vec2(win_size.x / work_size.x, win_size.y / work_size.y);
-    (Mat4::IDENTITY, ratio)
-}
-
-fn calculate_aspect_fit_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
-    let ratio = (win_size.x / work_size.x).min(win_size.y / work_size.y);
-    let ratio = Vec2::splat(ratio);
+fn calculate_scaled_projection(win_size: Vec2, ratio: Vec2) -> Mat4 {
     let scale = Mat4::from_scale(vec3(ratio.x, ratio.y, 1.0));
     let pos = win_size * 0.5;
     let position = vec3(pos.x, pos.y, 1.0);
     let translation = Mat4::from_translation(position);
     let projection = Mat4::orthographic_rh_gl(0.0, win_size.x, win_size.y, 0.0, -1.0, 1.0);
     let final_projection = projection * translation * scale;
-    (final_projection, ratio)
+    final_projection
+}
+
+fn calculate_fill_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
+    let ratio = vec2(win_size.x / work_size.x, win_size.y / work_size.y);
+    let projection = calculate_scaled_projection(win_size, ratio);
+    (projection, ratio)
+}
+
+fn calculate_aspect_fit_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
+    let ratio = (win_size.x / work_size.x).min(win_size.y / work_size.y);
+    let ratio = Vec2::splat(ratio);
+    let projection = calculate_scaled_projection(win_size, ratio);
+    (projection, ratio)
 }
 
 fn calculate_aspect_fill_projection(win_size: Vec2, work_size: Vec2) -> (Mat4, Vec2) {
     let ratio = (win_size.x / work_size.x).max(win_size.y / work_size.y);
     let ratio = Vec2::splat(ratio);
-    (Mat4::IDENTITY, ratio)
+    let projection = calculate_scaled_projection(win_size, ratio);
+    (projection, ratio)
 }

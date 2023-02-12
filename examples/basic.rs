@@ -14,7 +14,7 @@ struct State {
 impl State {
     fn new() -> Self {
         let mut camera = Camera::new(vec2(800.0, 600.0));
-        camera.set_mode(CameraMode::AspectFit(WORK_SIZE));
+        camera.set_mode(CameraMode::Fill(WORK_SIZE));
         Self {
             camera,
             entity: vec2(400.0, 300.0),
