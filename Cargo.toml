@@ -16,4 +16,5 @@ description = "A set of helpers for making games with notan"
 lto = true
 
 [dependencies]
-notan = { version = "0.9.2"}
+# default-features=false...
+notan = { version = "0.9.2" }
