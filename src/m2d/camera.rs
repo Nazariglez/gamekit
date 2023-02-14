@@ -1,7 +1,7 @@
-use notan::math::{vec2, vec3, Mat3, Mat4, Vec2};
+use notan::math::{vec2, vec3, Mat3, Mat4, Rect, Vec2};
 
 #[derive(Default, Clone, Copy, PartialEq)]
-pub enum CameraMode {
+pub enum ScreenMode {
     #[default]
     Basic,
     Fill(Vec2),
@@ -10,7 +10,7 @@ pub enum CameraMode {
 }
 
 #[derive(Default, Clone, Copy, PartialEq)]
-pub enum CameraStyle {
+pub enum FollowStyle {
     #[default]
     LockOn,
     Platformer,
@@ -29,9 +29,10 @@ pub struct Camera {
     projection: Mat4,
     ratio: Vec2,
     transform: Mat3,
+    local_bounds: Rect,
 
-    mode: CameraMode,
-    style: CameraStyle,
+    mode: ScreenMode,
+    style: FollowStyle,
 }
 
 impl Default for Camera {
@@ -46,39 +47,52 @@ impl Default for Camera {
             projection: Mat4::IDENTITY,
             ratio: vec2(1.0, 1.0),
             transform: Mat3::IDENTITY,
-            mode: CameraMode::Basic,
-            style: CameraStyle::LockOn,
+            mode: ScreenMode::Basic,
+            style: FollowStyle::LockOn,
+            local_bounds: Rect::default(),
         }
     }
 }
 
 impl Camera {
     pub fn new(size: Vec2) -> Self {
+        let local_bounds = Rect {
+            x: 0.0,
+            y: 0.0,
+            width: size.x,
+            height: size.y,
+        };
+
         Self {
             size,
+            local_bounds,
             ..Default::default()
         }
     }
 
-    pub fn set_mode(&mut self, mode: CameraMode) {
+    pub fn bounds(&self) -> Rect {
+        self.local_bounds
+    }
+
+    pub fn set_screen_mode(&mut self, mode: ScreenMode) {
         if self.mode != mode {
             self.mode = mode;
             self.dirty_projection = true;
         }
     }
 
-    pub fn mode(&self) -> CameraMode {
+    pub fn screen_mode(&self) -> ScreenMode {
         self.mode
     }
 
-    pub fn set_style(&mut self, style: CameraStyle) {
+    pub fn set_follow_style(&mut self, style: FollowStyle) {
         if self.style != style {
             self.style = style;
             self.dirty_projection = true;
         }
     }
 
-    pub fn style(&self) -> CameraStyle {
+    pub fn follow_style(&self) -> FollowStyle {
         self.style
     }
 
@@ -146,25 +160,48 @@ impl Camera {
     }
 
     pub fn update(&mut self) {
+        // Check if we need to recalculate bounds after the
+        // projection and transform are updated
+        let dirty_bounds = self.dirty_projection || self.dirty_transform;
+
         if self.dirty_projection {
             self.dirty_projection = false;
             self.calculate_projection();
-            return;
         }
 
         if self.dirty_transform {
             self.dirty_transform = false;
             self.calculate_transform();
         }
+
+        if dirty_bounds {
+            self.calculate_bounds();
+        }
+    }
+
+    pub fn resolution(&self) -> Vec2 {
+        match self.mode {
+            ScreenMode::Basic => self.size,
+            ScreenMode::Fill(r) => r,
+            ScreenMode::AspectFit(r) => r,
+            ScreenMode::AspectFill(r) => r,
+        }
     }
 
     fn calculate_projection(&mut self) {
-        match self.mode {
-            CameraMode::Basic => self.calculate_ortho_projection(),
-            CameraMode::Fill(work_size) => self.calculate_fill_projection(work_size),
-            CameraMode::AspectFit(work_size) => self.calculate_aspect_fit_projection(work_size),
-            CameraMode::AspectFill(work_size) => self.calculate_aspect_fill_projection(work_size),
-        }
+        let (projection, ratio) = match self.mode {
+            ScreenMode::Basic => calculate_ortho_projection(self.size),
+            ScreenMode::Fill(work_size) => calculate_fill_projection(self.size, work_size),
+            ScreenMode::AspectFit(work_size) => {
+                calculate_aspect_fit_projection(self.size, work_size)
+            }
+            ScreenMode::AspectFill(work_size) => {
+                calculate_aspect_fill_projection(self.size, work_size)
+            }
+        };
+
+        self.projection = projection;
+        self.ratio = ratio;
     }
 
     fn calculate_transform(&mut self) {
@@ -175,28 +212,16 @@ impl Camera {
         self.transform = transform;
     }
 
-    fn calculate_ortho_projection(&mut self) {
-        let (projection, ratio) = calculate_ortho_projection(self.size);
-        self.projection = projection;
-        self.ratio = ratio;
-    }
-
-    fn calculate_fill_projection(&mut self, work_size: Vec2) {
-        let (projection, ratio) = calculate_fill_projection(self.size, work_size);
-        self.projection = projection;
-        self.ratio = ratio;
-    }
-
-    fn calculate_aspect_fit_projection(&mut self, work_size: Vec2) {
-        let (projection, ratio) = calculate_aspect_fit_projection(self.size, work_size);
-        self.projection = projection;
-        self.ratio = ratio;
-    }
-
-    fn calculate_aspect_fill_projection(&mut self, work_size: Vec2) {
-        let (projection, ratio) = calculate_aspect_fill_projection(self.size, work_size);
-        self.projection = projection;
-        self.ratio = ratio;
+    fn calculate_bounds(&mut self) {
+        let size = self.resolution() / self.ratio;
+        let pos = self.position - (size * 0.5); // todo scale?
+        self.local_bounds = Rect {
+            x: pos.x,
+            y: pos.y,
+            width: size.x,
+            height: size.y,
+        };
+        dbg!(self.local_bounds);
     }
 }
 

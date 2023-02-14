@@ -3,7 +3,7 @@ use notan::draw::*;
 use notan::math::*;
 use notan::prelude::*;
 
-const WORK_SIZE: Vec2 = Vec2::new(300.0, 300.0);
+const RESOLUTION: Vec2 = Vec2::new(300.0, 300.0);
 
 #[derive(AppState, Default)]
 struct State {
@@ -14,7 +14,7 @@ struct State {
 impl State {
     fn new() -> Self {
         let mut camera = Camera::new(vec2(800.0, 600.0));
-        camera.set_mode(CameraMode::Fill(WORK_SIZE));
+        camera.set_screen_mode(ScreenMode::Fill(RESOLUTION));
         Self {
             camera,
             entity: vec2(400.0, 300.0),
@@ -74,7 +74,6 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
     let (w, h) = app.window().size();
     state.camera.set_size(w as _, h as _);
     state.camera.set_position(state.entity.x, state.entity.y);
-    // dbg!(state.entity);
     state.camera.update();
 
     let projection = state.camera.projection();
@@ -85,8 +84,8 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
     draw.transform().push(transform);
     draw.clear(Color::BLACK);
 
-    let start: (f32, f32) = ((WORK_SIZE * 0.5 * -1.0) + state.entity).into();
-    draw.rect(start, WORK_SIZE.into())
+    let start: (f32, f32) = ((RESOLUTION * 0.5 * -1.0) + state.entity).into();
+    draw.rect(start, RESOLUTION.into())
         .stroke_color(Color::ORANGE)
         .stroke(4.0);
 
