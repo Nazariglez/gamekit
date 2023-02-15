@@ -103,5 +103,10 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
 
     draw.line((0.0, 600.0), (800.0, 0.0)).width(10.0);
 
+    let bounds = state.camera.bounds();
+    draw.rect((bounds.x, bounds.y), (bounds.width, bounds.height))
+        .stroke_color(Color::GREEN)
+        .stroke(10.0);
+
     gfx.render(&draw);
 }

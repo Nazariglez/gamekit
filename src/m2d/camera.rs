@@ -213,15 +213,14 @@ impl Camera {
     }
 
     fn calculate_bounds(&mut self) {
-        let size = self.resolution() / self.ratio;
-        let pos = self.position - (size * 0.5); // todo scale?
+        let size = self.size / (self.ratio * self.scale);
+        let pos = self.position - (size * 0.5);
         self.local_bounds = Rect {
             x: pos.x,
             y: pos.y,
             width: size.x,
             height: size.y,
         };
-        dbg!(self.local_bounds);
     }
 }
 
