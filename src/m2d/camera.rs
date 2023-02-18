@@ -188,6 +188,22 @@ impl Camera {
         }
     }
 
+    pub fn local_point_to_global(&self, point: Vec2) -> Vec2 {
+        todo!()
+    }
+
+    pub fn global_point_to_local(&self, point: Vec2) -> Vec2 {
+        todo!()
+    }
+
+    pub fn is_point_visible(&self, point: Vec2) -> bool {
+        todo!()
+    }
+
+    pub fn is_rect_visible(&self, rect: Rect) -> bool {
+        todo!()
+    }
+
     fn calculate_projection(&mut self) {
         let (projection, ratio) = match self.mode {
             ScreenMode::Basic => calculate_ortho_projection(self.size),

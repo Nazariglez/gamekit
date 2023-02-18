@@ -1,4 +1,5 @@
 use gamekit::m2d::*;
+use gamekit::tween::*;
 use notan::draw::*;
 use notan::math::*;
 use notan::prelude::*;
@@ -15,6 +16,7 @@ impl State {
     fn new() -> Self {
         let mut camera = Camera::new(vec2(800.0, 600.0));
         camera.set_screen_mode(ScreenMode::Fill(RESOLUTION));
+        let tween = Tween::new(LINEAR);
         Self {
             camera,
             entity: vec2(400.0, 300.0),
