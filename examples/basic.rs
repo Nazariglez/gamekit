@@ -5,21 +5,35 @@ use notan::math::*;
 use notan::prelude::*;
 
 const RESOLUTION: Vec2 = Vec2::new(300.0, 300.0);
+const POS: Vec2 = Vec2::new(0.0, 0.0);
 
-#[derive(AppState, Default)]
+#[derive(AppState)]
 struct State {
     camera: Camera,
     entity: Vec2,
+    tween_x: Tween<f32>,
+    tween_y: Tween<f32>,
 }
 
 impl State {
     fn new() -> Self {
         let mut camera = Camera::new(vec2(800.0, 600.0));
-        camera.set_screen_mode(ScreenMode::Fill(RESOLUTION));
-        let tween = Tween::new(LINEAR);
+        // camera.set_position(400.0, 300.0);
+        camera.set_screen_mode(ScreenMode::AspectFit(RESOLUTION));
+        // let mut tween = Tween::new(POS, vec2(800.0, 600.0), 5.0);
+        // tween.set_repeat(2);
+        // tween.set_yoyo(true);
+        // tween.set_easing(IN_OUT_BOUNCE);
+
+        let time = 5.0;
+        let tween_x = Tween::new(0.0, 800.0, time);
+        let mut tween_y = Tween::new(600.0, 0.0, time);
+        tween_y.set_easing(IN_OUT_BOUNCE);
         Self {
             camera,
-            entity: vec2(400.0, 300.0),
+            entity: vec2(0.0, 600.0),
+            tween_x,
+            tween_y,
         }
     }
 }
@@ -29,9 +43,29 @@ fn main() {
     notan::init_with(State::new)
         .add_config(win_conf)
         .add_config(DrawConfig)
+        .update(update)
         .draw(draw)
         .build()
         .unwrap();
+}
+
+fn update(app: &mut App, state: &mut State) {
+    if app.keyboard.was_pressed(KeyCode::Space) {
+        if state.tween_x.is_started() {
+            state.tween_x.stop();
+            state.tween_y.stop();
+        } else {
+            state.tween_x.start();
+            state.tween_y.start();
+        }
+    }
+
+    let delta = app.timer.delta_f32();
+    state.tween_x.tick(delta);
+    state.tween_y.tick(delta);
+
+    let pos = vec2(state.tween_x.value(), state.tween_y.value());
+    state.entity = pos;
 }
 
 fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
@@ -105,10 +139,10 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
 
     draw.line((0.0, 600.0), (800.0, 0.0)).width(10.0);
 
-    let bounds = state.camera.bounds();
-    draw.rect((bounds.x, bounds.y), (bounds.width, bounds.height))
-        .stroke_color(Color::GREEN)
-        .stroke(10.0);
+    // let bounds = state.camera.bounds();
+    // draw.rect((bounds.x, bounds.y), (bounds.width, bounds.height))
+    //     .stroke_color(Color::GREEN)
+    //     .stroke(10.0);
 
     gfx.render(&draw);
 }
