@@ -1,4 +1,5 @@
 mod camera;
+pub mod filters;
 mod scene;
 mod tile_renderer;
 

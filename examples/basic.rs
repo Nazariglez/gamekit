@@ -1,3 +1,9 @@
+use std::any::Any;
+use std::any::TypeId;
+use std::ops::Add;
+use std::ops::Mul;
+use std::ops::Sub;
+
 use gamekit::m2d::*;
 use gamekit::tween::*;
 use notan::draw::*;
@@ -9,10 +15,10 @@ const POS: Vec2 = Vec2::new(0.0, 0.0);
 
 #[derive(AppState)]
 struct State {
-    camera: Camera,
+    camera: CameraOperator,
     entity: Vec2,
-    tween_x: Tween<f32>,
-    tween_y: Tween<f32>,
+    // tween_x: Tween<f32>,
+    // tween_y: Tween<f32>,
 }
 
 impl State {
@@ -25,20 +31,26 @@ impl State {
         // tween.set_yoyo(true);
         // tween.set_easing(IN_OUT_BOUNCE);
 
-        let time = 5.0;
-        let tween_x = Tween::new(0.0, 800.0, time);
-        let mut tween_y = Tween::new(600.0, 0.0, time);
-        tween_y.set_easing(IN_OUT_BOUNCE);
+        // let time = 5.0;
+        // let tween_x = Tween::new(0.0, 800.0, time);
+        // let mut tween_y = Tween::new(600.0, 0.0, time);
+        // tween_y.set_easing(IN_OUT_BOUNCE);
+
+        let camera = CameraOperator::new(camera);
         Self {
             camera,
-            entity: vec2(0.0, 600.0),
-            tween_x,
-            tween_y,
+            entity: vec2(400.0, 300.0),
+            // tween_x,
+            // tween_y,
         }
     }
 }
 
 fn main() {
+    // let mut container = vec![];
+    // container.push(Tween::new(0.0, 1.0, 10.0));
+    // container.push(Tween::new(vec2(1.0, 1.0), vec2(1.0, 1.0), 10.0));
+
     let win_conf = WindowConfig::default().resizable(true);
     notan::init_with(State::new)
         .add_config(win_conf)
@@ -50,50 +62,6 @@ fn main() {
 }
 
 fn update(app: &mut App, state: &mut State) {
-    if app.keyboard.was_pressed(KeyCode::Space) {
-        if state.tween_x.is_started() {
-            state.tween_x.stop();
-            state.tween_y.stop();
-        } else {
-            state.tween_x.start();
-            state.tween_y.start();
-        }
-    }
-
-    let delta = app.timer.delta_f32();
-    state.tween_x.tick(delta);
-    state.tween_y.tick(delta);
-
-    let pos = vec2(state.tween_x.value(), state.tween_y.value());
-    state.entity = pos;
-}
-
-fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
-    if app.keyboard.was_pressed(KeyCode::Q) {
-        app.exit();
-        return;
-    }
-
-    if app.keyboard.is_down(KeyCode::J) {
-        let zoom = state.camera.zoom();
-        state.camera.set_zoom(zoom - 10.0 * app.timer.delta_f32());
-    } else if app.keyboard.is_down(KeyCode::K) {
-        let zoom = state.camera.zoom();
-        state.camera.set_zoom(zoom + 10.0 * app.timer.delta_f32());
-    }
-
-    if app.keyboard.is_down(KeyCode::H) {
-        let rotation = state.camera.rotation();
-        state
-            .camera
-            .set_rotation(rotation - 10f32.to_radians() * app.timer.delta_f32());
-    } else if app.keyboard.is_down(KeyCode::L) {
-        let rotation = state.camera.rotation();
-        state
-            .camera
-            .set_rotation(rotation + 10f32.to_radians() * app.timer.delta_f32());
-    }
-
     let speed = 50.0;
     if app.keyboard.is_down(KeyCode::A) {
         state.entity.x -= speed * app.timer.delta_f32();
@@ -108,12 +76,39 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
     }
 
     let (w, h) = app.window().size();
-    state.camera.set_size(w as _, h as _);
-    state.camera.set_position(state.entity.x, state.entity.y);
-    state.camera.update();
+    state.camera.camera.set_size(w as _, h as _);
+    state.camera.look_at(state.entity.x, state.entity.y);
+    state.camera.update(app.timer.delta_f32());
+}
 
-    let projection = state.camera.projection();
-    let transform = state.camera.transform();
+fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
+    if app.keyboard.was_pressed(KeyCode::Q) {
+        app.exit();
+        return;
+    }
+
+    // if app.keyboard.is_down(KeyCode::J) {
+    //     let zoom = state.camera.zoom();
+    //     state.camera.set_zoom(zoom - 10.0 * app.timer.delta_f32());
+    // } else if app.keyboard.is_down(KeyCode::K) {
+    //     let zoom = state.camera.zoom();
+    //     state.camera.set_zoom(zoom + 10.0 * app.timer.delta_f32());
+    // }
+
+    // if app.keyboard.is_down(KeyCode::H) {
+    //     let rotation = state.camera.rotation();
+    //     state
+    //         .camera
+    //         .set_rotation(rotation - 10f32.to_radians() * app.timer.delta_f32());
+    // } else if app.keyboard.is_down(KeyCode::L) {
+    //     let rotation = state.camera.rotation();
+    //     state
+    //         .camera
+    //         .set_rotation(rotation + 10f32.to_radians() * app.timer.delta_f32());
+    // }
+
+    let projection = state.camera.camera.projection();
+    let transform = state.camera.camera.transform();
 
     let mut draw = gfx.create_draw();
     draw.set_projection(Some(projection));
@@ -143,6 +138,10 @@ fn draw(app: &mut App, gfx: &mut Graphics, state: &mut State) {
     // draw.rect((bounds.x, bounds.y), (bounds.width, bounds.height))
     //     .stroke_color(Color::GREEN)
     //     .stroke(10.0);
+
+    draw.rect((0.0, 0.0), (800.0, 600.0))
+        .stroke_color(Color::GREEN)
+        .stroke(1.0);
 
     gfx.render(&draw);
 }

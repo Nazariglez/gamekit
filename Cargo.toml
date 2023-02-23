@@ -16,5 +16,6 @@ description = "A set of helpers for making games with notan"
 lto = true
 
 [dependencies]
+anymap = "0.12.1"
 # default-features=false...
 notan = { version = "0.9.3" }

@@ -29,7 +29,6 @@ pub struct Camera {
     projection: Mat4,
     ratio: Vec2,
     transform: Mat3,
-    local_bounds: Rect,
 
     mode: ScreenMode,
     style: FollowStyle,
@@ -49,29 +48,16 @@ impl Default for Camera {
             transform: Mat3::IDENTITY,
             mode: ScreenMode::Basic,
             style: FollowStyle::LockOn,
-            local_bounds: Rect::default(),
         }
     }
 }
 
 impl Camera {
     pub fn new(size: Vec2) -> Self {
-        let local_bounds = Rect {
-            x: 0.0,
-            y: 0.0,
-            width: size.x,
-            height: size.y,
-        };
-
         Self {
             size,
-            local_bounds,
             ..Default::default()
         }
-    }
-
-    pub fn bounds(&self) -> Rect {
-        self.local_bounds
     }
 
     pub fn set_screen_mode(&mut self, mode: ScreenMode) {
@@ -160,10 +146,6 @@ impl Camera {
     }
 
     pub fn update(&mut self) {
-        // Check if we need to recalculate bounds after the
-        // projection and transform are updated
-        let dirty_bounds = self.dirty_projection || self.dirty_transform;
-
         if self.dirty_projection {
             self.dirty_projection = false;
             self.calculate_projection();
@@ -172,10 +154,6 @@ impl Camera {
         if self.dirty_transform {
             self.dirty_transform = false;
             self.calculate_transform();
-        }
-
-        if dirty_bounds {
-            self.calculate_bounds();
         }
     }
 
@@ -228,15 +206,15 @@ impl Camera {
         self.transform = transform;
     }
 
-    fn calculate_bounds(&mut self) {
+    pub fn bounds(&self) -> Rect {
         let size = self.size / (self.ratio * self.scale);
         let pos = self.position - (size * 0.5);
-        self.local_bounds = Rect {
+        Rect {
             x: pos.x,
             y: pos.y,
             width: size.x,
             height: size.y,
-        };
+        }
     }
 }
 
