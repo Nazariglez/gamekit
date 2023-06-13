@@ -1,0 +1,15 @@
+[package]
+name = "gk_app"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gk_winit = { path = "../gk_winit", version = "0.1.0", optional = true }
+gk_core = { path = "../gk_core", version = "0.1.0" }
+#gk_web = { path = "../gk_web", version = "0.1.0", optional = true }
+
+[features]
+default = ["window"]
+window = ["gk_winit", "gk_core/window"]
