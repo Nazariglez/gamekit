@@ -1,9 +1,15 @@
 #[derive(Copy, Clone, Hash, Debug, Eq, PartialEq)]
 pub struct GKWindowId(u64);
 
-impl GKWindowId {
-    pub fn new(inner: u64) -> Self {
-        Self(inner)
+impl From<u64> for GKWindowId {
+    fn from(value: u64) -> Self {
+        Self(value)
+    }
+}
+
+impl From<GKWindowId> for u64 {
+    fn from(value: GKWindowId) -> Self {
+        value.0
     }
 }
 
@@ -12,7 +18,7 @@ pub trait GKWindowManager<T: GKWindow> {
     fn create(&mut self) -> Result<GKWindowId, String>;
     fn window(&mut self, id: GKWindowId) -> Option<&mut T>;
     fn close(&mut self, id: GKWindowId) -> bool;
-    fn run<F: FnMut()>(&mut self, f: F);
+    fn exit(&mut self);
     fn create_runner<F: FnMut(&mut Self) + 'static>(self, f: F) -> Box<dyn FnOnce()>;
 }
 
