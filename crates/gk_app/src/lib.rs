@@ -23,7 +23,7 @@ impl<W: GKWindow, WM: GKWindowManager<W> + 'static> Builder<W, WM> {
         let mut count = 0;
         let runner = manager.create_runner(move |mut manager| {
             if count < 3000 && count.rem(1000) == 0 {
-                manager.create();
+                // manager.create();
             }
 
             count += 1;
