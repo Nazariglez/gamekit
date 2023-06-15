@@ -31,6 +31,7 @@ impl<W: GKWindow, WM: GKWindowManager<W> + 'static> Builder<W, WM> {
         } = self;
         dispatch(&mut storage, |manager: &mut WM| {
             println!("yep!");
+            // manager.create().unwrap();
         });
 
         let mut count = 0;
