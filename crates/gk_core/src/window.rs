@@ -14,12 +14,10 @@ impl From<GKWindowId> for u64 {
 }
 
 pub trait GKWindowManager<T: GKWindow> {
-    fn new() -> Result<Self, String> where Self: Sized;
     fn create(&mut self) -> Result<GKWindowId, String>;
     fn window(&mut self, id: GKWindowId) -> Option<&mut T>;
     fn close(&mut self, id: GKWindowId) -> bool;
     fn exit(&mut self);
-    fn create_runner<F: FnMut(&mut Self) + 'static>(self, f: F) -> Box<dyn FnOnce()>;
 }
 
 pub trait GKWindow {

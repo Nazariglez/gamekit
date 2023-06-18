@@ -1,54 +1,103 @@
 use gk_core::{GKWindow, GKWindowId, GKWindowManager};
-use gk_winit::{EventLoopWindowTarget, Manager, Window};
-use std::marker::PhantomData;
 use std::ops::Rem;
 
-pub struct Builder<W: GKWindow, WM: GKWindowManager<W>> {
+pub struct App<S> {
     storage: Storage,
-    _w: PhantomData<W>,
-    manager: WM,
+    events: Vec<()>,
+    state: S,
 }
 
-impl<W: GKWindow, WM: GKWindowManager<W> + 'static> Builder<W, WM> {
-    pub fn new() -> Result<Self, String> {
-        let mut manager = WM::new()?;
-        let mut storage = Storage::new();
-        let manager2 = WM::new()?;
-        storage.add(manager2);
-
-        Ok(Self {
-            storage,
-            manager,
-            _w: PhantomData::default(),
-        })
+impl<S> App<S> {
+    pub fn get_mut_plugin<T: 'static>(&mut self) -> Option<&mut T> {
+        self.storage.get_mut()
     }
 
-    pub fn run(mut self) {
+    pub fn tick(&mut self) {
+        println!("TICK!!");
+    }
+}
+
+pub struct AppBuilder<S: 'static> {
+    storage: Storage,
+    runner: Box<dyn FnMut(App<S>) -> Result<(), String>>,
+    setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>>,
+}
+
+// impl AppBuilder<()> {
+//     pub fn init() -> Self {
+//         Self::init_with(|| ())
+//     }
+// }
+
+impl<S> AppBuilder<S> {
+    pub fn init_with<T, H>(handler: H) -> Self
+    where
+        H: SetupHandler<S> + 'static,
+    {
+        let mut storage = Storage::new();
+        let runner = Box::new(default_runner);
+        let setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>> =
+            Box::new(|storage| handler.call(storage));
+
+        Self {
+            storage,
+            runner,
+            setup_handler,
+        }
+    }
+
+    pub fn set_runner<F: FnMut(App<S>) -> Result<(), String> + 'static>(
+        mut self,
+        runner: F,
+    ) -> Self {
+        self.runner = Box::new(runner);
+        self
+    }
+
+    pub fn add_plugin<T: 'static>(mut self, plugin: T) -> Self {
+        self.storage.add(plugin);
+        self
+    }
+
+    pub fn run(mut self) -> Result<(), String> {
         let Self {
-            manager,
             mut storage,
+            mut runner,
+            setup_handler,
             ..
         } = self;
-        dispatch(&mut storage, |manager: &mut WM| {
-            println!("yep!");
-            // manager.create().unwrap();
-        });
-
-        let mut count = 0;
-        let runner = manager.create_runner(move |mut manager| {
-            if count < 3000 && count.rem(1000) == 0 {
-                manager.create();
-            }
-
-            count += 1;
-        });
+        // dispatch(&mut storage, |manager: &mut WM| {
+        //     println!("yep!");
+        //     // manager.create().unwrap();
+        // });
+        //
+        // let mut count = 0;
+        // let runner = manager.create_runner(move |mut manager| {
+        //     if count < 3000 && count.rem(1000) == 0 {
+        //         manager.create();
+        //     }
+        //
+        //     count += 1;
+        // });
         // self.manager.run(|| {});
-        runner();
+
+        let state = (setup_handler)(&mut storage)?;
+
+        let app = App {
+            storage,
+            events: vec![],
+            state,
+        };
+
+        (runner)(app)?;
+
+        Ok(())
     }
 }
 
-pub fn init() -> Result<Builder<Window, Manager>, String> {
-    Builder::new()
+fn default_runner<S>(_app: App<S>) -> Result<(), String> {
+    // TODO: logic here?
+    Ok(())
 }
 
 //---
@@ -65,7 +114,12 @@ impl Storage {
 
     fn add<T: 'static>(&mut self, plugin: T) {
         self.map.insert(plugin);
-        println!("{:?}", self.map);
+        println!("add {:?} -> {:?}", std::any::TypeId::of::<T>(), self.map);
+    }
+
+    fn get_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        println!("get {:?} -> {:?}", std::any::TypeId::of::<T>(), self.map);
+        self.map.get_mut()
     }
 }
 
@@ -86,6 +140,10 @@ impl<T: 'static> FromStorage for T {
 
 pub trait Handler<T> {
     fn call(self, storage: &mut Storage);
+}
+
+pub trait SetupHandler<S> {
+    fn call(self, storage: &mut Storage) -> Result<S, String>;
 }
 
 pub fn dispatch<T, H>(storage: &mut Storage, handler: H)
