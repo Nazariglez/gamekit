@@ -1,10 +1,12 @@
+use std::marker::PhantomData;
 use gk_core::{GKWindow, GKWindowId, GKWindowManager};
 use std::ops::Rem;
 
 pub struct App<S> {
     storage: Storage,
     events: Vec<()>,
-    state: S,
+    _s: PhantomData<S>,
+    // state: S,
 }
 
 impl<S> App<S> {
@@ -20,23 +22,23 @@ impl<S> App<S> {
 pub struct AppBuilder<S: 'static> {
     storage: Storage,
     runner: Box<dyn FnMut(App<S>) -> Result<(), String>>,
-    setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>>,
+    setup_handler: Box<dyn FnOnce(&mut Storage)>,
 }
 
-// impl AppBuilder<()> {
-//     pub fn init() -> Self {
-//         Self::init_with(|| ())
-//     }
-// }
+impl AppBuilder<()> {
+    pub fn init() -> Self {
+        Self::init_with(|| {})
+    }
+}
 
 impl<S> AppBuilder<S> {
     pub fn init_with<T, H>(handler: H) -> Self
     where
-        H: SetupHandler<S> + 'static,
+    H: Handler<T> + 'static,
     {
         let mut storage = Storage::new();
         let runner = Box::new(default_runner);
-        let setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>> =
+        let setup_handler: Box<dyn FnOnce(&mut Storage)> =
             Box::new(|storage| handler.call(storage));
 
         Self {
@@ -81,12 +83,13 @@ impl<S> AppBuilder<S> {
         // });
         // self.manager.run(|| {});
 
-        let state = (setup_handler)(&mut storage)?;
+        // let state = (setup_handler)(&mut storage)?;
 
         let app = App {
             storage,
             events: vec![],
-            state,
+            _s: PhantomData::default(),
+            // state,
         };
 
         (runner)(app)?;
@@ -142,7 +145,7 @@ pub trait Handler<T> {
     fn call(self, storage: &mut Storage);
 }
 
-pub trait SetupHandler<S> {
+pub trait SetupHandler<S, T> {
     fn call(self, storage: &mut Storage) -> Result<S, String>;
 }
 
@@ -169,7 +172,7 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
             {
                 use std::collections::HashSet;
                 use std::any::TypeId;
-                let mut h_set = HashSet::new();
+                let mut h_set:HashSet<TypeId> = Default::default();
 
                 $(
 
@@ -193,6 +196,7 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
     }
 });
 
+fn_handler! {  }
 fn_handler! { A }
 fn_handler! { A B }
 fn_handler! { A B C }
