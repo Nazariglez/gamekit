@@ -1,12 +1,11 @@
-use std::marker::PhantomData;
 use gk_core::{GKWindow, GKWindowId, GKWindowManager};
+use std::marker::PhantomData;
 use std::ops::Rem;
 
 pub struct App<S> {
     storage: Storage,
     events: Vec<()>,
-    _s: PhantomData<S>,
-    // state: S,
+    state: S,
 }
 
 impl<S> App<S> {
@@ -22,23 +21,23 @@ impl<S> App<S> {
 pub struct AppBuilder<S: 'static> {
     storage: Storage,
     runner: Box<dyn FnMut(App<S>) -> Result<(), String>>,
-    setup_handler: Box<dyn FnOnce(&mut Storage)>,
+    setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>>,
 }
 
 impl AppBuilder<()> {
     pub fn init() -> Self {
-        Self::init_with(|| {})
+        Self::init_with(|| Ok(()))
     }
 }
 
 impl<S> AppBuilder<S> {
     pub fn init_with<T, H>(handler: H) -> Self
     where
-    H: Handler<T> + 'static,
+        H: SetupHandler<S, T> + 'static,
     {
         let mut storage = Storage::new();
         let runner = Box::new(default_runner);
-        let setup_handler: Box<dyn FnOnce(&mut Storage)> =
+        let setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>> =
             Box::new(|storage| handler.call(storage));
 
         Self {
@@ -83,13 +82,12 @@ impl<S> AppBuilder<S> {
         // });
         // self.manager.run(|| {});
 
-        // let state = (setup_handler)(&mut storage)?;
+        let state = (setup_handler)(&mut storage)?;
 
         let app = App {
             storage,
             events: vec![],
-            _s: PhantomData::default(),
-            // state,
+            state,
         };
 
         (runner)(app)?;
@@ -196,7 +194,7 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
     }
 });
 
-fn_handler! {  }
+fn_handler! {}
 fn_handler! { A }
 fn_handler! { A B }
 fn_handler! { A B C }
@@ -207,3 +205,58 @@ fn_handler! { A B C D E F G }
 fn_handler! { A B C D E F G H }
 fn_handler! { A B C D E F G H I }
 fn_handler! { A B C D E F G H I J }
+
+//-
+
+// Safe for notan because the map will never change
+// once it's created it will not have new register or removed ones
+// Doing this we got interior mutability for the components but not the map
+// because is never exposes
+macro_rules! fn_setup_handler ({ $($param:ident)* } => {
+    impl<S, Fun, $($param,)*> SetupHandler<S, ($($param,)*)> for Fun
+    where
+        S: 'static,
+        Fun: FnMut($(&mut $param),*) -> Result<S, String>,
+        $($param:FromStorage + 'static),*
+    {
+        fn call(mut self, storage: &mut Storage) -> Result<S, String> {
+            // Look for duplicated parameters and panic
+            #[cfg(debug_assertions)]
+            {
+                use std::collections::HashSet;
+                use std::any::TypeId;
+                let mut h_set:HashSet<TypeId> = Default::default();
+
+                $(
+
+                println!("{:?}", TypeId::of::<$param>());
+                    if !h_set.insert(TypeId::of::<$param>()) {
+                        panic!("Application handlers cannot contains duplicated parameters.");
+                    }
+                )*
+            }
+
+
+            // Safety. //TODO
+            paste::paste! {
+                let ($([<$param:lower _v>],)*) = unsafe {
+                    $(let [<$param:lower _v>] = $param::from_storage(storage) as *mut _;)*
+                    ($(&mut *[<$param:lower _v>],)*)
+                };
+                return (self)($([<$param:lower _v>],)*);
+            }
+        }
+    }
+});
+
+fn_setup_handler! {}
+fn_setup_handler! { A }
+fn_setup_handler! { A B }
+fn_setup_handler! { A B C }
+fn_setup_handler! { A B C D }
+fn_setup_handler! { A B C D E }
+fn_setup_handler! { A B C D E F }
+fn_setup_handler! { A B C D E F G }
+fn_setup_handler! { A B C D E F G H }
+fn_setup_handler! { A B C D E F G H I }
+fn_setup_handler! { A B C D E F G H I J }
