@@ -1,10 +1,10 @@
 use crate::Manager;
-use gk_app::App;
+use gk_app::{App, GKState};
 use gk_core::GKWindowId;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 
-pub fn runner<S: 'static>(mut app: App<S>) -> Result<(), String> {
+pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
     if app.get_mut_plugin::<Manager>().is_none() {
         return Err("Cannot find Winit's Window Manager".to_string());
     }

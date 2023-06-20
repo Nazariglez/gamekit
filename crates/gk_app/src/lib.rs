@@ -2,13 +2,13 @@ use gk_core::{GKWindow, GKWindowId, GKWindowManager};
 use std::marker::PhantomData;
 use std::ops::Rem;
 
-pub struct App<S> {
+pub struct App<S: GKState> {
     storage: Storage,
     events: Vec<()>,
-    state: S,
+    pub state: S,
 }
 
-impl<S> App<S> {
+impl<S: GKState> App<S> {
     pub fn get_mut_plugin<T: 'static>(&mut self) -> Option<&mut T> {
         self.storage.get_mut()
     }
@@ -18,11 +18,13 @@ impl<S> App<S> {
     }
 }
 
-pub struct AppBuilder<S: 'static> {
+pub struct AppBuilder<S: GKState + 'static> {
     storage: Storage,
     runner: Box<dyn FnMut(App<S>) -> Result<(), String>>,
     setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>>,
 }
+
+impl GKState for () {}
 
 impl AppBuilder<()> {
     pub fn init() -> Self {
@@ -30,7 +32,7 @@ impl AppBuilder<()> {
     }
 }
 
-impl<S> AppBuilder<S> {
+impl<S: GKState> AppBuilder<S> {
     pub fn init_with<T, H>(handler: H) -> Self
     where
         H: SetupHandler<S, T> + 'static,
@@ -96,7 +98,7 @@ impl<S> AppBuilder<S> {
     }
 }
 
-fn default_runner<S>(_app: App<S>) -> Result<(), String> {
+fn default_runner<S: GKState>(_app: App<S>) -> Result<(), String> {
     // TODO: logic here?
     Ok(())
 }
@@ -130,41 +132,50 @@ pub trait FromStorage {
 
 impl<T: 'static> FromStorage for T {
     fn from_storage(storage: &mut Storage) -> &mut Self {
-        println!(
-            "-> {:?}, -> {:?}",
-            std::any::TypeId::of::<Self>(),
-            storage.map
-        );
         storage.map.get_mut::<Self>().unwrap()
     }
 }
 
-pub trait Handler<T> {
-    fn call(self, storage: &mut Storage);
+pub trait Plugin {}
+pub trait GKState {}
+
+pub trait FromAppStorage<S: GKState> {
+    fn from_storage(app: &mut App<S>) -> &mut Self;
+}
+
+impl<S: GKState, T: Plugin + 'static> FromAppStorage<S> for T {
+    fn from_storage(app: &mut App<S>) -> &mut Self {
+        app.storage.map.get_mut::<Self>().unwrap()
+    }
+}
+
+pub trait Handler<S: GKState, T> {
+    fn call(self, app: &mut App<S>);
 }
 
 pub trait SetupHandler<S, T> {
     fn call(self, storage: &mut Storage) -> Result<S, String>;
 }
 
-pub fn dispatch<T, H>(storage: &mut Storage, handler: H)
-where
-    H: Handler<T>,
-{
-    handler.call(storage);
-}
+// pub fn dispatch<S, T, H>(storage: &mut Storage, handler: H)
+// where
+//     H: Handler<S, T>,
+// {
+//     handler.call(storage);
+// }
 
 // Safe for notan because the map will never change
 // once it's created it will not have new register or removed ones
 // Doing this we got interior mutability for the components but not the map
 // because is never exposes
 macro_rules! fn_handler ({ $($param:ident)* } => {
-    impl<Fun, $($param,)*> Handler<($($param,)*)> for Fun
+    impl<S, Fun, $($param,)*> Handler<S, ($($param,)*)> for Fun
     where
+        S: GKState + 'static,
         Fun: FnMut($(&mut $param),*),
-        $($param:FromStorage + 'static),*
+        $($param:FromAppStorage<S> + 'static),*
     {
-        fn call(mut self, storage: &mut Storage) {
+        fn call(mut self, app: &mut App<S>) {
             // Look for duplicated parameters and panic
             #[cfg(debug_assertions)]
             {
@@ -185,7 +196,7 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
             // Safety. //TODO
             paste::paste! {
                 let ($([<$param:lower _v>],)*) = unsafe {
-                    $(let [<$param:lower _v>] = $param::from_storage(storage) as *mut _;)*
+                    $(let [<$param:lower _v>] = $param::from_storage(app) as *mut _;)*
                     ($(&mut *[<$param:lower _v>],)*)
                 };
                 (self)($([<$param:lower _v>],)*);
