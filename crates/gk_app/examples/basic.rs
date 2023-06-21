@@ -10,6 +10,9 @@ fn main() {
     AppBuilder::init_with(|| Ok(State {}))
         .set_runner(runner)
         .add_plugin(Manager::new())
+        .set_event(|state: &mut State| {
+            println!("from event callback");
+        })
         .run()
         .unwrap();
 }

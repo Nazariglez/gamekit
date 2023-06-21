@@ -6,6 +6,7 @@ pub struct App<S: GKState> {
     storage: Storage,
     events: Vec<()>,
     pub state: S,
+    event_handler: Box<dyn FnMut(&mut App<S>)>,
 }
 
 impl<S: GKState> App<S> {
@@ -15,6 +16,7 @@ impl<S: GKState> App<S> {
 
     pub fn tick(&mut self) {
         println!("TICK!!");
+        // (self.event_handler)(self);
     }
 }
 
@@ -22,6 +24,7 @@ pub struct AppBuilder<S: GKState + 'static> {
     storage: Storage,
     runner: Box<dyn FnMut(App<S>) -> Result<(), String>>,
     setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>>,
+    event_handler: Box<dyn FnMut(&mut App<S>)>,
 }
 
 impl GKState for () {}
@@ -41,12 +44,22 @@ impl<S: GKState> AppBuilder<S> {
         let runner = Box::new(default_runner);
         let setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>> =
             Box::new(|storage| handler.call(storage));
+        let event_handler: Box<dyn FnMut(&mut App<S>)> = Box::new(|app| {});
 
         Self {
             storage,
             runner,
             setup_handler,
+            event_handler,
         }
+    }
+
+    pub fn set_event<T, H>(mut self, mut handler: H) -> Self
+    where
+        H: Handler<S, T> + 'static,
+    {
+        self.event_handler = Box::new(move |app| handler.call(app));
+        self
     }
 
     pub fn set_runner<F: FnMut(App<S>) -> Result<(), String> + 'static>(
@@ -67,6 +80,7 @@ impl<S: GKState> AppBuilder<S> {
             mut storage,
             mut runner,
             setup_handler,
+            event_handler,
             ..
         } = self;
         // dispatch(&mut storage, |manager: &mut WM| {
@@ -90,6 +104,7 @@ impl<S: GKState> AppBuilder<S> {
             storage,
             events: vec![],
             state,
+            event_handler,
         };
 
         (runner)(app)?;
@@ -150,7 +165,7 @@ impl<S: GKState, T: Plugin + 'static> FromAppStorage<S> for T {
 }
 
 pub trait Handler<S: GKState, T> {
-    fn call(self, app: &mut App<S>);
+    fn call(&mut self, app: &mut App<S>);
 }
 
 pub trait SetupHandler<S, T> {
@@ -175,7 +190,7 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
         Fun: FnMut($(&mut $param),*),
         $($param:FromAppStorage<S> + 'static),*
     {
-        fn call(mut self, app: &mut App<S>) {
+        fn call(&mut self, app: &mut App<S>) {
             // Look for duplicated parameters and panic
             #[cfg(debug_assertions)]
             {
