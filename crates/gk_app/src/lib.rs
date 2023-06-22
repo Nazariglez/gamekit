@@ -3,28 +3,27 @@ use std::marker::PhantomData;
 use std::ops::Rem;
 
 pub struct App<S: GKState> {
-    storage: Storage,
+    storage: Storage<S>,
     events: Vec<()>,
-    pub state: S,
-    event_handler: Box<dyn FnMut(&mut App<S>)>,
+    event_handler: Box<dyn FnMut(&mut Storage<S>)>,
 }
 
 impl<S: GKState> App<S> {
     pub fn get_mut_plugin<T: 'static>(&mut self) -> Option<&mut T> {
-        self.storage.get_mut()
+        self.storage.plugins.get_mut()
     }
 
     pub fn tick(&mut self) {
         println!("TICK!!");
-        // (self.event_handler)(self);
+        (self.event_handler)(&mut self.storage);
     }
 }
 
 pub struct AppBuilder<S: GKState + 'static> {
-    storage: Storage,
+    plugins: Plugins,
     runner: Box<dyn FnMut(App<S>) -> Result<(), String>>,
-    setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>>,
-    event_handler: Box<dyn FnMut(&mut App<S>)>,
+    setup_handler: Box<dyn FnOnce(&mut Plugins) -> Result<S, String>>,
+    event_handler: Box<dyn FnMut(&mut Storage<S>)>,
 }
 
 impl GKState for () {}
@@ -40,14 +39,14 @@ impl<S: GKState> AppBuilder<S> {
     where
         H: SetupHandler<S, T> + 'static,
     {
-        let mut storage = Storage::new();
+        let mut plugins = Plugins::new();
         let runner = Box::new(default_runner);
-        let setup_handler: Box<dyn FnOnce(&mut Storage) -> Result<S, String>> =
-            Box::new(|storage| handler.call(storage));
-        let event_handler: Box<dyn FnMut(&mut App<S>)> = Box::new(|app| {});
+        let setup_handler: Box<dyn FnOnce(&mut Plugins) -> Result<S, String>> =
+            Box::new(|plugins| handler.call(plugins));
+        let event_handler: Box<dyn FnMut(&mut Storage<S>)> = Box::new(|_| {});
 
         Self {
-            storage,
+            plugins,
             runner,
             setup_handler,
             event_handler,
@@ -58,7 +57,7 @@ impl<S: GKState> AppBuilder<S> {
     where
         H: Handler<S, T> + 'static,
     {
-        self.event_handler = Box::new(move |app| handler.call(app));
+        self.event_handler = Box::new(move |storage| handler.call(storage));
         self
     }
 
@@ -71,39 +70,25 @@ impl<S: GKState> AppBuilder<S> {
     }
 
     pub fn add_plugin<T: 'static>(mut self, plugin: T) -> Self {
-        self.storage.add(plugin);
+        self.plugins.add(plugin);
         self
     }
 
     pub fn run(mut self) -> Result<(), String> {
         let Self {
-            mut storage,
+            mut plugins,
             mut runner,
             setup_handler,
             event_handler,
             ..
         } = self;
-        // dispatch(&mut storage, |manager: &mut WM| {
-        //     println!("yep!");
-        //     // manager.create().unwrap();
-        // });
-        //
-        // let mut count = 0;
-        // let runner = manager.create_runner(move |mut manager| {
-        //     if count < 3000 && count.rem(1000) == 0 {
-        //         manager.create();
-        //     }
-        //
-        //     count += 1;
-        // });
-        // self.manager.run(|| {});
 
-        let state = (setup_handler)(&mut storage)?;
+        let state = (setup_handler)(&mut plugins)?;
+        let storage = Storage { plugins, state };
 
         let app = App {
             storage,
             events: vec![],
-            state,
             event_handler,
         };
 
@@ -121,11 +106,16 @@ fn default_runner<S: GKState>(_app: App<S>) -> Result<(), String> {
 //---
 use anymap::AnyMap;
 
-pub struct Storage {
+pub struct Storage<S: GKState> {
+    pub state: S,
+    pub plugins: Plugins,
+}
+
+pub struct Plugins {
     map: AnyMap,
 }
 
-impl Storage {
+impl Plugins {
     fn new() -> Self {
         Self { map: AnyMap::new() }
     }
@@ -141,12 +131,12 @@ impl Storage {
     }
 }
 
-pub trait FromStorage {
-    fn from_storage(storage: &mut Storage) -> &mut Self;
+pub trait FromPlugins {
+    fn from_plugins(storage: &mut Plugins) -> &mut Self;
 }
 
-impl<T: 'static> FromStorage for T {
-    fn from_storage(storage: &mut Storage) -> &mut Self {
+impl<T: 'static> FromPlugins for T {
+    fn from_plugins(storage: &mut Plugins) -> &mut Self {
         storage.map.get_mut::<Self>().unwrap()
     }
 }
@@ -154,30 +144,23 @@ impl<T: 'static> FromStorage for T {
 pub trait Plugin {}
 pub trait GKState {}
 
-pub trait FromAppStorage<S: GKState> {
-    fn from_storage(app: &mut App<S>) -> &mut Self;
+pub trait FromStorage<S: GKState> {
+    fn from_storage<'gk_state>(app: &'gk_state mut Storage<S>) -> &'gk_state mut Self;
 }
 
-impl<S: GKState, T: Plugin + 'static> FromAppStorage<S> for T {
-    fn from_storage(app: &mut App<S>) -> &mut Self {
-        app.storage.map.get_mut::<Self>().unwrap()
+impl<S: GKState, T: Plugin + 'static> FromStorage<S> for T {
+    fn from_storage(storage: &mut Storage<S>) -> &mut Self {
+        storage.plugins.map.get_mut::<Self>().unwrap()
     }
 }
 
 pub trait Handler<S: GKState, T> {
-    fn call(&mut self, app: &mut App<S>);
+    fn call(&mut self, app: &mut Storage<S>);
 }
 
 pub trait SetupHandler<S, T> {
-    fn call(self, storage: &mut Storage) -> Result<S, String>;
+    fn call(self, storage: &mut Plugins) -> Result<S, String>;
 }
-
-// pub fn dispatch<S, T, H>(storage: &mut Storage, handler: H)
-// where
-//     H: Handler<S, T>,
-// {
-//     handler.call(storage);
-// }
 
 // Safe for notan because the map will never change
 // once it's created it will not have new register or removed ones
@@ -188,9 +171,9 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
     where
         S: GKState + 'static,
         Fun: FnMut($(&mut $param),*),
-        $($param:FromAppStorage<S> + 'static),*
+        $($param:FromStorage<S> + 'static),*
     {
-        fn call(&mut self, app: &mut App<S>) {
+        fn call(&mut self, storage: &mut Storage<S>) {
             // Look for duplicated parameters and panic
             #[cfg(debug_assertions)]
             {
@@ -211,7 +194,7 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
             // Safety. //TODO
             paste::paste! {
                 let ($([<$param:lower _v>],)*) = unsafe {
-                    $(let [<$param:lower _v>] = $param::from_storage(app) as *mut _;)*
+                    $(let [<$param:lower _v>] = $param::from_storage(storage) as *mut _;)*
                     ($(&mut *[<$param:lower _v>],)*)
                 };
                 (self)($([<$param:lower _v>],)*);
@@ -242,10 +225,10 @@ macro_rules! fn_setup_handler ({ $($param:ident)* } => {
     impl<S, Fun, $($param,)*> SetupHandler<S, ($($param,)*)> for Fun
     where
         S: 'static,
-        Fun: FnMut($(&mut $param),*) -> Result<S, String>,
-        $($param:FromStorage + 'static),*
+        Fun: FnOnce($(&mut $param),*) -> Result<S, String>,
+        $($param:FromPlugins + 'static),*
     {
-        fn call(mut self, storage: &mut Storage) -> Result<S, String> {
+        fn call(mut self, plugins: &mut Plugins) -> Result<S, String> {
             // Look for duplicated parameters and panic
             #[cfg(debug_assertions)]
             {
@@ -266,7 +249,7 @@ macro_rules! fn_setup_handler ({ $($param:ident)* } => {
             // Safety. //TODO
             paste::paste! {
                 let ($([<$param:lower _v>],)*) = unsafe {
-                    $(let [<$param:lower _v>] = $param::from_storage(storage) as *mut _;)*
+                    $(let [<$param:lower _v>] = $param::from_plugins(plugins) as *mut _;)*
                     ($(&mut *[<$param:lower _v>],)*)
                 };
                 return (self)($([<$param:lower _v>],)*);
