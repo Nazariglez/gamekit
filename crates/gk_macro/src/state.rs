@@ -10,7 +10,7 @@ pub(crate) fn impl_state_derive(ast: &syn::DeriveInput) -> TokenStream {
     let gen = quote! {
         impl #impl_generics GKState for #name #ty_generics #where_clause {}
         impl #impl_generics FromStorage<#name #ty_generics> for #name #ty_generics #where_clause {
-            fn from_storage<'gk_state>(storage: &'gk_state mut Storage<#name #ty_generics>) -> &'gk_state mut Self {
+            fn from_storage(storage: &mut Storage<#name #ty_generics>) -> &mut Self {
                 &mut storage.state
             }
         }
