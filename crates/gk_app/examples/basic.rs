@@ -4,9 +4,9 @@ use gk_macro::AppState;
 use gk_winit::{runner, Manager, Window};
 
 #[derive(AppState)]
-struct State<T> {
+struct State<'a> {
     id: i32,
-    i: T,
+    i: &'a i32,
 }
 
 struct PP {
@@ -17,7 +17,7 @@ impl Plugin for PP {}
 
 fn main() {
     let b = 1090;
-    let s = State { id: 9999, i: b };
+    let s = State { id: 9999, i: &b };
     AppBuilder::init_with(|| Ok(s))
         .set_runner(runner)
         .add_plugin(PP { id: 1234 })
