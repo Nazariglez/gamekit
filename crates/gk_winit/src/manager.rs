@@ -1,4 +1,4 @@
-use crate::runner::event_loop;
+use crate::event_loop::EventLoopPtr;
 use gk_app::App;
 use gk_core::{GKWindow, GKWindowId, GKWindowManager};
 use std::collections::HashMap;
@@ -10,15 +10,15 @@ use winit::window::Window as WWindow;
 
 pub struct Manager {
     pub windows: HashMap<GKWindowId, Window>,
-    pub event_loop_ptr: Option<*const EventLoopWindowTarget<()>>,
-    pub request_exit: bool,
+    pub(crate) event_loop: EventLoopPtr,
+    pub(crate) request_exit: bool,
 }
 
 impl Manager {
     pub fn new() -> Self {
         Self {
             windows: HashMap::default(),
-            event_loop_ptr: None,
+            event_loop: EventLoopPtr::new(),
             request_exit: false,
         }
     }
@@ -27,7 +27,7 @@ impl Manager {
 impl GKWindowManager<Window> for Manager {
     fn create(&mut self) -> Result<GKWindowId, String> {
         // SAFETY: if it's `Some` means that we're inside the event's loop and this is available
-        let event_loop = unsafe { event_loop(self) };
+        let event_loop = self.event_loop.inner();
         match event_loop {
             Some(event_loop) => {
                 let raw = WWindow::new(event_loop).map_err(|err| err.to_string())?;
