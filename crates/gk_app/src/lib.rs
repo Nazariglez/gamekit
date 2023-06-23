@@ -2,10 +2,14 @@ use gk_core::{GKWindow, GKWindowId, GKWindowManager};
 use std::marker::PhantomData;
 use std::ops::Rem;
 
+type RunnerHandlerFn<S> = dyn FnMut(App<S>) -> Result<(), String>;
+type EventHandlerFn<S> = dyn FnMut(&mut Storage<S>);
+type SetupHandlerFn<S> = dyn FnOnce(&mut Plugins) -> Result<S, String>;
+
 pub struct App<S: GKState> {
     storage: Storage<S>,
     events: Vec<()>,
-    event_handler: Box<dyn FnMut(&mut Storage<S>)>,
+    event_handler: Box<EventHandlerFn<S>>,
 }
 
 impl<S: GKState> App<S> {
@@ -14,16 +18,15 @@ impl<S: GKState> App<S> {
     }
 
     pub fn tick(&mut self) {
-        println!("TICK!!");
         (self.event_handler)(&mut self.storage);
     }
 }
 
 pub struct AppBuilder<S: GKState + 'static> {
     plugins: Plugins,
-    runner: Box<dyn FnMut(App<S>) -> Result<(), String>>,
-    setup_handler: Box<dyn FnOnce(&mut Plugins) -> Result<S, String>>,
-    event_handler: Box<dyn FnMut(&mut Storage<S>)>,
+    runner: Box<RunnerHandlerFn<S>>,
+    setup_handler: Box<SetupHandlerFn<S>>,
+    event_handler: Box<EventHandlerFn<S>>,
 }
 
 impl GKState for () {}
@@ -41,9 +44,8 @@ impl<S: GKState> AppBuilder<S> {
     {
         let mut plugins = Plugins::new();
         let runner = Box::new(default_runner);
-        let setup_handler: Box<dyn FnOnce(&mut Plugins) -> Result<S, String>> =
-            Box::new(|plugins| handler.call(plugins));
-        let event_handler: Box<dyn FnMut(&mut Storage<S>)> = Box::new(|_| {});
+        let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
+        let event_handler: Box<EventHandlerFn<S>> = Box::new(|_| {});
 
         Self {
             plugins,
@@ -122,11 +124,9 @@ impl Plugins {
 
     fn add<T: 'static>(&mut self, plugin: T) {
         self.map.insert(plugin);
-        println!("add {:?} -> {:?}", std::any::TypeId::of::<T>(), self.map);
     }
 
     fn get_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        println!("get {:?} -> {:?}", std::any::TypeId::of::<T>(), self.map);
         self.map.get_mut()
     }
 }
@@ -183,7 +183,6 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
 
                 $(
 
-                println!("{:?}", TypeId::of::<$param>());
                     if !h_set.insert(TypeId::of::<$param>()) {
                         panic!("Application handlers cannot contains duplicated parameters.");
                     }
@@ -238,7 +237,6 @@ macro_rules! fn_setup_handler ({ $($param:ident)* } => {
 
                 $(
 
-                println!("{:?}", TypeId::of::<$param>());
                     if !h_set.insert(TypeId::of::<$param>()) {
                         panic!("Application handlers cannot contains duplicated parameters.");
                     }
