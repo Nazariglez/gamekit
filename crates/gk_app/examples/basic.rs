@@ -31,6 +31,6 @@ fn main() {
     .set_event(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
     })
-    .run()
+    .build()
     .unwrap();
 }

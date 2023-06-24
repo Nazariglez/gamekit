@@ -1,3 +1,5 @@
+mod config;
+
 use gk_core::{GKWindow, GKWindowId, GKWindowManager};
 use std::marker::PhantomData;
 use std::ops::Rem;
@@ -27,6 +29,7 @@ pub struct AppBuilder<S: GKState + 'static> {
     runner: Box<RunnerHandlerFn<S>>,
     setup_handler: Box<SetupHandlerFn<S>>,
     event_handler: Box<EventHandlerFn<S>>,
+    late_configs: Option<IndexMap<std::any::TypeId, Box<dyn BuildConfig<S>>>>,
 }
 
 impl GKState for () {}
@@ -46,13 +49,31 @@ impl<S: GKState> AppBuilder<S> {
         let runner = Box::new(default_runner);
         let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
         let event_handler: Box<EventHandlerFn<S>> = Box::new(|_| {});
+        let late_configs = Some(Default::default());
 
         Self {
             plugins,
             runner,
             setup_handler,
             event_handler,
+            late_configs,
         }
+    }
+
+    pub fn add_config<C>(mut self, config: C) -> Self
+    where
+        C: BuildConfig<S> + 'static,
+    {
+        if config.late_evaluation() {
+            if let Some(late_configs) = &mut self.late_configs {
+                let typ = std::any::TypeId::of::<C>();
+                late_configs.insert(typ, Box::new(config));
+            }
+
+            return self;
+        }
+
+        config.apply(self)
     }
 
     pub fn set_event<T, H>(mut self, mut handler: H) -> Self
@@ -76,7 +97,13 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn run(mut self) -> Result<(), String> {
+    pub fn build(mut self) -> Result<(), String> {
+        if let Some(late_configs) = self.late_configs.take() {
+            for (_, config) in late_configs {
+                self = config.apply(self);
+            }
+        }
+
         let Self {
             mut plugins,
             mut runner,
@@ -106,7 +133,9 @@ fn default_runner<S: GKState>(_app: App<S>) -> Result<(), String> {
 }
 
 //---
+use crate::config::BuildConfig;
 use anymap::AnyMap;
+use indexmap::IndexMap;
 
 pub struct Storage<S: GKState> {
     pub state: S,
