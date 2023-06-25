@@ -1,7 +1,6 @@
-use gk_app::{App, AppBuilder, FromStorage, GKState, Plugin, Plugins, Storage};
+use gk_app::prelude::*;
 use gk_core::{GKWindowId, GKWindowManager};
-use gk_macro::AppState;
-use gk_winit::{runner, Manager, Window};
+use gk_winit::{runner, Manager, Window, WinitConfig};
 
 #[derive(AppState)]
 struct State {
@@ -25,9 +24,9 @@ fn main() {
             win_id,
         })
     })
-    .set_runner(runner)
+    .add_config(WinitConfig)
+    .unwrap()
     .add_plugin(PP { id: 1234 })
-    .add_plugin(Manager::new())
     .set_event(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
     })

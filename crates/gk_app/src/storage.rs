@@ -1,0 +1,46 @@
+use crate::{GKState, Plugin};
+use anymap::AnyMap;
+use indexmap::IndexMap;
+
+pub struct Storage<S: GKState> {
+    pub state: S,
+    pub plugins: Plugins,
+}
+
+pub struct Plugins {
+    map: AnyMap,
+}
+
+impl Plugins {
+    pub(crate) fn new() -> Self {
+        Self { map: AnyMap::new() }
+    }
+
+    pub(crate) fn add<T: 'static>(&mut self, plugin: T) {
+        self.map.insert(plugin);
+    }
+
+    pub(crate) fn get_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        self.map.get_mut()
+    }
+}
+
+pub trait FromPlugins {
+    fn from_plugins(storage: &mut Plugins) -> &mut Self;
+}
+
+impl<T: 'static> FromPlugins for T {
+    fn from_plugins(storage: &mut Plugins) -> &mut Self {
+        storage.map.get_mut::<Self>().unwrap()
+    }
+}
+
+pub trait FromStorage<S: GKState> {
+    fn from_storage<'gk_state>(app: &'gk_state mut Storage<S>) -> &'gk_state mut Self;
+}
+
+impl<S: GKState, T: Plugin + 'static> FromStorage<S> for T {
+    fn from_storage(storage: &mut Storage<S>) -> &mut Self {
+        storage.plugins.map.get_mut::<Self>().unwrap()
+    }
+}
