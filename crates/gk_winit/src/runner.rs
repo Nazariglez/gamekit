@@ -5,11 +5,16 @@ use winit::event::{Event, WindowEvent};
 use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 
 pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
-    let manager = app.get_mut_plugin::<Manager>().unwrap();
-    // .ok_or_else(|| Err("Cannot find Winit's Window Manager".to_string()))?;
+    let manager = app
+        .get_mut_plugin::<Manager>()
+        .ok_or_else(|| "Cannot find Winit's Window Manager".to_string())?;
 
-    let event_loop = manager.event_loop.take().unwrap();
-    // .ok_or_else(|| Err("Something went wrong adquiring the Winit's EventLoop.".to_string()))?;
+    let event_loop = manager
+        .event_loop
+        .take()
+        .ok_or_else(|| "Something went wrong acquiring the Winit's EventLoop.".to_string())?;
+
+    app.initialize();
 
     event_loop.run(move |evt, event_loop, control_flow| {
         {

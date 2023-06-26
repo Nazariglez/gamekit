@@ -1,9 +1,11 @@
 use crate::app::App;
 use crate::config::BuildConfig;
-use crate::handlers::{EventHandlerFn, Handler, RunnerHandlerFn, SetupHandler, SetupHandlerFn};
+use crate::handlers::{
+    EventHandlerFn, Handler, PluginHandler, RunnerHandlerFn, SetupHandler, SetupHandlerFn,
+};
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
-use crate::GKState;
+use crate::{GKState, Plugin};
 use indexmap::IndexMap;
 
 pub struct AppBuilder<S: GKState + 'static> {
@@ -74,9 +76,19 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn add_plugin<T: 'static>(mut self, plugin: T) -> Self {
+    pub fn add_plugin<T: Plugin + 'static>(mut self, plugin: T) -> Self {
         self.plugins.add(plugin);
         self
+    }
+
+    pub fn add_plugin_with<T, P, H>(mut self, mut handler: H) -> Result<Self, String>
+    where
+        T: 'static,
+        P: Plugin + 'static,
+        H: PluginHandler<P, T> + 'static,
+    {
+        let plugin = handler.call(&mut self.plugins)?;
+        Ok(self.add_plugin(plugin))
     }
 
     pub fn build(mut self) -> Result<(), String> {
@@ -101,6 +113,7 @@ impl<S: GKState> AppBuilder<S> {
             storage,
             events: vec![],
             event_handler,
+            initialized: false,
         };
 
         (runner)(app)?;

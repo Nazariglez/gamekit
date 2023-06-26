@@ -1,5 +1,5 @@
 use crate::event_loop::EventLoopPtr;
-use gk_app::App;
+use gk_app::{App, Plugin};
 use gk_core::{GKWindow, GKWindowId, GKWindowManager};
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -13,6 +13,8 @@ pub struct Manager {
     pub(crate) event_loop: EventLoopPtr,
     pub(crate) request_exit: bool,
 }
+
+impl Plugin for Manager {}
 
 impl Manager {
     pub fn new() -> Self {
