@@ -1,6 +1,6 @@
 use crate::event_loop::EventLoopPtr;
 use gk_app::{App, Plugin};
-use gk_core::{GKWindow, GKWindowId, GKWindowManager};
+use gk_core::window::{GKWindow, GKWindowId, GKWindowManager};
 use std::collections::HashMap;
 use std::ops::Deref;
 use winit::event::{Event, WindowEvent};

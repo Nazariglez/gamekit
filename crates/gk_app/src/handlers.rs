@@ -1,12 +1,14 @@
 use crate::storage::{FromPlugins, FromStorage, Plugins, Storage};
 use crate::{App, GKState, Plugin};
+use gk_core::events::Event;
 
 pub(crate) type RunnerHandlerFn<S> = dyn FnMut(App<S>) -> Result<(), String>;
-pub(crate) type EventHandlerFn<S> = dyn FnMut(&mut Storage<S>);
 pub(crate) type SetupHandlerFn<S> = dyn FnOnce(&mut Plugins) -> Result<S, String>;
 pub(crate) type PluginHandlerFn<P> = dyn FnOnce(&mut Plugins) -> Result<P, String>;
+pub(crate) type UpdateHandlerFn<S> = dyn FnMut(&mut Storage<S>);
+pub(crate) type EventHandlerFn<S> = dyn FnMut(&mut Storage<S>, Event);
 
-/// Represent a event's handler
+/// Represent an update's handler
 /// It allow to use as parameter the App's State
 /// or any App's plugin
 pub trait Handler<S: GKState, T> {
@@ -180,3 +182,62 @@ fn_plugin_handler! { A B C D E F G }
 fn_plugin_handler! { A B C D E F G H }
 fn_plugin_handler! { A B C D E F G H I }
 fn_plugin_handler! { A B C D E F G H I J }
+
+// /// Represent a event's handler
+// /// It allow to use as parameter the App's State
+// /// or any App's plugin
+// pub trait EventHandler<S: GKState, T> {
+//     fn call(&mut self, app: &mut Storage<S>, evt: Event);
+// }
+//
+// // Safe for notan because the map will never change
+// // once it's created it will not have new register or removed ones
+// // Doing this we got interior mutability for the components but not the map
+// // because is never exposes
+// macro_rules! fn_event_handler ({ $($param:ident)* } => {
+//     impl<S, Fun, $($param,)*> EventHandler<S, ($($param,)*)> for Fun
+//     where
+//         S: GKState + 'static,
+//         Fun: FnMut($(&mut $param),*),
+//         $($param:FromStorage<S> + 'static),*
+//     {
+//         fn call(&mut self, storage: &mut Storage<S>) {
+//             // Look for duplicated parameters and panic
+//             #[cfg(debug_assertions)]
+//             {
+//                 use std::collections::HashSet;
+//                 use std::any::TypeId;
+//                 let mut h_set:HashSet<TypeId> = Default::default();
+//
+//                 $(
+//
+//                     if !h_set.insert(TypeId::of::<$param>()) {
+//                         panic!("Application handlers cannot contains duplicated parameters.");
+//                     }
+//                 )*
+//             }
+//
+//
+//             // Safety. //TODO
+//             paste::paste! {
+//                 let ($([<$param:lower _v>],)*) = unsafe {
+//                     $(let [<$param:lower _v>] = $param::from_storage(storage) as *mut _;)*
+//                     ($(&mut *[<$param:lower _v>],)*)
+//                 };
+//                 (self)($([<$param:lower _v>],)*);
+//             }
+//         }
+//     }
+// });
+//
+// fn_event_handler! {}
+// fn_event_handler! { A }
+// fn_event_handler! { A B }
+// fn_event_handler! { A B C }
+// fn_event_handler! { A B C D }
+// fn_event_handler! { A B C D E }
+// fn_event_handler! { A B C D E F }
+// fn_event_handler! { A B C D E F G }
+// fn_event_handler! { A B C D E F G H }
+// fn_event_handler! { A B C D E F G H I }
+// fn_event_handler! { A B C D E F G H I J }

@@ -1,5 +1,2 @@
-#[cfg(feature = "window")]
-mod window;
-
-#[cfg(feature = "window")]
-pub use window::*;
+pub mod events;
+pub mod window;

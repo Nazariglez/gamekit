@@ -1,5 +1,6 @@
 use crate::{GKState, Plugin};
 use anymap::AnyMap;
+use gk_core::events::Event;
 use indexmap::IndexMap;
 
 pub struct Storage<S: GKState> {
@@ -44,3 +45,19 @@ impl<S: GKState, T: Plugin + 'static> FromStorage<S> for T {
         storage.plugins.map.get_mut::<Self>().unwrap()
     }
 }
+//
+// pub trait FromStorageEvent<S: GKState> {
+//     fn from_storage<'gk_state>(app: &'gk_state mut Storage<S>, event: Event) -> &'gk_state mut Self;
+// }
+//
+// impl<S: GKState, T: Plugin + 'static> FromStorageEvent<S> for T {
+//     fn from_storage(storage: &mut Storage<S>, _event: Event) -> &mut Self {
+//         storage.plugins.map.get_mut::<Self>().unwrap()
+//     }
+// }
+//
+// impl<S: GKState> FromStorageEvent<S> for Event {
+//     fn from_storage(storage: &mut Storage<S>, event: Event) -> &mut Self {
+//
+//     }
+// }

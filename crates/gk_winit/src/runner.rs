@@ -1,6 +1,6 @@
 use crate::Manager;
 use gk_app::{App, GKState};
-use gk_core::GKWindowId;
+use gk_core::window::GKWindowId;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 

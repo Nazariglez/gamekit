@@ -1,5 +1,5 @@
 use gk_app::prelude::*;
-use gk_core::{GKWindowId, GKWindowManager};
+use gk_core::window::{GKWindowId, GKWindowManager};
 use gk_winit::{runner, Manager, Window, WinitConfig};
 
 #[derive(AppState)]
@@ -27,7 +27,7 @@ fn main() {
     .add_config(WinitConfig)
     .unwrap()
     .add_plugin(PP { id: 1234 })
-    .set_event(|state: &mut State, pp: &mut PP| {
+    .on_event(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
     })
     .build()
