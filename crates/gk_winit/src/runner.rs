@@ -6,11 +6,9 @@ use winit::event::{Event, WindowEvent};
 use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 
 pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
-    let manager = app
+    let event_loop = app
         .get_mut_plugin::<Manager>()
-        .ok_or_else(|| "Cannot find Winit's Window Manager".to_string())?;
-
-    let event_loop = manager
+        .ok_or_else(|| "Cannot find Winit's Window Manager".to_string())?
         .event_loop
         .take()
         .ok_or_else(|| "Something went wrong acquiring the Winit's EventLoop.".to_string())?;
@@ -34,9 +32,10 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                 window_id,
                 event: WindowEvent::CloseRequested,
             } => {
-                let manager = app.get_mut_plugin::<Manager>().unwrap();
                 let raw_id: u64 = window_id.into();
                 let id: GKWindowId = raw_id.into();
+
+                let manager = app.get_mut_plugin::<Manager>().unwrap();
                 manager.windows.remove(&id);
 
                 if manager.windows.is_empty() {
