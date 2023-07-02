@@ -165,7 +165,6 @@ impl<S: GKState> AppBuilder<S> {
 
         let mut app = App {
             storage,
-            events: Default::default(),
             event_handler,
             update_handler,
             ee_handler,
@@ -175,7 +174,7 @@ impl<S: GKState> AppBuilder<S> {
         app.event(Event::Close);
         app.custom_event(SuperEvent);
 
-        // (runner)(app)?;
+        (runner)(app)?;
 
         Ok(())
     }
