@@ -2,6 +2,8 @@ use std::collections::VecDeque;
 
 use crate::window::GKWindowId;
 
+pub struct SuperEvent;
+
 /// Window's event
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

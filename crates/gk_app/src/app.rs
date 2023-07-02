@@ -1,13 +1,18 @@
-use crate::handlers::{EventHandlerFn, UpdateHandlerFn};
+use crate::handlers::{
+    CustomEventHandler, CustomEventHandlerFn, EventHandlerFn, UpdatCustomEventHandlerFn,
+};
 use crate::storage::Storage;
 use crate::GKState;
 use gk_core::events::{Event, EventIterator};
+use std::any::{Any, TypeId};
+use std::collections::HashMap;
 
-pub struct App<S: GKState> {
+pub struct App<S: GKState + 'static> {
     pub(crate) storage: Storage<S>,
     pub(crate) events: EventIterator,
     pub(crate) event_handler: Box<EventHandlerFn<S>>,
-    pub(crate) update_handler: Box<UpdateHandlerFn<S>>,
+    pub(crate) ee_handler: HashMap<TypeId, Box<dyn Any>>,
+    pub(crate) update_handler: Box<UpdatCustomEventHandlerFn<S>>,
     pub(crate) initialized: bool,
 }
 
@@ -31,6 +36,17 @@ impl<S: GKState> App<S> {
 
     pub fn event(&mut self, evt: Event) {
         (self.event_handler)(&mut self.storage, evt);
+    }
+
+    pub fn custom_event<E: 'static>(&mut self, evt: E) {
+        let k = TypeId::of::<E>();
+        let opt_cb = self
+            .ee_handler
+            .get_mut(&TypeId::of::<E>())
+            .and_then(|cb| cb.downcast_mut::<Box<CustomEventHandlerFn<E, S>>>());
+        if let Some(cb) = opt_cb {
+            cb(&mut self.storage, evt);
+        }
     }
 
     pub fn tick(&mut self) {
