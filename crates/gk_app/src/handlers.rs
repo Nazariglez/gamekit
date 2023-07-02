@@ -5,7 +5,7 @@ use gk_core::events::Event;
 pub(crate) type RunnerHandlerFn<S> = dyn FnMut(App<S>) -> Result<(), String>;
 pub(crate) type SetupHandlerFn<S> = dyn FnOnce(&mut Plugins) -> Result<S, String>;
 pub(crate) type PluginHandlerFn<P> = dyn FnOnce(&mut Plugins) -> Result<P, String>;
-pub(crate) type UpdatCustomEventHandlerFn<S> = dyn FnMut(&mut Storage<S>);
+pub(crate) type UpdateHandlerFn<S> = dyn FnMut(&mut Storage<S>);
 pub(crate) type EventHandlerFn<S> = dyn FnMut(&mut Storage<S>, Event);
 pub(crate) type CustomEventHandlerFn<E, S> = dyn FnMut(&mut Storage<S>, E);
 

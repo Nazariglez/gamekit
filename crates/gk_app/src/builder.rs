@@ -2,7 +2,7 @@ use crate::app::App;
 use crate::config::BuildConfig;
 use crate::handlers::{
     CustomEventHandler, CustomEventHandlerFn, EventHandler, EventHandlerFn, Handler, PluginHandler,
-    RunnerHandlerFn, SetupHandler, SetupHandlerFn, UpdatCustomEventHandlerFn,
+    RunnerHandlerFn, SetupHandler, SetupHandlerFn, UpdateHandlerFn,
 };
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
@@ -16,11 +16,11 @@ pub struct AppBuilder<S: GKState + 'static> {
     plugins: Plugins,
     runner: Box<RunnerHandlerFn<S>>,
     setup_handler: Box<SetupHandlerFn<S>>,
-    init_handler: Box<UpdatCustomEventHandlerFn<S>>,
-    update_handler: Box<UpdatCustomEventHandlerFn<S>>,
+    init_handler: Box<UpdateHandlerFn<S>>,
+    update_handler: Box<UpdateHandlerFn<S>>,
     event_handler: Box<EventHandlerFn<S>>,
     ee_handler: HashMap<TypeId, Box<dyn Any>>,
-    close_handler: Box<UpdatCustomEventHandlerFn<S>>,
+    close_handler: Box<UpdateHandlerFn<S>>,
     late_configs: Option<IndexMap<TypeId, Box<dyn BuildConfig<S>>>>,
 }
 
@@ -40,10 +40,10 @@ impl<S: GKState> AppBuilder<S> {
         let mut plugins = Plugins::new();
         let runner = Box::new(default_runner);
         let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
-        let init_handler: Box<UpdatCustomEventHandlerFn<S>> = Box::new(|_| {});
+        let init_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
         let event_handler: Box<EventHandlerFn<S>> = Box::new(|_, _| {});
-        let update_handler: Box<UpdatCustomEventHandlerFn<S>> = Box::new(|_| {});
-        let close_handler: Box<UpdatCustomEventHandlerFn<S>> = Box::new(|_| {});
+        let update_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
+        let close_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
         let ee_handler = HashMap::default();
         let late_configs = Some(Default::default());
 

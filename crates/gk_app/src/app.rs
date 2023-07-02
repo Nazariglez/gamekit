@@ -1,6 +1,4 @@
-use crate::handlers::{
-    CustomEventHandler, CustomEventHandlerFn, EventHandlerFn, UpdatCustomEventHandlerFn,
-};
+use crate::handlers::{CustomEventHandler, CustomEventHandlerFn, EventHandlerFn, UpdateHandlerFn};
 use crate::storage::Storage;
 use crate::GKState;
 use gk_core::events::{Event, EventIterator};
@@ -12,7 +10,7 @@ pub struct App<S: GKState + 'static> {
     pub(crate) events: EventIterator,
     pub(crate) event_handler: Box<EventHandlerFn<S>>,
     pub(crate) ee_handler: HashMap<TypeId, Box<dyn Any>>,
-    pub(crate) update_handler: Box<UpdatCustomEventHandlerFn<S>>,
+    pub(crate) update_handler: Box<UpdateHandlerFn<S>>,
     pub(crate) initialized: bool,
 }
 
