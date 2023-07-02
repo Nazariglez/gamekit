@@ -27,8 +27,11 @@ fn main() {
     .add_config(WinitConfig)
     .unwrap()
     .add_plugin(PP { id: 1234 })
-    .on_event(|state: &mut State, pp: &mut PP| {
+    .on_update(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
+    })
+    .on_event(|evt, state: &mut State, pp: &mut PP| {
+        println!("Evt: {:?}", evt);
     })
     .build()
     .unwrap();

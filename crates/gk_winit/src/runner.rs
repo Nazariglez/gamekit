@@ -1,5 +1,6 @@
 use crate::Manager;
 use gk_app::{App, GKState};
+use gk_core::events::Event as GkEvent;
 use gk_core::window::GKWindowId;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{EventLoop, EventLoopWindowTarget};
@@ -17,20 +18,18 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
     app.initialize();
 
     event_loop.run(move |evt, event_loop, control_flow| {
-        {
-            let manager = app.get_mut_plugin::<Manager>().unwrap();
-            if manager.request_exit {
-                control_flow.set_exit();
-                return;
-            }
-
-            manager.event_loop.set(event_loop);
-        }
+        app.get_mut_plugin::<Manager>()
+            .unwrap()
+            .event_loop
+            .set(event_loop);
 
         control_flow.set_wait();
         println!("{evt:?}");
 
         match evt {
+            Event::LoopDestroyed => {
+                app.event(GkEvent::Close);
+            }
             Event::WindowEvent {
                 window_id,
                 event: WindowEvent::CloseRequested,
@@ -42,6 +41,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
 
                 if manager.windows.is_empty() {
                     manager.request_exit = true;
+                    println!("Close");
                 }
             }
             Event::MainEventsCleared => {
@@ -52,6 +52,9 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
 
         let manager = app.get_mut_plugin::<Manager>().unwrap();
         manager.event_loop.unset();
+        if manager.request_exit {
+            control_flow.set_exit();
+        }
     });
 
     Ok(())

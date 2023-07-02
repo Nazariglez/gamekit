@@ -1,7 +1,8 @@
 use crate::app::App;
 use crate::config::BuildConfig;
 use crate::handlers::{
-    Handler, PluginHandler, RunnerHandlerFn, SetupHandler, SetupHandlerFn, UpdateHandlerFn,
+    EventHandler, EventHandlerFn, Handler, PluginHandler, RunnerHandlerFn, SetupHandler,
+    SetupHandlerFn, UpdateHandlerFn,
 };
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
@@ -13,7 +14,8 @@ pub struct AppBuilder<S: GKState + 'static> {
     runner: Box<RunnerHandlerFn<S>>,
     setup_handler: Box<SetupHandlerFn<S>>,
     init_handler: Box<UpdateHandlerFn<S>>,
-    event_handler: Box<UpdateHandlerFn<S>>,
+    update_handler: Box<UpdateHandlerFn<S>>,
+    event_handler: Box<EventHandlerFn<S>>,
     close_handler: Box<UpdateHandlerFn<S>>,
     late_configs: Option<IndexMap<std::any::TypeId, Box<dyn BuildConfig<S>>>>,
 }
@@ -35,7 +37,8 @@ impl<S: GKState> AppBuilder<S> {
         let runner = Box::new(default_runner);
         let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
         let init_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
-        let event_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
+        let event_handler: Box<EventHandlerFn<S>> = Box::new(|_, _| {});
+        let update_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
         let close_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
         let late_configs = Some(Default::default());
 
@@ -45,6 +48,7 @@ impl<S: GKState> AppBuilder<S> {
             setup_handler,
             init_handler,
             event_handler,
+            update_handler,
             close_handler,
             late_configs,
         }
@@ -76,9 +80,17 @@ impl<S: GKState> AppBuilder<S> {
 
     pub fn on_event<T, H>(mut self, mut handler: H) -> Self
     where
+        H: EventHandler<S, T> + 'static,
+    {
+        self.event_handler = Box::new(move |storage, evt| handler.call(storage, evt));
+        self
+    }
+
+    pub fn on_update<T, H>(mut self, mut handler: H) -> Self
+    where
         H: Handler<S, T> + 'static,
     {
-        self.event_handler = Box::new(move |storage| handler.call(storage));
+        self.update_handler = Box::new(move |storage| handler.call(storage));
         self
     }
 
@@ -125,6 +137,7 @@ impl<S: GKState> AppBuilder<S> {
             mut runner,
             setup_handler,
             event_handler,
+            update_handler,
             ..
         } = self;
 
@@ -134,7 +147,8 @@ impl<S: GKState> AppBuilder<S> {
         let app = App {
             storage,
             events: Default::default(),
-            update_handler: event_handler,
+            event_handler,
+            update_handler,
             initialized: false,
         };
 

@@ -1,4 +1,4 @@
-use crate::handlers::UpdateHandlerFn;
+use crate::handlers::{EventHandlerFn, UpdateHandlerFn};
 use crate::storage::Storage;
 use crate::GKState;
 use gk_core::events::{Event, EventIterator};
@@ -6,6 +6,7 @@ use gk_core::events::{Event, EventIterator};
 pub struct App<S: GKState> {
     pub(crate) storage: Storage<S>,
     pub(crate) events: EventIterator,
+    pub(crate) event_handler: Box<EventHandlerFn<S>>,
     pub(crate) update_handler: Box<UpdateHandlerFn<S>>,
     pub(crate) initialized: bool,
 }
@@ -29,7 +30,7 @@ impl<S: GKState> App<S> {
     }
 
     pub fn event(&mut self, evt: Event) {
-        // todo
+        (self.event_handler)(&mut self.storage, evt);
     }
 
     pub fn tick(&mut self) {
