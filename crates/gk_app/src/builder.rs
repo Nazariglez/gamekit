@@ -1,7 +1,7 @@
 use crate::app::App;
 use crate::config::BuildConfig;
 use crate::handlers::{
-    CustomEventHandler, CustomEventHandlerFn, EventHandler, EventHandlerFn, Handler, PluginHandler,
+    EventHandler, EventHandlerFn, Handler, PluginHandler,
     RunnerHandlerFn, SetupHandler, SetupHandlerFn, UpdateHandlerFn,
 };
 use crate::runner::default_runner;
@@ -18,8 +18,7 @@ pub struct AppBuilder<S: GKState + 'static> {
     setup_handler: Box<SetupHandlerFn<S>>,
     init_handler: Box<UpdateHandlerFn<S>>,
     update_handler: Box<UpdateHandlerFn<S>>,
-    event_handler: Box<EventHandlerFn<S>>,
-    ee_handler: HashMap<TypeId, Box<dyn Any>>,
+    event_handler: HashMap<TypeId, Box<dyn Any>>,
     close_handler: Box<UpdateHandlerFn<S>>,
     late_configs: Option<IndexMap<TypeId, Box<dyn BuildConfig<S>>>>,
 }
@@ -41,10 +40,9 @@ impl<S: GKState> AppBuilder<S> {
         let runner = Box::new(default_runner);
         let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
         let init_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
-        let event_handler: Box<EventHandlerFn<S>> = Box::new(|_, _| {});
         let update_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
         let close_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
-        let ee_handler = HashMap::default();
+        let event_handler = HashMap::default();
         let late_configs = Some(Default::default());
 
         Self {
@@ -55,7 +53,6 @@ impl<S: GKState> AppBuilder<S> {
             event_handler,
             update_handler,
             close_handler,
-            ee_handler,
             late_configs,
         }
     }
@@ -84,14 +81,6 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn on_event<T, H>(mut self, mut handler: H) -> Self
-    where
-        H: EventHandler<S, T> + 'static,
-    {
-        self.event_handler = Box::new(move |storage, evt| handler.call(storage, evt));
-        self
-    }
-
     pub fn on_update<T, H>(mut self, mut handler: H) -> Self
     where
         H: Handler<S, T> + 'static,
@@ -108,15 +97,15 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn on_custom_event<E, T, H>(mut self, mut handler: H) -> Self
+    pub fn on_event<E, T, H>(mut self, mut handler: H) -> Self
     where
         E: 'static,
-        H: CustomEventHandler<E, S, T> + 'static,
+        H: EventHandler<E, S, T> + 'static,
     {
         let k = TypeId::of::<E>();
-        let ee: Box<CustomEventHandlerFn<E, S>> =
+        let cb: Box<EventHandlerFn<E, S>> =
             Box::new(move |s: &mut Storage<S>, e: E| handler.call(s, e));
-        self.ee_handler.insert(k, Box::new(ee));
+        self.event_handler.insert(k, Box::new(cb));
         self
     }
 
@@ -154,25 +143,25 @@ impl<S: GKState> AppBuilder<S> {
             mut plugins,
             mut runner,
             setup_handler,
-            event_handler,
             update_handler,
-            ee_handler,
+            event_handler,
+            close_handler,
+            init_handler,
             ..
         } = self;
 
         let state = (setup_handler)(&mut plugins)?;
         let storage = Storage { plugins, state };
 
-        let mut app = App {
+        let app = App {
             storage,
+            init_handler,
             event_handler,
             update_handler,
-            ee_handler,
+            close_handler,
             initialized: false,
+            closed: false,
         };
-
-        app.event(Event::Close);
-        app.custom_event(SuperEvent);
 
         (runner)(app)?;
 

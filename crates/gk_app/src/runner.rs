@@ -3,10 +3,10 @@ use crate::GKState;
 
 pub(crate) fn default_runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
     // Execute initialize callback
-    app.initialize();
+    app.init();
 
     // Execute event's callback
-    app.tick();
+    app.update();
 
     Ok(())
 }

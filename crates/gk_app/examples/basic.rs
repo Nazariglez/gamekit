@@ -31,10 +31,7 @@ fn main() {
     .on_update(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
     })
-    .on_event(|evt, state: &mut State, pp: &mut PP| {
-        println!("Evt: {:?}", evt);
-    })
-    .on_custom_event(|evt: SuperEvent| {
+    .on_event(|evt: SuperEvent| {
         println!("SuperEvent");
     })
     .build()

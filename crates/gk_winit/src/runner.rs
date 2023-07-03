@@ -13,7 +13,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
         .take()
         .ok_or_else(|| "Something went wrong acquiring the Winit's EventLoop.".to_string())?;
 
-    app.initialize();
+    app.init();
 
     event_loop.run(move |evt, event_loop, control_flow| {
         app.get_mut_plugin::<Manager>()
@@ -44,7 +44,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                 }
             }
             Event::MainEventsCleared => {
-                app.tick();
+                app.update();
             }
             _ => (),
         }
