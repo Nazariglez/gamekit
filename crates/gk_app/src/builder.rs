@@ -1,8 +1,9 @@
 use crate::app::App;
 use crate::config::BuildConfig;
+use crate::event::EventQueue;
 use crate::handlers::{
-    EventHandler, EventHandlerFn, Handler, PluginHandler,
-    RunnerHandlerFn, SetupHandler, SetupHandlerFn, UpdateHandlerFn,
+    EventHandler, EventHandlerFn, Handler, PluginHandler, RunnerHandlerFn, SetupHandler,
+    SetupHandlerFn, UpdateHandlerFn,
 };
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
@@ -151,9 +152,13 @@ impl<S: GKState> AppBuilder<S> {
         } = self;
 
         let state = (setup_handler)(&mut plugins)?;
-        let storage = Storage { plugins, state };
+        let storage = Storage {
+            plugins,
+            state,
+            events: EventQueue::new(),
+        };
 
-        let app = App {
+        let mut app = App {
             storage,
             init_handler,
             event_handler,
@@ -162,6 +167,8 @@ impl<S: GKState> AppBuilder<S> {
             initialized: false,
             closed: false,
         };
+
+        app.event(SuperEvent);
 
         (runner)(app)?;
 

@@ -1,11 +1,19 @@
-use crate::{GKState, Plugin};
+use crate::event::EventQueue;
+use crate::{App, GKState, Plugin};
 use anymap::AnyMap;
 use gk_core::events::Event;
 use indexmap::IndexMap;
 
-pub struct Storage<S: GKState> {
+pub struct Storage<S: GKState + 'static> {
     pub state: S,
     pub plugins: Plugins,
+    pub events: EventQueue<S>,
+}
+
+impl<S: GKState + 'static> Storage<S> {
+    pub fn take_event(&mut self) -> Option<Box<dyn FnOnce(&mut App<S>)>> {
+        self.events.take_event()
+    }
 }
 
 pub struct Plugins {
@@ -43,6 +51,12 @@ pub trait FromStorage<S: GKState> {
 impl<S: GKState, T: Plugin + 'static> FromStorage<S> for T {
     fn from_storage(storage: &mut Storage<S>) -> &mut Self {
         storage.plugins.map.get_mut::<Self>().unwrap()
+    }
+}
+
+impl<S: GKState + 'static> FromStorage<S> for EventQueue<S> {
+    fn from_storage(storage: &mut Storage<S>) -> &mut Self {
+        &mut storage.events
     }
 }
 //

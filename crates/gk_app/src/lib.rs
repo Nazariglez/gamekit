@@ -3,6 +3,7 @@ mod builder;
 mod config;
 mod runner;
 
+pub mod event;
 pub mod handlers;
 pub mod prelude;
 pub mod storage;
@@ -10,6 +11,7 @@ pub mod storage;
 pub use app::App;
 pub use builder::AppBuilder;
 pub use config::BuildConfig;
+pub use event::EventQueue;
 
 pub use gk_macro::AppState;
 

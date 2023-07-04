@@ -3,7 +3,7 @@ use crate::storage::Storage;
 use crate::GKState;
 use gk_core::events::Event;
 use std::any::{Any, TypeId};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 pub struct App<S: GKState + 'static> {
     pub(crate) storage: Storage<S>,
@@ -38,6 +38,8 @@ impl<S: GKState> App<S> {
         if let Some(cb) = opt_cb {
             cb(&mut self.storage, evt);
         }
+
+        execute_queued_events(self);
     }
 
     pub fn update(&mut self) {
@@ -51,5 +53,12 @@ impl<S: GKState> App<S> {
 
         self.closed = true;
         (self.close_handler)(&mut self.storage);
+    }
+}
+
+#[inline]
+fn execute_queued_events<S: GKState + 'static>(app: &mut App<S>) {
+    while let Some(cb) = app.storage.take_event() {
+        cb(app);
     }
 }

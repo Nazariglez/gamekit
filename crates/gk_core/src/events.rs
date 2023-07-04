@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use crate::window::GKWindowId;
 
 pub struct SuperEvent;
+pub struct SuperEvent2;
 
 /// Window's event
 #[derive(Debug, PartialEq, Clone)]

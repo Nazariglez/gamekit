@@ -1,5 +1,5 @@
 use gk_app::prelude::*;
-use gk_core::events::SuperEvent;
+use gk_core::events::{SuperEvent, SuperEvent2};
 use gk_core::window::{GKWindowId, GKWindowManager};
 use gk_winit::{runner, Manager, Window, WinitConfig};
 
@@ -31,8 +31,13 @@ fn main() {
     .on_update(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
     })
-    .on_event(|evt: SuperEvent| {
+    .on_event(|evt: SuperEvent, ee: &mut EventQueue<State>| {
         println!("SuperEvent");
+        ee.queue(SuperEvent2);
+    })
+    .on_event(|evt: SuperEvent2, ee: &mut EventQueue<State>| {
+        println!("SuperEvent2");
+        panic!();
     })
     .build()
     .unwrap();
