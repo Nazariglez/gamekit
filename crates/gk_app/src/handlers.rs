@@ -6,7 +6,7 @@ pub(crate) type RunnerHandlerFn<S> = dyn FnMut(App<S>) -> Result<(), String>;
 pub(crate) type SetupHandlerFn<S> = dyn FnOnce(&mut Plugins) -> Result<S, String>;
 pub(crate) type PluginHandlerFn<P> = dyn FnOnce(&mut Plugins) -> Result<P, String>;
 pub(crate) type UpdateHandlerFn<S> = dyn FnMut(&mut Storage<S>);
-pub(crate) type EventHandlerFn<E, S> = dyn FnMut(&mut Storage<S>, E);
+pub(crate) type EventHandlerFn<E, S> = dyn FnMut(&mut Storage<S>, &E);
 
 /// Represent an update's handler
 /// It allow to use as parameter the App's State
@@ -187,7 +187,7 @@ fn_plugin_handler! { A B C D E F G H I J }
 /// It allow to use as parameter the App's State
 /// or any App's plugin
 pub trait EventHandler<Evt, S: GKState, T> {
-    fn call(&mut self, app: &mut Storage<S>, evt: Evt);
+    fn call(&mut self, app: &mut Storage<S>, evt: &Evt);
 }
 
 // Safe for notan because the map will never change
@@ -198,10 +198,10 @@ macro_rules! fn_event_handler ({ $($param:ident)* } => {
     impl<Evt, S, Fun, $($param,)*> EventHandler<Evt, S, ($($param,)*)> for Fun
     where
         S: GKState + 'static,
-        Fun: FnMut(Evt, $(&mut $param),*),
+        Fun: FnMut(&Evt, $(&mut $param),*),
         $($param:FromStorage<S> + 'static),*
     {
-        fn call(&mut self, storage: &mut Storage<S>, evt: Evt) {
+        fn call(&mut self, storage: &mut Storage<S>, evt: &Evt) {
             // Look for duplicated parameters and panic
             #[cfg(debug_assertions)]
             {

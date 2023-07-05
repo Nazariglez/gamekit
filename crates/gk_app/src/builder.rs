@@ -1,6 +1,6 @@
 use crate::app::App;
 use crate::config::BuildConfig;
-use crate::event::EventQueue;
+use crate::event::{EventMap, EventQueue};
 use crate::handlers::{
     EventHandler, EventHandlerFn, Handler, PluginHandler, RunnerHandlerFn, SetupHandler,
     SetupHandlerFn, UpdateHandlerFn,
@@ -8,6 +8,7 @@ use crate::handlers::{
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
 use crate::{GKState, Plugin};
+use arrayvec::ArrayVec;
 use gk_core::events::{Event, SuperEvent};
 use indexmap::IndexMap;
 use std::any::{Any, TypeId};
@@ -19,7 +20,7 @@ pub struct AppBuilder<S: GKState + 'static> {
     setup_handler: Box<SetupHandlerFn<S>>,
     init_handler: Box<UpdateHandlerFn<S>>,
     update_handler: Box<UpdateHandlerFn<S>>,
-    event_handler: HashMap<TypeId, Box<dyn Any>>,
+    event_handler: EventMap,
     close_handler: Box<UpdateHandlerFn<S>>,
     late_configs: Option<IndexMap<TypeId, Box<dyn BuildConfig<S>>>>,
 }
@@ -98,15 +99,18 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn on_event<E, T, H>(mut self, mut handler: H) -> Self
+    pub fn listen_event<E, T, H>(mut self, mut handler: H) -> Self
     where
         E: 'static,
         H: EventHandler<E, S, T> + 'static,
     {
         let k = TypeId::of::<E>();
         let cb: Box<EventHandlerFn<E, S>> =
-            Box::new(move |s: &mut Storage<S>, e: E| handler.call(s, e));
-        self.event_handler.insert(k, Box::new(cb));
+            Box::new(move |s: &mut Storage<S>, e: &E| handler.call(s, e));
+        self.event_handler
+            .entry(k)
+            .or_insert_with(|| ArrayVec::new())
+            .push(Box::new(cb));
         self
     }
 
@@ -158,7 +162,7 @@ impl<S: GKState> AppBuilder<S> {
             events: EventQueue::new(),
         };
 
-        let mut app = App {
+        let app = App {
             storage,
             init_handler,
             event_handler,
@@ -167,8 +171,6 @@ impl<S: GKState> AppBuilder<S> {
             initialized: false,
             closed: false,
         };
-
-        app.event(SuperEvent);
 
         (runner)(app)?;
 
