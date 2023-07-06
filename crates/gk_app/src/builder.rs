@@ -106,10 +106,7 @@ impl<S: GKState> AppBuilder<S> {
         let k = TypeId::of::<E>();
         let cb: Box<EventHandlerFn<E, S>> =
             Box::new(move |s: &mut Storage<S>, e: &E| handler.call(s, e));
-        self.event_handler
-            .entry(k)
-            .or_default()
-            .push(Box::new(cb));
+        self.event_handler.entry(k).or_default().push(Box::new(cb));
         self
     }
 

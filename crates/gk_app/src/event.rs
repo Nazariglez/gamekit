@@ -71,7 +71,7 @@ const fn parse_limit_events_as_usize() -> usize {
                     res *= 10;
                     res += (*byte - b'0') as usize;
                 } else {
-                    panic!("not a number")
+                    panic!("GK_LIMIT_EVENT_TO expects an unsigned int");
                 }
             }
             res
