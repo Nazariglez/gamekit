@@ -3,10 +3,10 @@ use std::any::{Any, TypeId};
 use std::collections::{HashMap, VecDeque};
 
 #[cfg(feature = "limited_events")]
-const LIMIT_EVENTS: usize = parse_limit_events_as_usize();
+const MAX_EVENT_LISTENERS: usize = parse_limit_events_as_usize();
 
 #[cfg(feature = "limited_events")]
-pub(crate) type EventMap = HashMap<TypeId, arrayvec::ArrayVec<Box<dyn Any>, LIMIT_EVENTS>>;
+pub(crate) type EventMap = HashMap<TypeId, arrayvec::ArrayVec<Box<dyn Any>, MAX_EVENT_LISTENERS>>;
 
 #[cfg(not(feature = "limited_events"))]
 pub(crate) type EventMap = HashMap<TypeId, Vec<Box<dyn Any>>>;
@@ -57,7 +57,7 @@ pub struct Close;
 
 #[cfg(feature = "limited_events")]
 const fn parse_limit_events_as_usize() -> usize {
-    match std::option_env!("GK_LIMIT_EVENTS_TO") {
+    match option_env!("GK_LIMIT_EVENTS_TO") {
         None => 32, // Default value
         Some(num) => {
             // str.parse::<usize>() is not a const fn yet
