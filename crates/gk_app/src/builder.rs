@@ -8,7 +8,6 @@ use crate::handlers::{
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
 use crate::{GKState, Plugin};
-use arrayvec::ArrayVec;
 use gk_core::events::{Event, SuperEvent};
 use indexmap::IndexMap;
 use std::any::{Any, TypeId};
@@ -109,7 +108,7 @@ impl<S: GKState> AppBuilder<S> {
             Box::new(move |s: &mut Storage<S>, e: &E| handler.call(s, e));
         self.event_handler
             .entry(k)
-            .or_insert_with(|| ArrayVec::new())
+            .or_default()
             .push(Box::new(cb));
         self
     }

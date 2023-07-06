@@ -1,12 +1,14 @@
 use crate::{App, GKState};
-use arrayvec::ArrayVec;
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, VecDeque};
 
-#[cfg(feature = "64_events")]
-pub(crate) type EventMap = HashMap<TypeId, ArrayVec<Box<dyn Any>, 64>>;
+#[cfg(feature = "limited_events")]
+const LIMIT_EVENTS: usize = parse_limit_events_as_usize();
 
-#[cfg(not(feature = "64_events"))]
+#[cfg(feature = "limited_events")]
+pub(crate) type EventMap = HashMap<TypeId, arrayvec::ArrayVec<Box<dyn Any>, LIMIT_EVENTS>>;
+
+#[cfg(not(feature = "limited_events"))]
 pub(crate) type EventMap = HashMap<TypeId, Vec<Box<dyn Any>>>;
 
 /// A list of events pushed by plugins to be processed
@@ -52,3 +54,27 @@ pub struct PostUpdate;
 /// Triggered after user's close callback
 #[derive(Debug, Copy, Clone)]
 pub struct Close;
+
+#[cfg(feature = "limited_events")]
+const fn parse_limit_events_as_usize() -> usize {
+    match std::option_env!("GK_LIMIT_EVENTS_TO") {
+        None => 32, // Default value
+        Some(num) => {
+            // str.parse::<usize>() is not a const fn yet
+            // this trick will do it for now:
+            // https://www.reddit.com/r/rust/comments/10ol38k/comment/j6fbjwj/?utm_source=reddit&utm_medium=web2x&context=3
+            let mut res: usize = 0;
+            let mut bytes = num.as_bytes();
+            while let [byte, rest @ ..] = bytes {
+                bytes = rest;
+                if let b'0'..=b'9' = byte {
+                    res *= 10;
+                    res += (*byte - b'0') as usize;
+                } else {
+                    panic!("not a number")
+                }
+            }
+            res
+        }
+    }
+}
