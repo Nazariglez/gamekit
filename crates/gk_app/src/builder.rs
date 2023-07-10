@@ -8,9 +8,8 @@ use crate::handlers::{
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
 use crate::{GKState, Plugin};
-use gk_core::events::{Event, SuperEvent};
 use indexmap::IndexMap;
-use std::any::{Any, TypeId};
+use std::any::TypeId;
 use std::collections::HashMap;
 
 pub struct AppBuilder<S: GKState + 'static> {
@@ -37,7 +36,7 @@ impl<S: GKState> AppBuilder<S> {
     where
         H: SetupHandler<S, T> + 'static,
     {
-        let mut plugins = Plugins::new();
+        let plugins = Plugins::new();
         let runner = Box::new(default_runner);
         let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
         let init_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
@@ -123,7 +122,7 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn add_plugin_with<T, P, H>(mut self, mut handler: H) -> Result<Self, String>
+    pub fn add_plugin_with<T, P, H>(mut self, handler: H) -> Result<Self, String>
     where
         T: 'static,
         P: Plugin + 'static,

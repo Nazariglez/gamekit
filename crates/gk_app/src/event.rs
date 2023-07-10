@@ -35,22 +35,16 @@ impl<S: GKState + 'static> EventQueue<S> {
     }
 }
 
-/// Triggered before the user's initialize callback
 #[derive(Debug, Copy, Clone)]
-pub struct Init;
-
-/// First event triggered per frame
-#[derive(Debug, Copy, Clone)]
-pub struct PreUpdate;
-
-/// Triggered between pre and post update events (before user's update callback)
-#[derive(Debug, Copy, Clone)]
-pub struct Update;
-
-/// Latest event triggered per frame
-#[derive(Debug, Copy, Clone)]
-pub struct PostUpdate;
-
-/// Triggered after user's close callback
-#[derive(Debug, Copy, Clone)]
-pub struct Close;
+pub enum AppEvent {
+    /// Triggered before the user's initialize callback
+    Init,
+    /// First event triggered per frame
+    PreUpdate,
+    /// Triggered between pre and post update events (before user's update callback)
+    Update,
+    /// Latest event triggered per frame
+    PostUpdate,
+    /// Triggered after user's close callback
+    Close,
+}

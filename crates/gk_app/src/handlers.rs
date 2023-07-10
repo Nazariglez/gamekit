@@ -1,6 +1,6 @@
+#![allow(unused)]
 use crate::storage::{FromPlugins, FromStorage, Plugins, Storage};
 use crate::{App, GKState, Plugin};
-use gk_core::events::Event;
 
 pub(crate) type RunnerHandlerFn<S> = dyn FnMut(App<S>) -> Result<(), String>;
 pub(crate) type SetupHandlerFn<S> = dyn FnOnce(&mut Plugins) -> Result<S, String>;
@@ -35,7 +35,6 @@ macro_rules! fn_handler ({ $($param:ident)* } => {
                 let mut h_set:HashSet<TypeId> = Default::default();
 
                 $(
-
                     if !h_set.insert(TypeId::of::<$param>()) {
                         panic!("Application handlers cannot contains duplicated parameters.");
                     }
@@ -93,7 +92,6 @@ macro_rules! fn_setup_handler ({ $($param:ident)* } => {
                 let mut h_set:HashSet<TypeId> = Default::default();
 
                 $(
-
                     if !h_set.insert(TypeId::of::<$param>()) {
                         panic!("Application handlers cannot contains duplicated parameters.");
                     }
@@ -151,7 +149,6 @@ macro_rules! fn_plugin_handler ({ $($param:ident)* } => {
                 let mut h_set:HashSet<TypeId> = Default::default();
 
                 $(
-
                     if !h_set.insert(TypeId::of::<$param>()) {
                         panic!("Application handlers cannot contains duplicated parameters.");
                     }
@@ -210,7 +207,6 @@ macro_rules! fn_event_handler ({ $($param:ident)* } => {
                 let mut h_set:HashSet<TypeId> = Default::default();
 
                 $(
-
                     if !h_set.insert(TypeId::of::<$param>()) {
                         panic!("Application handlers cannot contains duplicated parameters.");
                     }

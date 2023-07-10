@@ -20,8 +20,8 @@ pub const fn parse_string_as_usize(key: Option<&'static str>, default: usize) ->
                     res *= 10;
                     res += (*byte - b'0') as usize;
                 } else {
+                    // FIXME: log here that the value cannot be parsed?
                     return default;
-                    panic!("{} expects an unsigned int", num);
                 }
             }
             res

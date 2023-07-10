@@ -1,4 +1,4 @@
-use gk_app::event::Init;
+use gk_app::event::AppEvent;
 use gk_app::prelude::*;
 use gk_core::events::{SuperEvent, SuperEvent2};
 use gk_core::window::{GKWindowId, GKWindowManager};
@@ -32,9 +32,14 @@ fn main() {
     .on_update(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
     })
-    .listen_event(|evt: &Init, ee: &mut EventQueue<State>| {
-        println!("Init");
-        ee.queue(SuperEvent);
+    .listen_event(|evt: &AppEvent, ee: &mut EventQueue<State>| {
+        println!("-> {evt:?}");
+        if let AppEvent::PostUpdate = evt {
+            println!("here... {:?}", evt);
+            panic!();
+        } else {
+            ee.queue(SuperEvent);
+        }
     })
     .listen_event(|evt: &SuperEvent, ee: &mut EventQueue<State>| {
         println!("SuperEvent");
@@ -42,7 +47,6 @@ fn main() {
     })
     .listen_event(|evt: &SuperEvent2, ee: &mut EventQueue<State>| {
         println!("SuperEvent2");
-        panic!();
     })
     .build()
     .unwrap();

@@ -1,8 +1,6 @@
 use crate::event::EventQueue;
 use crate::{App, GKState, Plugin};
 use anymap::AnyMap;
-use gk_core::events::Event;
-use indexmap::IndexMap;
 
 pub struct Storage<S: GKState + 'static> {
     pub state: S,
