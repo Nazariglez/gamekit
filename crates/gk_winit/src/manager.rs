@@ -1,10 +1,11 @@
 use crate::event_loop::EventLoopPtr;
-use gk_app::window::{GKWindow, GKWindowId, GKWindowManager};
+use gk_app::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
 use std::collections::HashMap;
 use winit::dpi::{LogicalPosition, LogicalSize};
 pub use winit::event_loop::EventLoopWindowTarget;
-use winit::window::Window as WWindow;
+use winit::platform::macos::WindowExtMacOS;
+use winit::window::{Fullscreen, Window as WWindow};
 
 pub struct Manager {
     pub windows: HashMap<GKWindowId, Window>,
@@ -33,7 +34,9 @@ impl GKWindowManager<Window> for Manager {
                 let raw = WWindow::new(event_loop).map_err(|err| err.to_string())?;
                 let raw_id: u64 = raw.id().into();
                 let id = raw_id.into();
-                let win = Window { id, raw };
+                let title = format!("GameKit Window {raw_id}");
+                raw.set_title(&title);
+                let win = Window { id, raw, title };
 
                 self.windows.insert(id, win);
                 Ok(id)
@@ -58,6 +61,7 @@ impl GKWindowManager<Window> for Manager {
 pub struct Window {
     id: GKWindowId,
     raw: WWindow,
+    title: String,
 }
 
 impl GKWindow for Window {
@@ -101,5 +105,79 @@ impl GKWindow for Window {
 
     fn set_position(&mut self, x: i32, y: i32) {
         self.raw.set_outer_position(LogicalPosition::new(x, y));
+    }
+
+    fn title(&self) -> &str {
+        &self.title
+    }
+
+    fn set_title(&mut self, title: &str) {
+        self.title = title.to_string();
+        self.raw.set_title(&self.title);
+    }
+
+    fn fullscreen(&self) -> bool {
+        self.raw.fullscreen().is_some()
+    }
+
+    fn set_fullscreen(&mut self, fullscreen: bool) {
+        let mode = fullscreen.then(|| Fullscreen::Borderless(self.raw.current_monitor()));
+        self.raw.set_fullscreen(mode);
+    }
+
+    fn request_focus(&mut self) {
+        self.raw.focus_window();
+    }
+
+    fn has_focus(&self) -> bool {
+        self.has_focus()
+    }
+
+    fn set_cursor_icon(&mut self, cursor: CursorIcon) {
+        todo!()
+    }
+
+    fn cursor(&self) -> CursorIcon {
+        todo!()
+    }
+
+    fn set_maximized(&mut self, maximized: bool) {
+        self.raw.set_maximized(maximized);
+    }
+
+    fn maximized(&self) -> bool {
+        self.raw.is_maximized()
+    }
+
+    fn set_minimized(&mut self, minimized: bool) {
+        self.raw.set_minimized(minimized);
+    }
+
+    fn minimized(&self) -> bool {
+        self.raw.is_minimized().unwrap_or(false)
+    }
+
+    fn set_visible(&mut self, visible: bool) {
+        self.raw.set_visible(visible);
+    }
+
+    fn visible(&self) -> bool {
+        self.raw.is_visible().unwrap_or(false)
+    }
+
+    fn set_transparent(&mut self, transparent: bool) {
+        todo!()
+    }
+
+    fn transparent(&self) -> bool {
+        todo!()
+    }
+
+    fn set_resizable(&mut self, resizable: bool) {
+        self.raw.set_resizable(resizable);
+    }
+
+    fn resizable(&self) -> bool {
+        self.raw.is_resizable()
     }
 }

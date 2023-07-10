@@ -29,6 +29,24 @@ pub trait GKWindow {
     fn scale(&self) -> f64;
     fn position(&self) -> Result<(i32, i32), String>;
     fn set_position(&mut self, x: i32, y: i32);
+    fn title(&self) -> &str;
+    fn set_title(&mut self, title: &str);
+    fn fullscreen(&self) -> bool;
+    fn set_fullscreen(&mut self, fullscreen: bool);
+    fn request_focus(&mut self);
+    fn has_focus(&self) -> bool;
+    fn set_cursor_icon(&mut self, cursor: CursorIcon);
+    fn cursor(&self) -> CursorIcon;
+    fn set_maximized(&mut self, maximized: bool);
+    fn maximized(&self) -> bool;
+    fn set_minimized(&mut self, minimized: bool);
+    fn minimized(&self) -> bool;
+    fn set_visible(&mut self, visible: bool);
+    fn visible(&self) -> bool;
+    fn set_transparent(&mut self, transparent: bool);
+    fn transparent(&self) -> bool;
+    fn set_resizable(&mut self, resizable: bool);
+    fn resizable(&self) -> bool;
 }
 
 /// Window's event
@@ -66,4 +84,44 @@ pub enum WindowEventId {
 
     /// The window has received the close signal
     CloseRequest,
+}
+
+/// Represent mouse cursor icon
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq)]
+pub enum CursorIcon {
+    Default,
+    None,
+    ContextMenu,
+    Help,
+    PointingHand,
+    Progress,
+    Wait,
+    Cell,
+    Crosshair,
+    Text,
+    VerticalText,
+    Alias,
+    Copy,
+    Move,
+    NoDrop,
+    NotAllowed,
+    Grab,
+    Grabbing,
+    AllScroll,
+    ResizeHorizontal,
+    ResizeNeSw,
+    ResizeNwSe,
+    ResizeVertical,
+    ZoomIn,
+    ZoomOut,
+    ResizeEast,
+    ResizeSouthEast,
+    ResizeSouth,
+    ResizeSouthWest,
+    ResizeWest,
+    ResizeNorthWest,
+    ResizeNorth,
+    ResizeNorthEast,
+    ResizeColumn,
+    ResizeRow,
 }
