@@ -1,9 +1,10 @@
 use crate::Manager;
+use gk_app::window::{
+    GKWindow, GKWindowId, GKWindowManager, WindowEvent as GkWindowEvent, WindowEventId as GkEvent,
+};
 use gk_app::{App, GKState};
-use gk_core::events::Event as GkEvent;
-use gk_core::window::GKWindowId;
 use winit::event::{Event, WindowEvent};
-use winit::event_loop::{EventLoop, EventLoopWindowTarget};
+use winit::window::WindowId;
 
 pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
     let event_loop = app
@@ -13,7 +14,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
         .take()
         .ok_or_else(|| "Something went wrong acquiring the Winit's EventLoop.".to_string())?;
 
-    app.init();
+    let mut initialized = false;
 
     event_loop.run(move |evt, event_loop, control_flow| {
         app.get_mut_plugin::<Manager>()
@@ -25,24 +26,94 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
         println!("{evt:?}");
 
         match evt {
-            Event::LoopDestroyed => {
-                app.event(GkEvent::Close);
-            }
-            Event::WindowEvent {
-                window_id,
-                event: WindowEvent::CloseRequested,
-            } => {
-                let raw_id: u64 = window_id.into();
-                let id: GKWindowId = raw_id.into();
-
-                let manager = app.get_mut_plugin::<Manager>().unwrap();
-                manager.windows.remove(&id);
-
-                if manager.windows.is_empty() {
-                    manager.request_exit = true;
-                    println!("Close");
+            Event::Resumed => {
+                // init the app's logic on the first resumed event
+                if !initialized {
+                    initialized = true;
+                    app.init();
                 }
             }
+            Event::LoopDestroyed => {
+                app.close();
+            }
+            Event::WindowEvent { window_id, event } => {
+                let manager = app.get_mut_plugin::<Manager>().unwrap();
+                let id = win_id(window_id);
+                if let Some(win) = manager.window(id) {
+                    match event {
+                        WindowEvent::Resized(size) => {
+                            let size = size.to_logical::<u32>(win.scale());
+                            app.event(GkWindowEvent {
+                                id,
+                                event: GkEvent::Resized {
+                                    width: size.width,
+                                    height: size.height,
+                                },
+                            });
+                        }
+                        WindowEvent::Moved(pos) => {
+                            let pos = pos.to_logical::<i32>(win.scale());
+                            app.event(GkWindowEvent {
+                                id,
+                                event: GkEvent::Moved { x: pos.x, y: pos.y },
+                            });
+                        }
+                        WindowEvent::CloseRequested => {
+                            app.event(GkWindowEvent {
+                                id,
+                                event: GkEvent::CloseRequest,
+                            });
+                        }
+                        WindowEvent::Destroyed => {}
+                        WindowEvent::DroppedFile(_) => {}
+                        WindowEvent::HoveredFile(_) => {}
+                        WindowEvent::HoveredFileCancelled => {}
+                        WindowEvent::ReceivedCharacter(_) => {}
+                        WindowEvent::Focused(focus) => {
+                            app.event(GkWindowEvent {
+                                id,
+                                event: if focus {
+                                    GkEvent::FocusGained
+                                } else {
+                                    GkEvent::FocusLost
+                                },
+                            });
+                        }
+                        WindowEvent::KeyboardInput { .. } => {}
+                        WindowEvent::ModifiersChanged(_) => {}
+                        WindowEvent::Ime(_) => {}
+                        WindowEvent::CursorMoved { .. } => {}
+                        WindowEvent::CursorEntered { .. } => {}
+                        WindowEvent::CursorLeft { .. } => {}
+                        WindowEvent::MouseWheel { .. } => {}
+                        WindowEvent::MouseInput { .. } => {}
+                        WindowEvent::TouchpadMagnify { .. } => {}
+                        WindowEvent::SmartMagnify { .. } => {}
+                        WindowEvent::TouchpadRotate { .. } => {}
+                        WindowEvent::TouchpadPressure { .. } => {}
+                        WindowEvent::AxisMotion { .. } => {}
+                        WindowEvent::Touch(_) => {}
+                        WindowEvent::ScaleFactorChanged { .. } => {}
+                        WindowEvent::ThemeChanged(_) => {}
+                        WindowEvent::Occluded(_) => {}
+                    }
+                }
+            }
+            // Event::WindowEvent {
+            //     window_id,
+            //     event: WindowEvent::CloseRequested,
+            // } => {
+            //     let raw_id: u64 = window_id.into();
+            //     let id: GKWindowId = raw_id.into();
+            //
+            //     let manager = app.get_mut_plugin::<Manager>().unwrap();
+            //     manager.windows.remove(&id);
+            //
+            //     if manager.windows.is_empty() {
+            //         manager.request_exit = true;
+            //         println!("Close");
+            //     }
+            // }
             Event::MainEventsCleared => {
                 app.update();
             }
@@ -57,4 +128,9 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
     });
 
     Ok(())
+}
+
+fn win_id(window_id: WindowId) -> GKWindowId {
+    let raw: u64 = window_id.into();
+    raw.into()
 }

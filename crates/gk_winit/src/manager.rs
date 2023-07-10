@@ -1,10 +1,8 @@
 use crate::event_loop::EventLoopPtr;
-use gk_app::{App, Plugin};
-use gk_core::window::{GKWindow, GKWindowId, GKWindowManager};
+use gk_app::window::{GKWindow, GKWindowId, GKWindowManager};
+use gk_app::Plugin;
 use std::collections::HashMap;
-use std::ops::Deref;
-use winit::event::{Event, WindowEvent};
-use winit::event_loop::EventLoop;
+use winit::dpi::{LogicalPosition, LogicalSize};
 pub use winit::event_loop::EventLoopWindowTarget;
 use winit::window::Window as WWindow;
 
@@ -33,7 +31,6 @@ impl GKWindowManager<Window> for Manager {
         match event_loop {
             Some(event_loop) => {
                 let raw = WWindow::new(event_loop).map_err(|err| err.to_string())?;
-
                 let raw_id: u64 = raw.id().into();
                 let id = raw_id.into();
                 let win = Window { id, raw };
@@ -68,11 +65,41 @@ impl GKWindow for Window {
         self.id
     }
 
+    fn size(&self) -> (u32, u32) {
+        let scale_factor = self.raw.scale_factor();
+        let size = self.raw.inner_size().to_logical::<u32>(scale_factor);
+        (size.width, size.height)
+    }
+
     fn width(&self) -> u32 {
-        todo!()
+        let (w, _) = self.size();
+        w
     }
 
     fn height(&self) -> u32 {
-        todo!()
+        let (_, h) = self.size();
+        h
+    }
+
+    fn set_size(&mut self, width: u32, height: u32) {
+        self.raw.set_inner_size(LogicalSize::new(width, height));
+    }
+
+    fn scale(&self) -> f64 {
+        self.raw.scale_factor()
+    }
+
+    fn position(&self) -> Result<(i32, i32), String> {
+        let pos = self
+            .raw
+            .outer_position()
+            .map_err(|err| err.to_string())?
+            .to_logical::<i32>(self.scale());
+
+        Ok(pos.into())
+    }
+
+    fn set_position(&mut self, x: i32, y: i32) {
+        self.raw.set_outer_position(LogicalPosition::new(x, y));
     }
 }

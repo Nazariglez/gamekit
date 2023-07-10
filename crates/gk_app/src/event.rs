@@ -35,6 +35,7 @@ impl<S: GKState + 'static> EventQueue<S> {
     }
 }
 
+/// Events related to the app's life cycle
 #[derive(Debug, Copy, Clone)]
 pub enum AppEvent {
     /// Triggered before the user's initialize callback

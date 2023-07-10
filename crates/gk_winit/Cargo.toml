@@ -6,6 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gk_core = { path = "../gk_core", version = "0.1.0" }
 gk_app = { path = "../gk_app", version = "0.1.0" }
 winit = "0.28.1"
