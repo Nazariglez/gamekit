@@ -2,6 +2,7 @@ mod app;
 mod builder;
 mod config;
 mod runner;
+mod utils;
 
 pub mod event;
 pub mod handlers;

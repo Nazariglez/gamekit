@@ -59,19 +59,3 @@ impl<S: GKState + 'static> FromStorage<S> for EventQueue<S> {
         &mut storage.events
     }
 }
-//
-// pub trait FromStorageEvent<S: GKState> {
-//     fn from_storage<'gk_state>(app: &'gk_state mut Storage<S>, event: Event) -> &'gk_state mut Self;
-// }
-//
-// impl<S: GKState, T: Plugin + 'static> FromStorageEvent<S> for T {
-//     fn from_storage(storage: &mut Storage<S>, _event: Event) -> &mut Self {
-//         storage.plugins.map.get_mut::<Self>().unwrap()
-//     }
-// }
-//
-// impl<S: GKState> FromStorageEvent<S> for Event {
-//     fn from_storage(storage: &mut Storage<S>, event: Event) -> &mut Self {
-//
-//     }
-// }
