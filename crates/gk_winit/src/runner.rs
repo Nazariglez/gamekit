@@ -1,10 +1,10 @@
+use crate::utils::win_id;
 use crate::Manager;
 use gk_app::window::{
-    GKWindow, GKWindowId, GKWindowManager, WindowEvent as GkWindowEvent, WindowEventId as GkEvent,
+    GKWindow, GKWindowManager, WindowEvent as GkWindowEvent, WindowEventId as GkEvent,
 };
 use gk_app::{App, GKState};
 use winit::event::{Event, WindowEvent};
-use winit::window::WindowId;
 
 pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
     let event_loop = app
@@ -128,9 +128,4 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
     });
 
     Ok(())
-}
-
-fn win_id(window_id: WindowId) -> GKWindowId {
-    let raw: u64 = window_id.into();
-    raw.into()
 }
