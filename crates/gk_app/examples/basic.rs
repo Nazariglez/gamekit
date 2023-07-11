@@ -2,7 +2,10 @@ use gk_app::event::AppEvent;
 use gk_app::prelude::*;
 use gk_core::events::{SuperEvent, SuperEvent2};
 use gk_core::window::{GKWindowId, GKWindowManager};
+use gk_win::{WindowManager, WindowsConfig};
 use gk_winit::{runner, Manager, Window, WinitConfig};
+
+pub type Windows = WindowManager<gk_winit::Window, gk_winit::Manager>;
 
 #[derive(AppState)]
 struct State {
@@ -18,7 +21,9 @@ struct PP {
 impl Plugin for PP {}
 
 fn main() {
-    AppBuilder::init_with(|pp: &mut PP, manager: &mut Manager| {
+    let win_config = WindowsConfig::with_manager(Manager::new(), runner);
+
+    AppBuilder::init_with(|pp: &mut PP, windows: &mut Windows| {
         // let win_id = manager.create()?;
         Ok(State {
             id: 9999,
@@ -26,7 +31,7 @@ fn main() {
             // win_id,
         })
     })
-    .add_config(WinitConfig)
+    .add_config(win_config)
     .unwrap()
     .add_plugin(PP { id: 1234 })
     .on_update(|state: &mut State, pp: &mut PP| {

@@ -57,13 +57,13 @@ impl<S: GKState> AppBuilder<S> {
         }
     }
 
-    pub fn add_config<C>(mut self, config: C) -> Result<Self, String>
+    pub fn add_config<C>(mut self, mut config: C) -> Result<Self, String>
     where
         C: BuildConfig<S> + 'static,
     {
         if config.late_evaluation() {
             if let Some(late_configs) = &mut self.late_configs {
-                let typ = std::any::TypeId::of::<C>();
+                let typ = TypeId::of::<C>();
                 late_configs.insert(typ, Box::new(config));
             }
 
@@ -134,7 +134,7 @@ impl<S: GKState> AppBuilder<S> {
 
     pub fn build(mut self) -> Result<(), String> {
         if let Some(late_configs) = self.late_configs.take() {
-            for (_, config) in late_configs {
+            for (_, mut config) in late_configs {
                 self = config.apply(self)?;
             }
         }

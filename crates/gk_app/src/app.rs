@@ -36,6 +36,10 @@ impl<S: GKState> App<S> {
 
     /// Execute any listener set for the event passed in
     pub fn event<E: 'static>(&mut self, evt: E) {
+        if !self.initialized {
+            return;
+        }
+
         let list = self.event_handler.get_mut(&TypeId::of::<E>());
         if let Some(list) = list {
             list.iter_mut()
@@ -52,6 +56,10 @@ impl<S: GKState> App<S> {
     /// It's called each frame by the backend and it dispatches
     /// the events `PreUpdate`, `Update` and `PostUpdate`
     pub fn update(&mut self) {
+        if !self.initialized {
+            return;
+        }
+
         self.event(AppEvent::PreUpdate);
         self.event(AppEvent::Update);
         (self.update_handler)(&mut self.storage);
@@ -61,6 +69,10 @@ impl<S: GKState> App<S> {
     /// It's called when the backend/app is about to close
     /// it dispatched the event `Close`
     pub fn close(&mut self) {
+        if !self.initialized {
+            return;
+        }
+
         if self.closed {
             return;
         }
