@@ -1,4 +1,4 @@
-use crate::{WindowManager};
+use crate::WindowManager;
 use gk_app::window::{GKWindow, GKWindowManager};
 use gk_app::{App, AppBuilder, BuildConfig, GKState};
 use std::marker::PhantomData;

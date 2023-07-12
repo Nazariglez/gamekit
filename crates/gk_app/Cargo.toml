@@ -19,6 +19,7 @@ serde = { version = "1.0", features = ["serde_derive"], optional = true }
 [dev-dependencies]
 gk_winit = { path = "../gk_winit", version = "0.1.0" }
 gk_win = { path = "../gk_win", version = "0.1.0" }
+gk_platform = { path = "../gk_platform", version = "0.1.0" }
 
 [features]
 default = ["limited_events"]

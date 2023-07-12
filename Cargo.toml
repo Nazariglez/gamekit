@@ -21,6 +21,10 @@ members = ["crates/*"]
 [workspace.dependencies]
 gk_app = { path = "./crates/gk_app", version = "0.1.0" }
 
+serde = { version = "1.0", features = ["serde_derive"] }
+log = "0.4.19"
+hashbrown = "0.14.0"
+
 [dependencies]
 anymap = "0.12.1"
 # default-features=false...

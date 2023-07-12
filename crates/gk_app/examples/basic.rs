@@ -2,10 +2,11 @@ use gk_app::event::AppEvent;
 use gk_app::prelude::*;
 use gk_core::events::{SuperEvent, SuperEvent2};
 use gk_core::window::{GKWindowId, GKWindowManager};
+use gk_platform::{PlatformConfig, Windows};
 use gk_win::{WindowManager, WindowsConfig};
 use gk_winit::{runner, Manager, Window, WinitConfig};
 
-pub type Windows = WindowManager<gk_winit::Window, gk_winit::Manager>;
+// pub type Windows = WindowManager<gk_winit::Window, gk_winit::Manager>;
 
 #[derive(AppState)]
 struct State {
@@ -21,7 +22,7 @@ struct PP {
 impl Plugin for PP {}
 
 fn main() {
-    let win_config = WindowsConfig::with_manager(Manager::new(), runner);
+    let win_config = PlatformConfig;
 
     AppBuilder::init_with(|pp: &mut PP, windows: &mut Windows| {
         // let win_id = manager.create()?;
@@ -41,7 +42,7 @@ fn main() {
         println!("-> {evt:?}");
         if let AppEvent::PostUpdate = evt {
             println!("here... {:?}", evt);
-            panic!();
+            // panic!();
         } else {
             ee.queue(SuperEvent);
         }
