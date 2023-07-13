@@ -1,18 +1,13 @@
 use gk_app::event::AppEvent;
 use gk_app::prelude::*;
 use gk_core::events::{SuperEvent, SuperEvent2};
-use gk_core::window::{GKWindowId, GKWindowManager};
+use gk_core::window::GKWindowManager;
 use gk_platform::{PlatformConfig, Windows};
-use gk_win::{WindowManager, WindowsConfig};
-use gk_winit::{runner, Manager, Window, WinitConfig};
-
-// pub type Windows = WindowManager<gk_winit::Window, gk_winit::Manager>;
 
 #[derive(AppState)]
 struct State {
     id: i32,
     i: i32,
-    // win_id: GKWindowId,
 }
 
 struct PP {
@@ -35,6 +30,10 @@ fn main() {
     .add_config(win_config)
     .unwrap()
     .add_plugin(PP { id: 1234 })
+    .on_init(|windows: &mut Windows| {
+        let id = windows.create().title("SuperMega win").build().unwrap();
+        windows.set_main_window(id);
+    })
     .on_update(|state: &mut State, pp: &mut PP| {
         println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
     })

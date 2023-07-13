@@ -2,7 +2,7 @@ use crate::utils::win_id;
 use gk_app::window::{CursorIcon, GKWindow, GKWindowId};
 use winit::dpi::{LogicalPosition, LogicalSize};
 use winit::event_loop::EventLoopWindowTarget;
-use winit::window::{Fullscreen, Window as RawWindow};
+use winit::window::{Fullscreen, Window as RawWindow, WindowBuilder};
 
 pub struct Window {
     id: GKWindowId,

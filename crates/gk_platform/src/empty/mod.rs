@@ -3,7 +3,7 @@
 mod runner;
 mod window;
 
-use crate::window::WindowManager;
+use crate::platform::WindowManager;
 
 pub use runner::*;
 pub use window::*;

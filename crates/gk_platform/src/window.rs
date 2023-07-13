@@ -1,33 +1,3 @@
-use gk_app::Plugin;
-use std::marker::PhantomData;
-
-#[derive(Default)]
-pub struct WindowManager<W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
-    pub(crate) manager: M,
-    _w: PhantomData<W>,
-}
-
-impl<W, M> Plugin for WindowManager<W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
-}
-
-impl<W, M> WindowManager<W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
-    pub fn exit(&mut self) {
-        self.manager.exit();
-    }
-}
-
 #[derive(Copy, Clone, Hash, Debug, Eq, PartialEq)]
 pub struct GKWindowId(u64);
 
@@ -43,9 +13,40 @@ impl From<GKWindowId> for u64 {
     }
 }
 
-pub trait GKWindowManager<T: GKWindow> {
-    fn create(&mut self) -> Result<GKWindowId, String>;
-    fn window(&mut self, id: GKWindowId) -> Option<&mut T>;
+#[derive(Debug, Clone)]
+pub struct GKWindowAttributes {
+    pub size: Option<(u32, u32)>,
+    pub min_size: Option<(u32, u32)>,
+    pub max_size: Option<(u32, u32)>,
+    pub position: Option<(i32, i32)>,
+    pub resizable: bool,
+    pub title: String,
+    pub fullscreen: bool,
+    pub maximized: bool,
+    pub visible: bool,
+    pub transparent: bool,
+}
+
+impl Default for GKWindowAttributes {
+    fn default() -> Self {
+        Self {
+            size: Some((800, 600)),
+            min_size: None,
+            max_size: None,
+            position: None,
+            resizable: false,
+            title: "GameKit Window".to_string(),
+            fullscreen: false,
+            maximized: false,
+            visible: true,
+            transparent: false,
+        }
+    }
+}
+
+pub trait GKWindowManager<W: GKWindow> {
+    fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String>;
+    fn window(&mut self, id: GKWindowId) -> Option<&mut W>;
     fn close(&mut self, id: GKWindowId) -> bool;
     fn exit(&mut self);
 }
@@ -77,6 +78,10 @@ pub trait GKWindow {
     fn transparent(&self) -> bool;
     fn set_resizable(&mut self, resizable: bool);
     fn resizable(&self) -> bool;
+    fn set_min_size(&mut self, width: u32, height: u32);
+    fn min_size(&self) -> Option<(u32, u32)>;
+    fn set_max_size(&mut self, width: u32, height: u32);
+    fn max_size(&self) -> Option<(u32, u32)>;
 }
 
 /// Window's event

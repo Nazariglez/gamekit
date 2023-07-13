@@ -1,4 +1,5 @@
 use crate::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
+use crate::GKWindowAttributes;
 use hashbrown::HashMap;
 
 #[derive(Default)]
@@ -8,12 +9,18 @@ pub struct Manager {
 }
 
 impl GKWindowManager<Window> for Manager {
-    fn create(&mut self) -> Result<GKWindowId, String> {
+    fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
         let count = self.windows.len();
         let id: GKWindowId = (count as u64).into();
         let win = Window {
             id,
-            ..Default::default()
+            size: attrs.size.unwrap_or((800, 600)),
+            position: attrs.position.unwrap_or((0, 0)),
+            title: attrs.title.clone(),
+            cursor: CursorIcon::Default,
+            resizable: attrs.resizable,
+            min_size: None,
+            max_size: None,
         };
         self.windows.insert(id, win);
         Ok(id)
@@ -39,6 +46,8 @@ pub struct Window {
     title: String,
     cursor: CursorIcon,
     resizable: bool,
+    min_size: Option<(u32, u32)>,
+    max_size: Option<(u32, u32)>,
 }
 
 impl Default for Window {
@@ -50,6 +59,8 @@ impl Default for Window {
             title: "Window".to_string(),
             cursor: CursorIcon::Default,
             resizable: false,
+            min_size: None,
+            max_size: None,
         }
     }
 }
@@ -157,5 +168,21 @@ impl GKWindow for Window {
 
     fn resizable(&self) -> bool {
         self.resizable
+    }
+
+    fn set_min_size(&mut self, width: u32, height: u32) {
+        self.min_size = Some((width, height));
+    }
+
+    fn min_size(&self) -> Option<(u32, u32)> {
+        self.min_size
+    }
+
+    fn set_max_size(&mut self, width: u32, height: u32) {
+        self.max_size = Some((width, height));
+    }
+
+    fn max_size(&self) -> Option<(u32, u32)> {
+        self.max_size
     }
 }
