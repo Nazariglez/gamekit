@@ -10,6 +10,7 @@ where
 {
     pub(crate) manager: M,
     main_window: Option<GKWindowId>,
+    window_ids: Vec<GKWindowId>,
     _w: PhantomData<W>,
 }
 
@@ -32,6 +33,23 @@ where
 
     pub fn set_main_window(&mut self, win_id: GKWindowId) {
         self.main_window = Some(win_id);
+    }
+
+    pub fn window_ids(&self) -> &[GKWindowId] {
+        &self.window_ids
+    }
+
+    pub fn close(&mut self, id: GKWindowId) {
+        let closed = self.manager.close(id);
+        if closed {
+            if let Some(pos) = self
+                .window_ids
+                .iter()
+                .position(|stored_id| *stored_id == id)
+            {
+                self.window_ids.remove(pos);
+            }
+        }
     }
 
     pub fn exit(&mut self) {
@@ -119,6 +137,8 @@ where
 
     pub fn build(self) -> Result<GKWindowId, String> {
         let Self { manager, attrs } = self;
-        manager.manager.create(attrs)
+        let id = manager.manager.create(attrs)?;
+        manager.window_ids.push(id);
+        Ok(id)
     }
 }
