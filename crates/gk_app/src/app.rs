@@ -43,10 +43,12 @@ impl<S: GKState> App<S> {
         let list = self.event_handler.get_mut(&TypeId::of::<E>());
         if let Some(list) = list {
             list.iter_mut()
-                .filter_map(|cb| cb.downcast_mut::<Box<EventHandlerFn<E, S>>>())
+                .filter_map(|listener| listener.handler.downcast_mut::<Box<EventHandlerFn<E, S>>>())
                 .for_each(|cb| {
                     cb(&mut self.storage, &evt);
                 });
+
+            // clean "once" listeners
         }
 
         if !self.closed {

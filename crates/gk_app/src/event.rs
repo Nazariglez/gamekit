@@ -6,10 +6,15 @@ use std::collections::{HashMap, VecDeque};
 const MAX_EVENT_LISTENERS: usize = option_usize_env!("GK_LIMIT_EVENTS_TO", 32);
 
 #[cfg(feature = "limited_events")]
-pub(crate) type EventMap = HashMap<TypeId, arrayvec::ArrayVec<Box<dyn Any>, MAX_EVENT_LISTENERS>>;
+pub(crate) type EventMap = HashMap<TypeId, arrayvec::ArrayVec<EventListener, MAX_EVENT_LISTENERS>>;
 
 #[cfg(not(feature = "limited_events"))]
-pub(crate) type EventMap = HashMap<TypeId, Vec<Box<dyn Any>>>;
+pub(crate) type EventMap = HashMap<TypeId, Vec<EventListener>>;
+
+pub(crate) struct EventListener {
+    pub(crate) handler: Box<dyn Any>,
+    pub(crate) once: bool,
+}
 
 /// A list of events pushed by plugins to be processed
 #[derive(Default)]
