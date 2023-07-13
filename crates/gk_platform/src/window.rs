@@ -18,6 +18,16 @@ where
 {
 }
 
+impl<W, M> WindowManager<W, M>
+where
+    W: GKWindow + 'static,
+    M: GKWindowManager<W> + 'static,
+{
+    pub fn exit(&mut self) {
+        self.manager.exit();
+    }
+}
+
 #[derive(Copy, Clone, Hash, Debug, Eq, PartialEq)]
 pub struct GKWindowId(u64);
 

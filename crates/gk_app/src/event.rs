@@ -46,6 +46,9 @@ pub enum AppEvent {
     Update,
     /// Latest event triggered per frame
     PostUpdate,
+    /// Triggered before the user's close callback
+    RequestedClose,
     /// Triggered after user's close callback
+    /// No other event will be triggered after this one
     Close,
 }

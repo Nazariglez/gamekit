@@ -51,9 +51,12 @@ fn main() {
         println!("SuperEvent");
         ee.queue(SuperEvent2);
     })
-    .listen_event(|evt: &SuperEvent2, ee: &mut EventQueue<State>| {
-        println!("SuperEvent2");
-    })
+    .listen_event(
+        |evt: &SuperEvent2, windows: &mut Windows, ee: &mut EventQueue<State>| {
+            println!("SuperEvent2");
+            windows.exit();
+        },
+    )
     .build()
     .unwrap();
 }

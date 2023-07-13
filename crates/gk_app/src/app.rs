@@ -46,11 +46,12 @@ impl<S: GKState> App<S> {
                 .filter_map(|cb| cb.downcast_mut::<Box<EventHandlerFn<E, S>>>())
                 .for_each(|cb| {
                     cb(&mut self.storage, &evt);
-                    // execute_queued_events(self);
                 });
         }
 
-        execute_queued_events(self);
+        if !self.closed {
+            execute_queued_events(self);
+        }
     }
 
     /// It's called each frame by the backend and it dispatches
@@ -67,7 +68,7 @@ impl<S: GKState> App<S> {
     }
 
     /// It's called when the backend/app is about to close
-    /// it dispatched the event `Close`
+    /// it dispatched the events `RequestedClose` and `Close`
     pub fn close(&mut self) {
         if !self.initialized {
             return;
@@ -77,6 +78,7 @@ impl<S: GKState> App<S> {
             return;
         }
 
+        self.event(AppEvent::RequestedClose);
         self.closed = true;
         (self.close_handler)(&mut self.storage);
         self.event(AppEvent::Close);
