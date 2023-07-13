@@ -2,8 +2,8 @@ use crate::app::App;
 use crate::config::BuildConfig;
 use crate::event::{EventListener, EventMap, EventQueue};
 use crate::handlers::{
-    EventHandler, EventHandlerFn, Handler, PluginHandler, RunnerHandlerFn, SetupHandler,
-    SetupHandlerFn, UpdateHandlerFn,
+    EventHandler, EventHandlerFn, EventHandlerFnOnce, EventHandlerOnce, Handler, PluginHandler,
+    RunnerHandlerFn, SetupHandler, SetupHandlerFn, UpdateHandlerFn,
 };
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
@@ -108,28 +108,22 @@ impl<S: GKState> AppBuilder<S> {
         self.event_handler
             .entry(k)
             .or_default()
-            .push(EventListener {
-                handler: Box::new(cb),
-                once: false,
-            });
+            .push(EventListener::Mut(Box::new(cb)));
         self
     }
 
     pub fn listen_event_once<E, T, H>(mut self, mut handler: H) -> Self
     where
         E: 'static,
-        H: EventHandler<E, S, T> + 'static,
+        H: EventHandlerOnce<E, S, T> + 'static,
     {
         let k = TypeId::of::<E>();
-        let cb: Box<EventHandlerFn<E, S>> =
+        let cb: Box<EventHandlerFnOnce<E, S>> =
             Box::new(move |s: &mut Storage<S>, e: &E| handler.call(s, e));
         self.event_handler
             .entry(k)
             .or_default()
-            .push(EventListener {
-                handler: Box::new(cb),
-                once: true,
-            });
+            .push(EventListener::Once(Some(Box::new(cb))));
         self
     }
 

@@ -11,9 +11,19 @@ pub(crate) type EventMap = HashMap<TypeId, arrayvec::ArrayVec<EventListener, MAX
 #[cfg(not(feature = "limited_events"))]
 pub(crate) type EventMap = HashMap<TypeId, Vec<EventListener>>;
 
-pub(crate) struct EventListener {
-    pub(crate) handler: Box<dyn Any>,
-    pub(crate) once: bool,
+pub(crate) enum EventListener {
+    Once(Option<Box<dyn Any>>),
+    Mut(Box<dyn Any>),
+}
+
+impl EventListener {
+    pub(crate) fn is_once(&self) -> bool {
+        if let Self::Once(_) = self {
+            return true;
+        }
+
+        return false;
+    }
 }
 
 /// A list of events pushed by plugins to be processed

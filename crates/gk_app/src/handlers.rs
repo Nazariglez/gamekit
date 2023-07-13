@@ -7,6 +7,7 @@ pub(crate) type SetupHandlerFn<S> = dyn FnOnce(&mut Plugins) -> Result<S, String
 pub(crate) type PluginHandlerFn<P> = dyn FnOnce(&mut Plugins) -> Result<P, String>;
 pub(crate) type UpdateHandlerFn<S> = dyn FnMut(&mut Storage<S>);
 pub(crate) type EventHandlerFn<E, S> = dyn FnMut(&mut Storage<S>, &E);
+pub(crate) type EventHandlerFnOnce<E, S> = dyn FnOnce(&mut Storage<S>, &E);
 
 /// Represent an update's handler
 /// It allow to use as parameter the App's State
@@ -237,3 +238,61 @@ fn_event_handler! { A B C D E F G }
 fn_event_handler! { A B C D E F G H }
 fn_event_handler! { A B C D E F G H I }
 fn_event_handler! { A B C D E F G H I J }
+
+/// Represent a event's handler
+/// It allow to use as parameter the App's State
+/// or any App's plugin
+pub trait EventHandlerOnce<Evt, S: GKState, T> {
+    fn call(self, app: &mut Storage<S>, evt: &Evt);
+}
+
+// Safe for notan because the map will never change
+// once it's created it will not have new register or removed ones
+// Doing this we got interior mutability for the components but not the map
+// because is never exposes
+macro_rules! fn_event_once_handler ({ $($param:ident)* } => {
+    impl<Evt, S, Fun, $($param,)*> EventHandlerOnce<Evt, S, ($($param,)*)> for Fun
+    where
+        S: GKState + 'static,
+        Fun: FnOnce(&Evt, $(&mut $param),*),
+        $($param:FromStorage<S> + 'static),*
+    {
+        fn call(mut self, storage: &mut Storage<S>, evt: &Evt) {
+            // Look for duplicated parameters and panic
+            #[cfg(debug_assertions)]
+            {
+                use std::collections::HashSet;
+                use std::any::TypeId;
+                let mut h_set:HashSet<TypeId> = Default::default();
+
+                $(
+                    if !h_set.insert(TypeId::of::<$param>()) {
+                        panic!("Application handlers cannot contains duplicated parameters.");
+                    }
+                )*
+            }
+
+
+            // Safety. //TODO
+            paste::paste! {
+                let ($([<$param:lower _v>],)*) = unsafe {
+                    $(let [<$param:lower _v>] = $param::from_storage(storage) as *mut _;)*
+                    ($(&mut *[<$param:lower _v>],)*)
+                };
+                (self)(evt, $([<$param:lower _v>],)*);
+            }
+        }
+    }
+});
+
+fn_event_once_handler! {}
+fn_event_once_handler! { A }
+fn_event_once_handler! { A B }
+fn_event_once_handler! { A B C }
+fn_event_once_handler! { A B C D }
+fn_event_once_handler! { A B C D E }
+fn_event_once_handler! { A B C D E F }
+fn_event_once_handler! { A B C D E F G }
+fn_event_once_handler! { A B C D E F G H }
+fn_event_once_handler! { A B C D E F G H I }
+fn_event_once_handler! { A B C D E F G H I J }

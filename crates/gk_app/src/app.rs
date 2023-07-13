@@ -1,5 +1,5 @@
-use crate::event::{AppEvent, EventMap};
-use crate::handlers::{EventHandlerFn, UpdateHandlerFn};
+use crate::event::{AppEvent, EventListener, EventMap};
+use crate::handlers::{EventHandlerFn, EventHandlerFnOnce, UpdateHandlerFn};
 use crate::storage::Storage;
 use crate::GKState;
 use std::any::TypeId;
@@ -28,9 +28,8 @@ impl<S: GKState> App<S> {
             return;
         }
 
-        self.event(AppEvent::Init);
-
         self.initialized = true;
+        self.event(AppEvent::Init);
         (self.init_handler)(&mut self.storage);
     }
 
@@ -42,13 +41,28 @@ impl<S: GKState> App<S> {
 
         let list = self.event_handler.get_mut(&TypeId::of::<E>());
         if let Some(list) = list {
-            list.iter_mut()
-                .filter_map(|listener| listener.handler.downcast_mut::<Box<EventHandlerFn<E, S>>>())
-                .for_each(|cb| {
-                    cb(&mut self.storage, &evt);
-                });
+            let mut needs_clean = false;
+            list.iter_mut().for_each(|listener| match listener {
+                EventListener::Once(cb_opt) => {
+                    if let Some(mut cb) = cb_opt.take() {
+                        let cb = cb.downcast::<Box<EventHandlerFnOnce<E, S>>>();
+                        if let Ok(mut cb) = cb {
+                            cb(&mut self.storage, &evt);
+                        }
+                    }
+                }
+                EventListener::Mut(cb) => {
+                    let cb = cb.downcast_mut::<Box<EventHandlerFn<E, S>>>();
+                    if let Some(cb) = cb {
+                        cb(&mut self.storage, &evt);
+                    }
+                }
+            });
 
             // clean "once" listeners
+            if needs_clean {
+                list.retain(|listener| !listener.is_once());
+            }
         }
 
         if !self.closed {

@@ -27,6 +27,58 @@ pub struct GKWindowAttributes {
     pub transparent: bool,
 }
 
+impl GKWindowAttributes {
+    pub fn with_size(mut self, width: u32, height: u32) -> Self {
+        self.size = Some((width, height));
+        self
+    }
+
+    pub fn with_min_size(mut self, width: u32, height: u32) -> Self {
+        self.min_size = Some((width, height));
+        self
+    }
+
+    pub fn with_max_size(mut self, width: u32, height: u32) -> Self {
+        self.max_size = Some((width, height));
+        self
+    }
+
+    pub fn with_position(mut self, x: i32, y: i32) -> Self {
+        self.position = Some((x, y));
+        self
+    }
+
+    pub fn with_resizable(mut self, resizable: bool) -> Self {
+        self.resizable = resizable;
+        self
+    }
+
+    pub fn with_title(mut self, title: &str) -> Self {
+        self.title = title.to_string();
+        self
+    }
+
+    pub fn with_fullscreen(mut self, fullscreen: bool) -> Self {
+        self.fullscreen = fullscreen;
+        self
+    }
+
+    pub fn with_maximized(mut self, maximized: bool) -> Self {
+        self.maximized = maximized;
+        self
+    }
+
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.visible = visible;
+        self
+    }
+
+    pub fn with_transparent(mut self, transparent: bool) -> Self {
+        self.transparent = transparent;
+        self
+    }
+}
+
 impl Default for GKWindowAttributes {
     fn default() -> Self {
         Self {

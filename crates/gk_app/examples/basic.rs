@@ -2,7 +2,7 @@ use gk_app::event::AppEvent;
 use gk_app::prelude::*;
 use gk_core::events::{SuperEvent, SuperEvent2};
 use gk_core::window::GKWindowManager;
-use gk_platform::{PlatformConfig, Windows};
+use gk_platform::{GKWindow, PlatformConfig, Windows};
 
 #[derive(AppState)]
 struct State {
@@ -17,7 +17,7 @@ struct PP {
 impl Plugin for PP {}
 
 fn main() {
-    let win_config = PlatformConfig;
+    let win_config = PlatformConfig::default().window(Default::default());
 
     AppBuilder::init_with(|pp: &mut PP, windows: &mut Windows| {
         // let win_id = manager.create()?;
@@ -30,12 +30,18 @@ fn main() {
     .add_config(win_config)
     .unwrap()
     .add_plugin(PP { id: 1234 })
-    .on_init(|windows: &mut Windows| {
-        let id = windows.create().title("SuperMega win").build().unwrap();
-        windows.set_main_window(id);
-    })
-    .on_update(|state: &mut State, pp: &mut PP| {
-        println!("state.id: {}x{}, pp.id: {}", state.id, state.i, pp.id);
+    // .on_init(|windows: &mut Windows| {
+    //     let id = windows.create().title("SuperMega win").build().unwrap();
+    //     windows.set_main_window(id);
+    // })
+    .on_update(|state: &mut State, pp: &mut PP, windows: &mut Windows| {
+        println!(
+            "state.id: {}x{}, pp.id: {} -> {:?}",
+            state.id,
+            state.i,
+            pp.id,
+            windows.main_window().unwrap().id()
+        );
     })
     .listen_event(|evt: &AppEvent, ee: &mut EventQueue<State>| {
         println!("-> {evt:?}");

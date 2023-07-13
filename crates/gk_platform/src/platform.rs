@@ -52,7 +52,7 @@ where
     M: GKWindowManager<W> + 'static,
 {
     manager: &'a mut WindowManager<W, M>,
-    attrs: GKWindowAttributes,
+    pub(crate) attrs: GKWindowAttributes,
 }
 
 impl<'a, W, M> WindowBuilder<'a, W, M>
@@ -68,52 +68,52 @@ where
     }
 
     pub fn size(mut self, width: u32, height: u32) -> Self {
-        self.attrs.size = Some((width, height));
+        self.attrs = self.attrs.with_size(width, height);
         self
     }
 
     pub fn min_size(mut self, width: u32, height: u32) -> Self {
-        self.attrs.min_size = Some((width, height));
+        self.attrs = self.attrs.with_min_size(width, height);
         self
     }
 
     pub fn max_size(mut self, width: u32, height: u32) -> Self {
-        self.attrs.max_size = Some((width, height));
+        self.attrs = self.attrs.with_max_size(width, height);
         self
     }
 
     pub fn position(mut self, x: i32, y: i32) -> Self {
-        self.attrs.position = Some((x, y));
+        self.attrs = self.attrs.with_position(x, y);
         self
     }
 
     pub fn resizable(mut self, resizable: bool) -> Self {
-        self.attrs.resizable = resizable;
+        self.attrs = self.attrs.with_resizable(resizable);
         self
     }
 
     pub fn title(mut self, title: &str) -> Self {
-        self.attrs.title = title.to_string();
+        self.attrs = self.attrs.with_title(title);
         self
     }
 
     pub fn fullscreen(mut self, fullscreen: bool) -> Self {
-        self.attrs.fullscreen = fullscreen;
+        self.attrs = self.attrs.with_fullscreen(fullscreen);
         self
     }
 
     pub fn maximized(mut self, maximized: bool) -> Self {
-        self.attrs.maximized = maximized;
+        self.attrs = self.attrs.with_maximized(maximized);
         self
     }
 
     pub fn visible(mut self, visible: bool) -> Self {
-        self.attrs.visible = visible;
+        self.attrs = self.attrs.with_visible(visible);
         self
     }
 
     pub fn transparent(mut self, transparent: bool) -> Self {
-        self.attrs.transparent = transparent;
+        self.attrs = self.attrs.with_transparent(transparent);
         self
     }
 
