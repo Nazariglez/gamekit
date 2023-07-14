@@ -1,7 +1,12 @@
-use crate::empty::*;
 use crate::{GKWindowAttributes, WindowEvent, WindowEventId};
 use gk_app::event::AppEvent;
 use gk_app::{AppBuilder, BuildConfig, GKState};
+
+#[cfg(feature = "empty")]
+use crate::empty::*;
+
+#[cfg(feature = "winit")]
+use crate::winit::*;
 
 #[derive(Default)]
 pub struct PlatformConfig {

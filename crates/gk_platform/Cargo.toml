@@ -16,5 +16,5 @@ serde = { workspace = true, optional = true }
 winit = { version = "0.28", optional = true }
 
 [features]
-default = ["empty"]
+default = ["winit"]
 empty = []

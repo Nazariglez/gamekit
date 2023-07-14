@@ -1,7 +1,8 @@
-#![cfg(feature = "empty")]
+#![cfg(feature = "winit")]
 
 mod manager;
 mod runner;
+mod utils;
 mod window;
 
 use crate::platform::WindowManager;
