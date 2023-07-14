@@ -1,5 +1,5 @@
 use crate::empty::*;
-use crate::GKWindowAttributes;
+use crate::{GKWindowAttributes, WindowEvent, WindowEventId};
 use gk_app::event::AppEvent;
 use gk_app::{AppBuilder, BuildConfig, GKState};
 
@@ -32,6 +32,19 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
                 })
             }
         };
+
+        // Read windows event to set main window and close app when all windows are closed
+        let builder =
+            builder.listen_event(|evt: &WindowEvent, windows: &mut Windows| match evt.event {
+                // WindowEventId::Open => windows.set_main_window(evt.id),
+                WindowEventId::FocusGained => windows.set_main_window(evt.id),
+                WindowEventId::CloseRequest => {
+                    if windows.window_ids().len() == 1 {
+                        windows.exit();
+                    }
+                }
+                _ => {}
+            });
 
         // let's add the windows plugin
         let windows = Windows::default();

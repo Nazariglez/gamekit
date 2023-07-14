@@ -42,11 +42,11 @@ where
     pub fn close(&mut self, id: GKWindowId) {
         let closed = self.manager.close(id);
         if closed {
-            if let Some(pos) = self
+            let pos = self
                 .window_ids
                 .iter()
-                .position(|stored_id| *stored_id == id)
-            {
+                .position(|stored_id| *stored_id == id);
+            if let Some(pos) = pos {
                 self.window_ids.remove(pos);
             }
         }
