@@ -97,6 +97,7 @@ impl Default for GKWindowAttributes {
 }
 
 pub trait GKWindowManager<W: GKWindow> {
+    fn new() -> Self;
     fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String>;
     fn window(&mut self, id: GKWindowId) -> Option<&mut W>;
     fn close(&mut self, id: GKWindowId) -> bool;

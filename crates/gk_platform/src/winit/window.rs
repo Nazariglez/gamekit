@@ -1,28 +1,23 @@
-use crate::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
+use super::utils::win_id;
+use crate::window::{CursorIcon, GKWindow, GKWindowId};
+use winit::dpi::{LogicalPosition, LogicalSize};
+use winit::event_loop::EventLoopWindowTarget;
+use winit::window::{Fullscreen, Window as RawWindow};
 
 pub struct Window {
-    pub(crate) id: GKWindowId,
-    pub(crate) size: (u32, u32),
-    pub(crate) position: (i32, i32),
-    pub(crate) title: String,
-    pub(crate) cursor: CursorIcon,
-    pub(crate) resizable: bool,
-    pub(crate) min_size: Option<(u32, u32)>,
-    pub(crate) max_size: Option<(u32, u32)>,
+    id: GKWindowId,
+    raw: RawWindow,
+    title: String,
 }
 
-impl Default for Window {
-    fn default() -> Self {
-        Self {
-            id: 0u64.into(),
-            size: (0, 0),
-            position: (0, 0),
-            title: "Window".to_string(),
-            cursor: CursorIcon::Default,
-            resizable: false,
-            min_size: None,
-            max_size: None,
-        }
+impl Window {
+    pub(crate) fn new(event_loop: &EventLoopWindowTarget<()>) -> Result<Self, String> {
+        let raw = RawWindow::new(event_loop).map_err(|err| err.to_string())?;
+        let id = win_id(raw.id());
+        let title = format!("GameKit Window {}", <GKWindowId as Into<u64>>::into(id));
+        raw.set_title(&title);
+        let win = Window { id, raw, title };
+        Ok(win)
     }
 }
 
@@ -32,31 +27,41 @@ impl GKWindow for Window {
     }
 
     fn size(&self) -> (u32, u32) {
-        self.size
+        let scale_factor = self.raw.scale_factor();
+        let size = self.raw.inner_size().to_logical::<u32>(scale_factor);
+        (size.width, size.height)
     }
 
     fn width(&self) -> u32 {
-        self.size.0
+        let (w, _) = self.size();
+        w
     }
 
     fn height(&self) -> u32 {
-        self.size.1
+        let (_, h) = self.size();
+        h
     }
 
     fn set_size(&mut self, width: u32, height: u32) {
-        self.size = (width, height);
+        self.raw.set_inner_size(LogicalSize::new(width, height));
     }
 
     fn scale(&self) -> f64 {
-        1.0
+        self.raw.scale_factor()
     }
 
     fn position(&self) -> Result<(i32, i32), String> {
-        Ok(self.position)
+        let pos = self
+            .raw
+            .outer_position()
+            .map_err(|err| err.to_string())?
+            .to_logical::<i32>(self.scale());
+
+        Ok(pos.into())
     }
 
     fn set_position(&mut self, x: i32, y: i32) {
-        self.position = (x, y);
+        self.raw.set_outer_position(LogicalPosition::new(x, y));
     }
 
     fn title(&self) -> &str {
@@ -65,85 +70,87 @@ impl GKWindow for Window {
 
     fn set_title(&mut self, title: &str) {
         self.title = title.to_string();
+        self.raw.set_title(&self.title);
     }
 
     fn fullscreen(&self) -> bool {
-        false
+        self.raw.fullscreen().is_some()
     }
 
-    fn set_fullscreen(&mut self, _fullscreen: bool) {
-        // no-op
+    fn set_fullscreen(&mut self, fullscreen: bool) {
+        let mode = fullscreen.then(|| Fullscreen::Borderless(self.raw.current_monitor()));
+        self.raw.set_fullscreen(mode);
     }
 
     fn request_focus(&mut self) {
-        // no-op
+        self.raw.focus_window();
     }
 
     fn has_focus(&self) -> bool {
-        true
+        self.has_focus()
     }
 
     fn set_cursor_icon(&mut self, cursor: CursorIcon) {
-        self.cursor = cursor;
+        todo!()
     }
 
     fn cursor(&self) -> CursorIcon {
-        self.cursor
+        todo!()
     }
 
-    fn set_maximized(&mut self, _maximized: bool) {
-        // no-op
+    fn set_maximized(&mut self, maximized: bool) {
+        self.raw.set_maximized(maximized);
     }
 
     fn maximized(&self) -> bool {
-        false
+        self.raw.is_maximized()
     }
 
-    fn set_minimized(&mut self, _minimized: bool) {
-        // no-op
+    fn set_minimized(&mut self, minimized: bool) {
+        self.raw.set_minimized(minimized);
     }
 
     fn minimized(&self) -> bool {
-        false
+        self.raw.is_minimized().unwrap_or(false)
     }
 
-    fn set_visible(&mut self, _visible: bool) {
-        // no-op
+    fn set_visible(&mut self, visible: bool) {
+        self.raw.set_visible(visible);
     }
 
     fn visible(&self) -> bool {
-        false
+        self.raw.is_visible().unwrap_or(false)
     }
 
-    fn set_transparent(&mut self, _transparent: bool) {
-        // no-op
+    fn set_transparent(&mut self, transparent: bool) {
+        todo!()
     }
 
     fn transparent(&self) -> bool {
-        false
+        todo!()
     }
 
     fn set_resizable(&mut self, resizable: bool) {
-        self.resizable = resizable;
+        self.raw.set_resizable(resizable);
     }
 
     fn resizable(&self) -> bool {
-        self.resizable
+        self.raw.is_resizable()
     }
 
     fn set_min_size(&mut self, width: u32, height: u32) {
-        self.min_size = Some((width, height));
+        todo!()
     }
 
     fn min_size(&self) -> Option<(u32, u32)> {
-        self.min_size
+        todo!()
     }
 
     fn set_max_size(&mut self, width: u32, height: u32) {
-        self.max_size = Some((width, height));
+        todo!()
     }
 
     fn max_size(&self) -> Option<(u32, u32)> {
-        self.max_size
+        todo!()
     }
 }

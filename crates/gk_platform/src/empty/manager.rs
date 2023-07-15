@@ -10,6 +10,10 @@ pub struct Manager {
 }
 
 impl GKWindowManager<Window> for Manager {
+    fn new() -> Self {
+        Default::default()
+    }
+
     fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
         let count = self.windows.len();
         let id: GKWindowId = (count as u64).into();

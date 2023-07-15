@@ -52,7 +52,7 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
             });
 
         // let's add the windows plugin
-        let windows = Windows::default();
+        let windows = Windows::new();
         Ok(builder.add_plugin(windows).with_runner(runner))
     }
 }

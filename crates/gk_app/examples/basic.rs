@@ -59,7 +59,7 @@ fn main() {
     .listen_event(
         |evt: &SuperEvent2, windows: &mut Windows, ee: &mut EventQueue<State>| {
             println!("SuperEvent2");
-            windows.exit();
+            // windows.exit();
         },
     )
     .build()

@@ -9,7 +9,7 @@ pub fn runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
 
         let request_exit = app
             .get_mut_plugin::<Windows>()
-            .unwrap()
+            .ok_or_else(|| "Cannot find Windows plugin.")?
             .manager
             .request_exit;
 

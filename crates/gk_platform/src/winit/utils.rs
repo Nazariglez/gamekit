@@ -1,4 +1,4 @@
-use gk_app::window::GKWindowId;
+use crate::GKWindowId;
 use winit::window::WindowId;
 
 pub(crate) fn win_id(window_id: WindowId) -> GKWindowId {

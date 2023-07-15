@@ -1,30 +1,45 @@
+use super::event_loop::EventLoopPtr;
 use super::window::Window;
-use crate::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
-use crate::GKWindowAttributes;
-use hashbrown::HashMap;
+use crate::{GKWindow, GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_app::Plugin;
+use std::collections::HashMap;
+pub use winit::event_loop::EventLoopWindowTarget;
 
-#[derive(Default)]
 pub struct Manager {
-    windows: HashMap<GKWindowId, Window>,
+    pub windows: HashMap<GKWindowId, Window>,
+    pub(crate) event_loop: EventLoopPtr,
     pub(crate) request_exit: bool,
 }
 
+impl Plugin for Manager {}
+
+impl Default for Manager {
+    fn default() -> Self {
+        Self {
+            windows: HashMap::default(),
+            event_loop: EventLoopPtr::new(),
+            request_exit: false,
+        }
+    }
+}
+
 impl GKWindowManager<Window> for Manager {
+    fn new() -> Self {
+        Default::default()
+    }
+
     fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
-        let count = self.windows.len();
-        let id: GKWindowId = (count as u64).into();
-        let win = Window {
-            id,
-            size: attrs.size.unwrap_or((800, 600)),
-            position: attrs.position.unwrap_or((0, 0)),
-            title: attrs.title.clone(),
-            cursor: CursorIcon::Default,
-            resizable: attrs.resizable,
-            min_size: None,
-            max_size: None,
-        };
-        self.windows.insert(id, win);
-        Ok(id)
+        // SAFETY: if it's `Some` means that we're inside the event's loop and this is available
+        let event_loop = self.event_loop.inner();
+        match event_loop {
+            Some(event_loop) => {
+                let win = Window::new(event_loop)?;
+                let id = win.id();
+                self.windows.insert(id, win);
+                Ok(id)
+            }
+            None => Err("Cannot create window because EventLoop is not initialized".to_string()),
+        }
     }
 
     fn window(&mut self, id: GKWindowId) -> Option<&mut Window> {

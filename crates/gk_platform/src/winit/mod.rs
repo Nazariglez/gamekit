@@ -1,5 +1,6 @@
 #![cfg(feature = "winit")]
 
+mod event_loop;
 mod manager;
 mod runner;
 mod utils;

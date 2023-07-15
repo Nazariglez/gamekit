@@ -2,7 +2,6 @@ use crate::{GKWindow, GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
 use std::marker::PhantomData;
 
-#[derive(Default)]
 pub struct WindowManager<W, M>
 where
     W: GKWindow + 'static,
@@ -19,6 +18,15 @@ where
     W: GKWindow + 'static,
     M: GKWindowManager<W> + 'static,
 {
+    pub(crate) fn new() -> Self {
+        Self {
+            manager: M::new(),
+            main_window: None,
+            window_ids: vec![],
+            _w: Default::default(),
+        }
+    }
+
     pub fn create(&mut self) -> WindowBuilder<W, M> {
         WindowBuilder::new(self)
     }
