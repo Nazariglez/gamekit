@@ -44,10 +44,11 @@ impl<S: GKState> App<S> {
             let mut needs_clean = false;
             list.iter_mut().for_each(|listener| match listener {
                 EventListener::Once(cb_opt) => {
-                    if let Some(mut cb) = cb_opt.take() {
+                    if let Some(cb) = cb_opt.take() {
                         let cb = cb.downcast::<Box<EventHandlerFnOnce<E, S>>>();
-                        if let Ok(mut cb) = cb {
+                        if let Ok(cb) = cb {
                             cb(&mut self.storage, &evt);
+                            needs_clean = true;
                         }
                     }
                 }

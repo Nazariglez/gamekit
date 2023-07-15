@@ -1,6 +1,6 @@
 use super::utils::win_id;
 use super::Windows;
-use crate::window::{GKWindow, GKWindowManager, WindowEvent, WindowEventId};
+use crate::window::{GKWindow, WindowEvent, WindowEventId};
 use gk_app::{App, GKState};
 use winit::event::{Event, WindowEvent as WWindowEvent};
 
@@ -36,9 +36,9 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                 app.close();
             }
             Event::WindowEvent { window_id, event } => {
-                let manager = &mut app.get_mut_plugin::<Windows>().unwrap().manager;
+                let windows = app.get_mut_plugin::<Windows>().unwrap();
                 let id = win_id(window_id);
-                if let Some(win) = manager.window(id) {
+                if let Some(win) = windows.window(id) {
                     match event {
                         WWindowEvent::Resized(size) => {
                             let size = size.to_logical::<u32>(win.scale());
@@ -58,9 +58,11 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                             });
                         }
                         WWindowEvent::CloseRequested => {
+                            let windows = app.get_mut_plugin::<Windows>().unwrap();
+                            windows.close(id);
                             app.event(WindowEvent {
                                 id,
-                                event: WindowEventId::CloseRequest,
+                                event: WindowEventId::Close,
                             });
                         }
                         WWindowEvent::Destroyed => {}
@@ -110,6 +112,4 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
             control_flow.set_exit();
         }
     });
-
-    Ok(())
 }

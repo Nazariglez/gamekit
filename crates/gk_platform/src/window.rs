@@ -170,8 +170,8 @@ pub enum WindowEventId {
     /// The window did lost the focus
     FocusLost,
 
-    /// The window has received the close signal
-    CloseRequest,
+    /// The window was closed
+    Close,
 }
 
 /// Represent mouse cursor icon

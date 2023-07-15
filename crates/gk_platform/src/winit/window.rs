@@ -1,22 +1,75 @@
-use super::utils::win_id;
+use super::utils::{cursor_id, win_id};
 use crate::window::{CursorIcon, GKWindow, GKWindowId};
-use winit::dpi::{LogicalPosition, LogicalSize};
+use crate::GKWindowAttributes;
+use winit::dpi::{LogicalPosition, LogicalSize, PhysicalPosition};
 use winit::event_loop::EventLoopWindowTarget;
-use winit::window::{Fullscreen, Window as RawWindow};
+use winit::window::{Fullscreen, Window as RawWindow, WindowBuilder};
 
 pub struct Window {
     id: GKWindowId,
     raw: RawWindow,
     title: String,
+    cursor: CursorIcon,
+    transparent: bool,
+    min_size: Option<(u32, u32)>,
+    max_size: Option<(u32, u32)>,
 }
 
 impl Window {
-    pub(crate) fn new(event_loop: &EventLoopWindowTarget<()>) -> Result<Self, String> {
-        let raw = RawWindow::new(event_loop).map_err(|err| err.to_string())?;
+    pub(crate) fn new(
+        event_loop: &EventLoopWindowTarget<()>,
+        attrs: GKWindowAttributes,
+    ) -> Result<Self, String> {
+        let GKWindowAttributes {
+            size,
+            min_size,
+            max_size,
+            position,
+            resizable,
+            title,
+            fullscreen,
+            maximized,
+            visible,
+            transparent,
+        } = attrs;
+        let mut builder = WindowBuilder::default()
+            .with_title(&title)
+            .with_resizable(resizable)
+            .with_maximized(maximized)
+            .with_transparent(transparent)
+            .with_visible(visible);
+
+        if let Some((w, h)) = size {
+            builder = builder.with_inner_size(LogicalSize::new(w, h));
+        }
+
+        if let Some((w, h)) = min_size {
+            builder = builder.with_min_inner_size(LogicalSize::new(w, h));
+        }
+
+        if let Some((w, h)) = max_size {
+            builder = builder.with_max_inner_size(LogicalSize::new(w, h));
+        }
+
+        if let Some((x, y)) = position {
+            builder = builder.with_position(PhysicalPosition::new(x, y));
+        }
+
+        let raw = builder.build(event_loop).map_err(|err| err.to_string())?;
         let id = win_id(raw.id());
-        let title = format!("GameKit Window {}", <GKWindowId as Into<u64>>::into(id));
-        raw.set_title(&title);
-        let win = Window { id, raw, title };
+        let cursor = CursorIcon::Default;
+        let mut win = Window {
+            id,
+            raw,
+            title,
+            cursor,
+            transparent,
+            min_size: None,
+            max_size: None,
+        };
+        if fullscreen {
+            win.set_fullscreen(true);
+        }
         Ok(win)
     }
 }
@@ -87,15 +140,26 @@ impl GKWindow for Window {
     }
 
     fn has_focus(&self) -> bool {
-        self.has_focus()
+        self.raw.has_focus()
     }
 
     fn set_cursor_icon(&mut self, cursor: CursorIcon) {
-        todo!()
+        if cursor != self.cursor {
+            self.cursor = cursor;
+            match cursor_id(cursor) {
+                None => {
+                    self.raw.set_cursor_visible(false);
+                }
+                Some(icon) => {
+                    self.raw.set_cursor_visible(true);
+                    self.raw.set_cursor_icon(icon);
+                }
+            }
+        }
     }
 
     fn cursor(&self) -> CursorIcon {
-        todo!()
+        self.cursor
     }
 
     fn set_maximized(&mut self, maximized: bool) {
@@ -123,11 +187,12 @@ impl GKWindow for Window {
     }
 
     fn set_transparent(&mut self, transparent: bool) {
-        todo!()
+        self.transparent = transparent;
+        self.raw.set_transparent(transparent);
     }
 
     fn transparent(&self) -> bool {
-        todo!()
+        self.transparent
     }
 
     fn set_resizable(&mut self, resizable: bool) {
@@ -139,18 +204,22 @@ impl GKWindow for Window {
     }
 
     fn set_min_size(&mut self, width: u32, height: u32) {
-        todo!()
+        self.min_size = Some((width, height));
+        self.raw
+            .set_min_inner_size(Some(LogicalSize::new(width, height)));
     }
 
     fn min_size(&self) -> Option<(u32, u32)> {
-        todo!()
+        self.min_size
     }
 
     fn set_max_size(&mut self, width: u32, height: u32) {
-        todo!()
+        self.max_size = Some((width, height));
+        self.raw
+            .set_max_inner_size(Some(LogicalSize::new(width, height)));
     }
 
     fn max_size(&self) -> Option<(u32, u32)> {
-        todo!()
+        self.max_size
     }
 }

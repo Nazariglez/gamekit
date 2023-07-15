@@ -1,7 +1,5 @@
 use gk_app::event::AppEvent;
 use gk_app::prelude::*;
-use gk_core::events::{SuperEvent, SuperEvent2};
-use gk_core::window::GKWindowManager;
 use gk_platform::{GKWindow, PlatformConfig, Windows};
 
 #[derive(AppState)]
@@ -19,49 +17,34 @@ impl Plugin for PP {}
 fn main() {
     let win_config = PlatformConfig::default().window(Default::default());
 
-    AppBuilder::init_with(|pp: &mut PP, windows: &mut Windows| {
-        // let win_id = manager.create()?;
-        Ok(State {
-            id: 9999,
-            i: pp.id,
-            // win_id,
+    AppBuilder::init_with(|pp: &mut PP, windows: &mut Windows| Ok(State { id: 9999, i: pp.id }))
+        .add_config(win_config)
+        .unwrap()
+        .add_plugin(PP { id: 1234 })
+        .on_init(|windows: &mut Windows| {
+            let id = windows
+                .create()
+                .title("Lol")
+                .size(100, 100)
+                .build()
+                .unwrap();
         })
-    })
-    .add_config(win_config)
-    .unwrap()
-    .add_plugin(PP { id: 1234 })
-    // .on_init(|windows: &mut Windows| {
-    //     let id = windows.create().title("SuperMega win").build().unwrap();
-    //     windows.set_main_window(id);
-    // })
-    .on_update(|state: &mut State, pp: &mut PP, windows: &mut Windows| {
-        println!(
-            "state.id: {}x{}, pp.id: {} -> {:?}",
-            state.id,
-            state.i,
-            pp.id,
-            windows.main_window().unwrap().id()
-        );
-    })
-    .listen_event(|evt: &AppEvent, ee: &mut EventQueue<State>| {
-        println!("-> {evt:?}");
-        if let AppEvent::PostUpdate = evt {
-            println!("here... {:?}", evt);
-            // panic!();
-        } else {
-            ee.queue(SuperEvent);
-        }
-    })
-    .listen_event(|evt: &SuperEvent, ee: &mut EventQueue<State>| {
-        println!("SuperEvent");
-        ee.queue(SuperEvent2);
-    })
-    .listen_event(
-        |evt: &SuperEvent2, windows: &mut Windows, ee: &mut EventQueue<State>| {
-            println!("SuperEvent2");
-            // windows.exit();
-        },
-    )
-    .build()
-    .unwrap();
+        .on_update(|state: &mut State, pp: &mut PP, windows: &mut Windows| {
+            println!(
+                "state.id: {}x{}, pp.id: {} -> {:?}",
+                state.id,
+                state.i,
+                pp.id,
+                windows.main_window().map(|w| w.id()).unwrap_or(999.into()),
+            );
+        })
+        .listen_event(|evt: &AppEvent, ee: &mut EventQueue<State>| {
+            println!("-> {evt:?}");
+            if let AppEvent::PostUpdate = evt {
+                println!("here... {:?}", evt);
+                // panic!();
+            }
+        })
+        .build()
+        .unwrap();
 }

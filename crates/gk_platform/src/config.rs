@@ -43,8 +43,8 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
             builder.listen_event(|evt: &WindowEvent, windows: &mut Windows| match evt.event {
                 // WindowEventId::Open => windows.set_main_window(evt.id),
                 WindowEventId::FocusGained => windows.set_main_window(evt.id),
-                WindowEventId::CloseRequest => {
-                    if windows.window_ids().len() == 1 {
+                WindowEventId::Close => {
+                    if windows.window_ids().len() == 0 {
                         windows.exit();
                     }
                 }

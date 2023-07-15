@@ -112,7 +112,7 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn listen_event_once<E, T, H>(mut self, mut handler: H) -> Self
+    pub fn listen_event_once<E, T, H>(mut self, handler: H) -> Self
     where
         E: 'static,
         H: EventHandlerOnce<E, S, T> + 'static,

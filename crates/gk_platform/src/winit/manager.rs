@@ -33,7 +33,7 @@ impl GKWindowManager<Window> for Manager {
         let event_loop = self.event_loop.inner();
         match event_loop {
             Some(event_loop) => {
-                let win = Window::new(event_loop)?;
+                let win = Window::new(event_loop, attrs)?;
                 let id = win.id();
                 self.windows.insert(id, win);
                 Ok(id)
