@@ -1,4 +1,6 @@
-use crate::{GKWindowAttributes, WindowEvent, WindowEventId};
+#![cfg(any(feature = "empty", feature = "winit"))]
+
+use crate::window::{GKWindowAttributes, WindowEvent, WindowEventId};
 use gk_app::event::AppEvent;
 use gk_app::{AppBuilder, BuildConfig, GKState};
 
@@ -8,15 +10,25 @@ use crate::empty::*;
 #[cfg(feature = "winit")]
 use crate::winit::*;
 
-#[derive(Default)]
 pub struct PlatformConfig {
     main_window: Option<GKWindowAttributes>,
 }
 
+impl Default for PlatformConfig {
+    fn default() -> Self {
+        Self::windowless()
+    }
+}
+
 impl PlatformConfig {
-    pub fn window(mut self, attrs: GKWindowAttributes) -> Self {
-        self.main_window = Some(attrs);
-        self
+    pub fn windowless() -> Self {
+        Self { main_window: None }
+    }
+
+    pub fn with_window(attrs: GKWindowAttributes) -> Self {
+        Self {
+            main_window: Some(attrs),
+        }
     }
 }
 

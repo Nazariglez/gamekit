@@ -3,22 +3,19 @@ name = "gk_app"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-anymap = "0.12.1"
+gk_macro.workspace = true
+anymap.workspace = true
+arrayvec = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+
 paste = "1.0.12"
-gk_macro = { path = "../gk_macro", version = "0.1.0" }
 indexmap = "2.0.0"
-arrayvec = { version = "0.7.4", optional = true }
-serde = { version = "1.0", features = ["serde_derive"], optional = true }
 
 [dev-dependencies]
 gk_platform = { path = "../gk_platform", version = "0.1.0" }
 
 [features]
-default = ["limited_events"]
-
 # Avoid using a vector per event listener, instead uses a an Array limited to 32 by default. The number can be changed
 # passing `GK_LIMIT_EVENTS_TO=N` with the desired size as compilation variable.
 limited_events = ["arrayvec"]

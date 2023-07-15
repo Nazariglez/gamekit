@@ -1,13 +1,16 @@
-mod config;
 mod platform;
+pub mod prelude;
 mod window;
 
 #[cfg(feature = "empty")]
 mod empty;
+
 #[cfg(feature = "winit")]
 mod winit;
 
-pub use config::*;
+#[cfg(any(feature = "empty", feature = "winit"))]
+mod config;
+
 pub use platform::*;
 pub use window::*;
 
@@ -16,3 +19,6 @@ pub use empty::*;
 
 #[cfg(feature = "winit")]
 pub use crate::winit::*;
+
+#[cfg(any(feature = "empty", feature = "winit"))]
+pub use config::*;
