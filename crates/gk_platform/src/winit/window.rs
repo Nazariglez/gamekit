@@ -1,6 +1,7 @@
 use super::utils::{cursor_id, win_id};
 use crate::window::{CursorIcon, GKWindow, GKWindowId};
 use crate::GKWindowAttributes;
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::dpi::{LogicalPosition, LogicalSize, PhysicalPosition};
 use winit::event_loop::EventLoopWindowTarget;
 use winit::window::{Fullscreen, Window as RawWindow, WindowBuilder};
@@ -71,6 +72,12 @@ impl Window {
             win.set_fullscreen(true);
         }
         Ok(win)
+    }
+}
+
+unsafe impl HasRawWindowHandle for Window {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        self.raw.raw_window_handle()
     }
 }
 

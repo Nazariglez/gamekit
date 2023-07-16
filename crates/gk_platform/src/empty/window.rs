@@ -1,4 +1,5 @@
 use crate::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
 pub struct Window {
     pub(crate) id: GKWindowId,
@@ -23,6 +24,12 @@ impl Default for Window {
             min_size: None,
             max_size: None,
         }
+    }
+}
+
+unsafe impl HasRawWindowHandle for Window {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        todo!()
     }
 }
 

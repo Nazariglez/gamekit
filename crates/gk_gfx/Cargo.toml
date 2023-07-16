@@ -1,0 +1,12 @@
+[package]
+name = "gk_gfx"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gk_platform.workspace = true
+
+raw-window-handle.workspace = true
+hashbrown.workspace = true
+wgpu = "0.16.2"
+pollster = "0.3.0"

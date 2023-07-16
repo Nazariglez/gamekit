@@ -22,17 +22,20 @@ members = ["crates/*"]
 gk_app = { path = "./crates/gk_app", version = "0.1.0" }
 gk_macro = { path = "./crates/gk_macro", version = "0.1.0" }
 gk_platform = { path = "./crates/gk_platform", version = "0.1.0" }
+gk_gfx = { path = "./crates/gk_gfx", version = "0.1.0" }
 
 serde = { version = "1.0", features = ["serde_derive"] }
 log = "0.4.19"
 hashbrown = "0.14.0"
 anymap = "0.12.1"
 arrayvec = "0.7.4"
+raw-window-handle = "0.5.2"
 
 [dependencies]
 gk_app.workspace = true
 gk_platform.workspace = true
 gk_macro.workspace = true
+gk_gfx.workspace = true
 
 anymap.workspace = true
 # default-features=false...
