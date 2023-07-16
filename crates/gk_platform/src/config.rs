@@ -16,7 +16,7 @@ pub struct PlatformConfig {
 
 impl Default for PlatformConfig {
     fn default() -> Self {
-        Self::windowless()
+        Self::with_window(Default::default())
     }
 }
 

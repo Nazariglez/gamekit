@@ -39,5 +39,10 @@ anymap.workspace = true
 notan = { version = "0.9.3" }
 
 [features]
-default = ["gk_app/arrayvec", "gk_platform/winit"]
+default = ["basic"]
+# basic features for most apps
+basic = ["limited_memory", "gk_platform/winit"]
+# use arrayvec instead of vec when possible
+limited_memory = ["gk_app/limited_events"]
+# allow serialize and deserialize internal types
 serde = ["gk_app/serde", "gk_platform/serde"]
