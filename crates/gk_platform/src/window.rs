@@ -152,7 +152,7 @@ pub struct WindowEvent {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum WindowEventId {
     /// A new window was created
-    Open,
+    Init,
 
     /// Window's position after it was moved
     Moved { x: i32, y: i32 },
