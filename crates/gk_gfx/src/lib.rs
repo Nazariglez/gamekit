@@ -1,8 +1,10 @@
 use gk_platform::{GKWindow, GKWindowId};
 use hashbrown::HashMap;
-use wgpu::{Adapter, Device, Queue, Surface, SurfaceTexture};
+use wgpu::{Adapter, Color, Device, Instance, Queue, Surface, SurfaceTexture};
 
 pub struct Gfx {
+    color: Color,
+    instance: Instance,
     adapter: Adapter,
     device: Device,
     queue: Queue,
@@ -19,7 +21,7 @@ impl Gfx {
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 // Request an adapter which can render to our surface
-                compatible_surface: viewports.first().map(|desc| &desc.surface),
+                // compatible_surface: viewports.first().map(|desc| &desc.surface),
                 ..Default::default()
             })
             .await
@@ -39,6 +41,8 @@ impl Gfx {
             .expect("Failed to create device");
 
         Ok(Self {
+            color: Color::WHITE,
+            instance,
             adapter,
             device,
             queue,
@@ -47,8 +51,8 @@ impl Gfx {
     }
 
     pub fn create_surface<W: GKWindow>(&mut self, window: &W) {
-        let surface = unsafe { instance.create_surface(window) }.unwrap();
-        let caps = surface.get_capabilities(adapter);
+        let surface = unsafe { self.instance.create_surface(window) }.unwrap();
+        let caps = surface.get_capabilities(&self.adapter);
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: caps.formats[0],
@@ -59,20 +63,25 @@ impl Gfx {
             view_formats: vec![],
         };
 
-        surface.configure(device, &config);
+        surface.configure(&self.device, &config);
         self.surfaces.insert(window.id(), surface);
     }
 
     pub fn current_texture(&mut self, id: &GKWindowId) -> SurfaceTexture {
-        self.surfaces.get(id).unwrap().get_current_texture().unwrap()
+        self.surfaces
+            .get(id)
+            .unwrap()
+            .get_current_texture()
+            .unwrap()
     }
 
     pub fn draw(&mut self, id: &GKWindowId) {
-        let frame = self.current_texture();
+        let frame = self.current_texture(id);
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self.device
+        let mut encoder = self
+            .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
         {
             let _rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -81,7 +90,7 @@ impl Gfx {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(viewport.desc.background),
+                        load: wgpu::LoadOp::Clear(self.color),
                         store: true,
                     },
                 })],
@@ -91,6 +100,10 @@ impl Gfx {
 
         self.queue.submit(Some(encoder.finish()));
         frame.present();
+
+        self.color.r = (self.color.r + 0.001) % 1.0;
+        self.color.g = (self.color.g + 0.0001) % 1.0;
+        self.color.b = (self.color.b + 0.00001) % 1.0;
     }
 }
 /*

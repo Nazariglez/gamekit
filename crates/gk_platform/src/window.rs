@@ -1,4 +1,4 @@
-use raw_window_handle::HasRawWindowHandle;
+use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
 #[derive(Copy, Clone, Hash, Debug, Eq, PartialEq)]
 pub struct GKWindowId(u64);
@@ -106,7 +106,7 @@ pub trait GKWindowManager<W: GKWindow> {
     fn exit(&mut self);
 }
 
-pub trait GKWindow: HasRawWindowHandle {
+pub trait GKWindow: HasRawWindowHandle + HasRawDisplayHandle {
     fn id(&self) -> GKWindowId;
     fn size(&self) -> (u32, u32);
     fn width(&self) -> u32;
