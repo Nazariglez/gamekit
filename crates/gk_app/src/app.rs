@@ -22,7 +22,7 @@ impl<S: GKState> App<S> {
     }
 
     /// It's called when the backend is ready
-    /// it dispartched the event `Init`
+    /// it dispatched the event `Init`
     pub fn init(&mut self) {
         if self.initialized {
             return;
