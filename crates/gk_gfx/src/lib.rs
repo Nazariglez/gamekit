@@ -1,15 +1,25 @@
 use gk_app::{AppBuilder, BuildConfig, GKState, Plugin};
 use gk_platform::{GKWindow, GKWindowId, Platform, WindowEvent, WindowEventId};
 use hashbrown::HashMap;
-use wgpu::{Adapter, Color, Device, Instance, Queue, Surface, SurfaceTexture};
+use std::borrow::Cow;
+use wgpu::{
+    Adapter, Color, Device, Instance, Queue, RenderPipeline, Surface, SurfaceConfiguration,
+    SurfaceTexture,
+};
+
+pub struct GfxSurface {
+    surface: Surface,
+    config: SurfaceConfiguration,
+}
 
 pub struct Gfx {
+    render_pipeline: Option<RenderPipeline>,
     color: Color,
     instance: Instance,
     adapter: Adapter,
     device: Device,
     queue: Queue,
-    surfaces: HashMap<GKWindowId, Surface>,
+    surfaces: HashMap<GKWindowId, GfxSurface>,
 }
 
 impl Plugin for Gfx {}
@@ -44,6 +54,7 @@ impl Gfx {
             .expect("Failed to create device");
 
         Ok(Self {
+            render_pipeline: None,
             color: Color::WHITE,
             instance,
             adapter,
@@ -51,6 +62,14 @@ impl Gfx {
             queue,
             surfaces: Default::default(),
         })
+    }
+
+    fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
+        if let Some(surface) = self.surfaces.get_mut(&id) {
+            surface.config.width = width;
+            surface.config.height = height;
+            surface.surface.configure(&self.device, &surface.config);
+        }
     }
 
     pub fn create_surface<W: GKWindow>(&mut self, window: &W) {
@@ -68,13 +87,59 @@ impl Gfx {
         };
 
         surface.configure(&self.device, &config);
-        self.surfaces.insert(window.id(), surface);
+
+        if self.render_pipeline.is_none() {
+            // Load the shaders from disk
+            let shader = self
+                .device
+                .create_shader_module(wgpu::ShaderModuleDescriptor {
+                    label: None,
+                    source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
+                });
+
+            let pipeline_layout =
+                self.device
+                    .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                        label: None,
+                        bind_group_layouts: &[],
+                        push_constant_ranges: &[],
+                    });
+
+            let swapchain_format = caps.formats[0];
+
+            let render_pipeline =
+                self.device
+                    .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                        label: None,
+                        layout: Some(&pipeline_layout),
+                        vertex: wgpu::VertexState {
+                            module: &shader,
+                            entry_point: "vs_main",
+                            buffers: &[],
+                        },
+                        fragment: Some(wgpu::FragmentState {
+                            module: &shader,
+                            entry_point: "fs_main",
+                            targets: &[Some(swapchain_format.into())],
+                        }),
+                        primitive: wgpu::PrimitiveState::default(),
+                        depth_stencil: None,
+                        multisample: wgpu::MultisampleState::default(),
+                        multiview: None,
+                    });
+
+            self.render_pipeline = Some(render_pipeline);
+        }
+
+        self.surfaces
+            .insert(window.id(), GfxSurface { surface, config });
     }
 
     pub fn current_texture(&mut self, id: &GKWindowId) -> SurfaceTexture {
         self.surfaces
             .get(id)
             .unwrap()
+            .surface
             .get_current_texture()
             .unwrap()
     }
@@ -88,7 +153,7 @@ impl Gfx {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
         {
-            let _rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
@@ -100,6 +165,11 @@ impl Gfx {
                 })],
                 depth_stencil_attachment: None,
             });
+
+            if let Some(rp) = &self.render_pipeline {
+                rpass.set_pipeline(rp);
+                rpass.draw(0..3, 0..1);
+            }
         }
 
         self.queue.submit(Some(encoder.finish()));
@@ -119,7 +189,15 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
             |evt: &WindowEvent, gfx: &mut Gfx, platform: &mut Platform| match evt.event {
                 WindowEventId::Init => gfx.create_surface(platform.window(evt.id).unwrap()),
                 WindowEventId::Moved { .. } => {}
-                WindowEventId::Resized { .. } => {}
+                WindowEventId::Resized {
+                    width,
+                    height,
+                    scale_factor,
+                } => {
+                    let w = (width as f64 * scale_factor) as u32;
+                    let h = (height as f64 * scale_factor) as u32;
+                    gfx.resize(evt.id, w, h);
+                }
                 WindowEventId::Minimized => {}
                 WindowEventId::Maximized => {}
                 WindowEventId::FocusGained => {}

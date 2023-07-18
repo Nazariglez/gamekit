@@ -60,6 +60,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                                 event: WindowEventId::Resized {
                                     width: size.width,
                                     height: size.height,
+                                    scale_factor,
                                 },
                             });
                         }
@@ -107,7 +108,20 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                         WWindowEvent::TouchpadPressure { .. } => {}
                         WWindowEvent::AxisMotion { .. } => {}
                         WWindowEvent::Touch(_) => {}
-                        WWindowEvent::ScaleFactorChanged { .. } => {}
+                        WWindowEvent::ScaleFactorChanged {
+                            scale_factor,
+                            new_inner_size,
+                        } => {
+                            let size = new_inner_size.to_logical::<u32>(scale_factor);
+                            app.event(WindowEvent {
+                                id,
+                                event: WindowEventId::Resized {
+                                    width: size.width,
+                                    height: size.height,
+                                    scale_factor,
+                                },
+                            });
+                        }
                         WWindowEvent::ThemeChanged(_) => {}
                         WWindowEvent::Occluded(_) => {}
                     }

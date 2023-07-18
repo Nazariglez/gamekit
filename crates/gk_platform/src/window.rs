@@ -159,7 +159,11 @@ pub enum WindowEventId {
     Moved { x: i32, y: i32 },
 
     /// Window's size after it was resized
-    Resized { width: u32, height: u32 },
+    Resized {
+        width: u32,
+        height: u32,
+        scale_factor: f64,
+    },
 
     /// The window was minimized
     Minimized,
