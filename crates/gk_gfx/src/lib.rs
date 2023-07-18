@@ -55,12 +55,13 @@ impl Gfx {
 
     pub fn create_surface<W: GKWindow>(&mut self, window: &W) {
         let surface = unsafe { self.instance.create_surface(window) }.unwrap();
+        let (width, height) = window.physical_size();
         let caps = surface.get_capabilities(&self.adapter);
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: caps.formats[0],
-            width: window.width(),
-            height: window.height(),
+            width,
+            height,
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: caps.alpha_modes[0],
             view_formats: vec![],

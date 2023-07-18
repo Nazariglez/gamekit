@@ -94,6 +94,11 @@ impl GKWindow for Window {
         self.id
     }
 
+    fn physical_size(&self) -> (u32, u32) {
+        let size = self.raw.inner_size();
+        (size.width, size.height)
+    }
+
     fn size(&self) -> (u32, u32) {
         let scale_factor = self.raw.scale_factor();
         let size = self.raw.inner_size().to_logical::<u32>(scale_factor);

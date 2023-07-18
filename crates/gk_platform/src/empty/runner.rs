@@ -1,4 +1,4 @@
-use super::Windows;
+use crate::platform::Platform;
 use gk_app::{App, GKState};
 
 pub fn runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
@@ -8,8 +8,8 @@ pub fn runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
         app.update();
 
         let request_exit = app
-            .get_mut_plugin::<Windows>()
-            .ok_or_else(|| "Cannot find Windows plugin.")?
+            .get_mut_plugin::<Platform>()
+            .ok_or_else(|| "Cannot find Platform plugin.")?
             .manager
             .request_exit;
 

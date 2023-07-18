@@ -1,5 +1,7 @@
 use crate::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+use raw_window_handle::{
+    HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
+};
 
 pub struct Window {
     pub(crate) id: GKWindowId,
@@ -29,13 +31,23 @@ impl Default for Window {
 
 unsafe impl HasRawWindowHandle for Window {
     fn raw_window_handle(&self) -> RawWindowHandle {
-        todo!()
+        unreachable!("Empty platform should not try to get RawWindowHandle")
+    }
+}
+
+unsafe impl HasRawDisplayHandle for Window {
+    fn raw_display_handle(&self) -> RawDisplayHandle {
+        unreachable!("Empty platform should not try to get HasRawDisplayHandle")
     }
 }
 
 impl GKWindow for Window {
     fn id(&self) -> GKWindowId {
         self.id
+    }
+
+    fn physical_size(&self) -> (u32, u32) {
+        self.size
     }
 
     fn size(&self) -> (u32, u32) {

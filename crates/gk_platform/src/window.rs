@@ -108,6 +108,7 @@ pub trait GKWindowManager<W: GKWindow> {
 
 pub trait GKWindow: HasRawWindowHandle + HasRawDisplayHandle {
     fn id(&self) -> GKWindowId;
+    fn physical_size(&self) -> (u32, u32);
     fn size(&self) -> (u32, u32);
     fn width(&self) -> u32;
     fn height(&self) -> u32;
