@@ -1,14 +1,7 @@
-#![cfg(any(feature = "empty", feature = "winit"))]
-
 use crate::window::{GKWindowAttributes, WindowEvent, WindowEventId};
+use crate::{backend, Platform};
 use gk_app::event::AppEvent;
 use gk_app::{AppBuilder, BuildConfig, GKState};
-
-#[cfg(feature = "empty")]
-use crate::empty::*;
-
-#[cfg(feature = "winit")]
-use crate::winit::*;
 
 pub struct PlatformConfig {
     main_window: Option<GKWindowAttributes>,
@@ -37,34 +30,33 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
         // start the app with a window
         let builder = match self.main_window.take() {
             None => builder,
-            Some(attrs) => {
-                builder.listen_event_once(move |evt: &AppEvent, windows: &mut Windows| match evt {
+            Some(attrs) => builder.listen_event_once(
+                move |evt: &AppEvent, platform: &mut Platform| match evt {
                     AppEvent::Init => {
-                        let mut builder = windows.create();
-                        builder.attrs = attrs;
-                        let id = builder.build().unwrap();
-                        windows.set_main_window(id);
+                        let id = platform.create_window(attrs).unwrap();
+                        platform.set_main_window(id);
                     }
                     _ => {}
-                })
-            }
+                },
+            ),
         };
 
         // Read windows event to set main window and close app when all windows are closed
-        let builder =
-            builder.listen_event(|evt: &WindowEvent, windows: &mut Windows| match evt.event {
-                // WindowEventId::Open => windows.set_main_window(evt.id),
-                WindowEventId::FocusGained => windows.set_main_window(evt.id),
-                WindowEventId::Close => {
-                    if windows.window_ids().len() == 0 {
-                        windows.exit();
-                    }
+        let builder = builder.listen_event(|evt: &WindowEvent, platform: &mut Platform| match evt
+            .event
+        {
+            // WindowEventId::Open => windows.set_main_window(evt.id),
+            WindowEventId::FocusGained => platform.set_main_window(evt.id),
+            WindowEventId::Close => {
+                if platform.window_ids().len() == 0 {
+                    platform.exit();
                 }
-                _ => {}
-            });
+            }
+            _ => {}
+        });
 
         // let's add the windows plugin
-        let windows = Windows::new();
-        Ok(builder.add_plugin(windows).with_runner(runner))
+        let platform = Platform::new();
+        Ok(builder.add_plugin(platform).with_runner(backend::runner))
     }
 }

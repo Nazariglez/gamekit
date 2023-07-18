@@ -1,10 +1,9 @@
 pub use crate::platform::*;
 pub use crate::window::*;
 
-#[cfg(any(feature = "empty", feature = "winit"))]
 pub use crate::config::*;
 
-#[cfg(feature = "empty")]
+#[cfg(not(feature = "winit"))]
 pub use crate::empty::*;
 
 #[cfg(feature = "winit")]

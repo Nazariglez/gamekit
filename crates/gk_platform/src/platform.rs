@@ -1,41 +1,33 @@
-use crate::{GKWindow, GKWindowAttributes, GKWindowId, GKWindowManager};
+use crate::backend::{Manager, Window};
+use crate::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
-use std::marker::PhantomData;
 
-pub struct WindowManager<W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
-    pub(crate) manager: M,
+pub struct Platform {
+    pub(crate) manager: Manager,
     main_window: Option<GKWindowId>,
     window_ids: Vec<GKWindowId>,
-    _w: PhantomData<W>,
 }
 
-impl<W, M> WindowManager<W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
+impl Platform {
     pub(crate) fn new() -> Self {
         Self {
-            manager: M::new(),
+            manager: Manager::new(),
             main_window: None,
             window_ids: vec![],
-            _w: Default::default(),
         }
     }
 
-    pub fn create(&mut self) -> WindowBuilder<W, M> {
-        WindowBuilder::new(self)
+    pub fn create_window(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
+        let id = self.manager.create(attrs)?;
+        self.window_ids.push(id);
+        Ok(id)
     }
 
-    pub fn window(&mut self, id: GKWindowId) -> Option<&mut W> {
+    pub fn window(&mut self, id: GKWindowId) -> Option<&mut Window> {
         self.manager.window(id)
     }
 
-    pub fn main_window(&mut self) -> Option<&mut W> {
+    pub fn main_window(&mut self) -> Option<&mut Window> {
         self.main_window.and_then(|id| self.window(id))
     }
 
@@ -65,88 +57,4 @@ where
     }
 }
 
-impl<W, M> Plugin for WindowManager<W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
-}
-
-pub struct WindowBuilder<'a, W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
-    manager: &'a mut WindowManager<W, M>,
-    pub(crate) attrs: GKWindowAttributes,
-}
-
-impl<'a, W, M> WindowBuilder<'a, W, M>
-where
-    W: GKWindow + 'static,
-    M: GKWindowManager<W> + 'static,
-{
-    fn new(manager: &'a mut WindowManager<W, M>) -> Self {
-        Self {
-            manager,
-            attrs: Default::default(),
-        }
-    }
-
-    pub fn size(mut self, width: u32, height: u32) -> Self {
-        self.attrs = self.attrs.with_size(width, height);
-        self
-    }
-
-    pub fn min_size(mut self, width: u32, height: u32) -> Self {
-        self.attrs = self.attrs.with_min_size(width, height);
-        self
-    }
-
-    pub fn max_size(mut self, width: u32, height: u32) -> Self {
-        self.attrs = self.attrs.with_max_size(width, height);
-        self
-    }
-
-    pub fn position(mut self, x: i32, y: i32) -> Self {
-        self.attrs = self.attrs.with_position(x, y);
-        self
-    }
-
-    pub fn resizable(mut self, resizable: bool) -> Self {
-        self.attrs = self.attrs.with_resizable(resizable);
-        self
-    }
-
-    pub fn title(mut self, title: &str) -> Self {
-        self.attrs = self.attrs.with_title(title);
-        self
-    }
-
-    pub fn fullscreen(mut self, fullscreen: bool) -> Self {
-        self.attrs = self.attrs.with_fullscreen(fullscreen);
-        self
-    }
-
-    pub fn maximized(mut self, maximized: bool) -> Self {
-        self.attrs = self.attrs.with_maximized(maximized);
-        self
-    }
-
-    pub fn visible(mut self, visible: bool) -> Self {
-        self.attrs = self.attrs.with_visible(visible);
-        self
-    }
-
-    pub fn transparent(mut self, transparent: bool) -> Self {
-        self.attrs = self.attrs.with_transparent(transparent);
-        self
-    }
-
-    pub fn build(self) -> Result<GKWindowId, String> {
-        let Self { manager, attrs } = self;
-        let id = manager.manager.create(attrs)?;
-        manager.window_ids.push(id);
-        Ok(id)
-    }
-}
+impl Plugin for Platform {}

@@ -1,24 +1,23 @@
-mod platform;
 pub mod prelude;
+
+mod platform;
 mod window;
 
-#[cfg(feature = "empty")]
+#[cfg(not(feature = "winit"))]
 mod empty;
+
+#[cfg(not(feature = "winit"))]
+pub(crate) use crate::empty as backend;
 
 #[cfg(feature = "winit")]
 mod winit;
 
-#[cfg(any(feature = "empty", feature = "winit"))]
+#[cfg(feature = "winit")]
+pub(crate) use crate::winit as backend;
+
 mod config;
 
 pub use platform::*;
 pub use window::*;
 
-#[cfg(feature = "empty")]
-pub use empty::*;
-
-#[cfg(feature = "winit")]
-pub use crate::winit::*;
-
-#[cfg(any(feature = "empty", feature = "winit"))]
 pub use config::*;
