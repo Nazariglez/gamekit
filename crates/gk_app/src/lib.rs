@@ -8,7 +8,6 @@ pub mod event;
 pub mod handlers;
 pub mod prelude;
 pub mod storage;
-pub mod window;
 
 pub use app::App;
 pub use builder::AppBuilder;

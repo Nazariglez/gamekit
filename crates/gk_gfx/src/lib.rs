@@ -1,4 +1,5 @@
-use gk_platform::{GKWindow, GKWindowId};
+use gk_app::{AppBuilder, BuildConfig, GKState, Plugin};
+use gk_platform::{GKWindow, GKWindowId, Platform, WindowEvent, WindowEventId};
 use hashbrown::HashMap;
 use wgpu::{Adapter, Color, Device, Instance, Queue, Surface, SurfaceTexture};
 
@@ -10,6 +11,8 @@ pub struct Gfx {
     queue: Queue,
     surfaces: HashMap<GKWindowId, Surface>,
 }
+
+impl Plugin for Gfx {}
 
 impl Gfx {
     pub fn new() -> Result<Self, String> {
@@ -102,10 +105,33 @@ impl Gfx {
         frame.present();
 
         self.color.r = (self.color.r + 0.001) % 1.0;
-        self.color.g = (self.color.g + 0.0001) % 1.0;
-        self.color.b = (self.color.b + 0.00001) % 1.0;
+        self.color.g = (self.color.g + 0.01) % 1.0;
+        self.color.b = (self.color.b + 0.1) % 1.0;
     }
 }
+
+pub struct GfxConfig;
+
+impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
+    fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
+        let builder = builder.listen_event(
+            |evt: &WindowEvent, gfx: &mut Gfx, platform: &mut Platform| match evt.event {
+                WindowEventId::Init => gfx.create_surface(platform.window(evt.id).unwrap()),
+                WindowEventId::Moved { .. } => {}
+                WindowEventId::Resized { .. } => {}
+                WindowEventId::Minimized => {}
+                WindowEventId::Maximized => {}
+                WindowEventId::FocusGained => {}
+                WindowEventId::FocusLost => {}
+                WindowEventId::Close => {}
+            },
+        );
+
+        let gfx = Gfx::new()?;
+        Ok(builder.add_plugin(gfx))
+    }
+}
+
 /*
 impl Viewport {
     // fn resize(&mut self, device: &wgpu::Device, size: winit::dpi::PhysicalSize<u32>) {
