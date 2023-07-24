@@ -2,7 +2,7 @@ use super::event_loop::EventLoopPtr;
 use super::window::Window;
 use crate::{GKWindow, GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 pub use winit::event_loop::EventLoopWindowTarget;
 
 pub struct Manager {

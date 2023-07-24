@@ -82,7 +82,7 @@ impl Gfx {
             format: caps.formats[0],
             width,
             height,
-            present_mode: wgpu::PresentMode::Fifo,
+            present_mode: wgpu::PresentMode::AutoVsync,
             alpha_mode: caps.alpha_modes[0],
             view_formats: vec![],
         };
@@ -182,8 +182,9 @@ impl Gfx {
     }
 }
 
-pub struct DrawEvt {
+pub struct Canvas {
     pub window: GKWindowId,
+    pub size: (u32, u32),
 }
 
 pub struct GfxConfig;
@@ -218,14 +219,20 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
         );
 
         let builder = builder.listen_event(
-            |evt: &AppEvent, platform: &mut Platform, events: &mut EventQueue<S>| match evt {
-                AppEvent::PostUpdate => {
-                    platform
-                        .window_ids()
-                        .iter()
-                        .for_each(|id| events.queue(DrawEvt { window: *id }));
+            |evt: &AppEvent, platform: &mut Platform, gfx: &mut Gfx, events: &mut EventQueue<S>| {
+                match evt {
+                    AppEvent::PostUpdate => {
+                        platform.windows().for_each(|win| {
+                            if win.visible() {
+                                events.queue(Canvas {
+                                    window: win.id(),
+                                    size: (800, 600),
+                                })
+                            }
+                        });
+                    }
+                    _ => {}
                 }
-                _ => {}
             },
         );
 

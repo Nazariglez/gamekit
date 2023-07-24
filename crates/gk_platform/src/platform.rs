@@ -1,6 +1,7 @@
 use crate::backend::{Manager, Window};
 use crate::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
+use hashbrown::hash_map::{Values, ValuesMut};
 
 pub struct Platform {
     pub(crate) manager: Manager,
@@ -37,6 +38,14 @@ impl Platform {
 
     pub fn window_ids(&self) -> &[GKWindowId] {
         &self.window_ids
+    }
+
+    pub fn windows(&self) -> Values<'_, GKWindowId, Window> {
+        self.manager.windows.values()
+    }
+
+    pub fn windows_mut(&mut self) -> ValuesMut<'_, GKWindowId, Window> {
+        self.manager.windows.values_mut()
     }
 
     pub fn close(&mut self, id: GKWindowId) {

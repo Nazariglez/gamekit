@@ -78,10 +78,12 @@ impl<S: GKState> App<S> {
             return;
         }
 
+        self.event(AppEvent::FrameInit);
         self.event(AppEvent::PreUpdate);
         self.event(AppEvent::Update);
         (self.update_handler)(&mut self.storage);
         self.event(AppEvent::PostUpdate);
+        self.event(AppEvent::FrameEnd);
     }
 
     /// It's called when the backend/app is about to close

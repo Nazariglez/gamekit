@@ -55,12 +55,16 @@ impl<S: GKState + 'static> EventQueue<S> {
 pub enum AppEvent {
     /// Triggered before the user's initialize callback
     Init,
-    /// First event triggered per frame
+    /// First event triggered per frame (ideally should be used only to measure time)
+    FrameInit,
+    /// Triggered before update event, it can be used to prepare systems for the update event
     PreUpdate,
     /// Triggered between pre and post update events (before user's update callback)
     Update,
-    /// Latest event triggered per frame
+    /// Triggered after the update event, it can be used to clean up system
     PostUpdate,
+    /// Latest event triggered per frame (ideally should be used only to measure time)
+    FrameEnd,
     /// Triggered before the user's close callback
     RequestedClose,
     /// Triggered after user's close callback
