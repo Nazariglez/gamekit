@@ -183,6 +183,12 @@ impl Gfx {
 
 pub struct GfxConfig;
 
+impl Default for GfxConfig {
+    fn default() -> Self {
+        GfxConfig
+    }
+}
+
 impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
         let builder = builder.listen_event(
