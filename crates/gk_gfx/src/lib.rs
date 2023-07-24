@@ -1,4 +1,5 @@
-use gk_app::{AppBuilder, BuildConfig, GKState, Plugin};
+use gk_app::event::AppEvent;
+use gk_app::{AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
 use gk_platform::{GKWindow, GKWindowId, Platform, WindowEvent, WindowEventId};
 use hashbrown::HashMap;
 use std::borrow::Cow;
@@ -181,6 +182,10 @@ impl Gfx {
     }
 }
 
+pub struct DrawEvt {
+    pub window: GKWindowId,
+}
+
 pub struct GfxConfig;
 
 impl Default for GfxConfig {
@@ -209,6 +214,18 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
                 WindowEventId::FocusGained => {}
                 WindowEventId::FocusLost => {}
                 WindowEventId::Close => {}
+            },
+        );
+
+        let builder = builder.listen_event(
+            |evt: &AppEvent, platform: &mut Platform, events: &mut EventQueue<S>| match evt {
+                AppEvent::PostUpdate => {
+                    platform
+                        .window_ids()
+                        .iter()
+                        .for_each(|id| events.queue(DrawEvt { window: *id }));
+                }
+                _ => {}
             },
         );
 
