@@ -16,10 +16,7 @@ pub struct AppBuilder<S: GKState + 'static> {
     plugins: Plugins,
     runner: Box<RunnerHandlerFn<S>>,
     setup_handler: Box<SetupHandlerFn<S>>,
-    init_handler: Box<UpdateHandlerFn<S>>,
-    update_handler: Box<UpdateHandlerFn<S>>,
     event_handler: EventMap,
-    close_handler: Box<UpdateHandlerFn<S>>,
     late_configs: Option<IndexMap<TypeId, Box<dyn BuildConfig<S>>>>,
 }
 
@@ -39,9 +36,6 @@ impl<S: GKState> AppBuilder<S> {
         let plugins = Plugins::new();
         let runner = Box::new(default_runner);
         let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
-        let init_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
-        let update_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
-        let close_handler: Box<UpdateHandlerFn<S>> = Box::new(|_| {});
         let event_handler = HashMap::default();
         let late_configs = Some(Default::default());
 
@@ -49,10 +43,7 @@ impl<S: GKState> AppBuilder<S> {
             plugins,
             runner,
             setup_handler,
-            init_handler,
             event_handler,
-            update_handler,
-            close_handler,
             late_configs,
         }
     }
@@ -73,31 +64,7 @@ impl<S: GKState> AppBuilder<S> {
         config.apply(self)
     }
 
-    pub fn on_init<T, H>(mut self, mut handler: H) -> Self
-    where
-        H: Handler<S, T> + 'static,
-    {
-        self.init_handler = Box::new(move |storage| handler.call(storage));
-        self
-    }
-
-    pub fn on_update<T, H>(mut self, mut handler: H) -> Self
-    where
-        H: Handler<S, T> + 'static,
-    {
-        self.update_handler = Box::new(move |storage| handler.call(storage));
-        self
-    }
-
-    pub fn on_close<T, H>(mut self, mut handler: H) -> Self
-    where
-        H: Handler<S, T> + 'static,
-    {
-        self.close_handler = Box::new(move |storage| handler.call(storage));
-        self
-    }
-
-    pub fn listen_event<E, T, H>(mut self, mut handler: H) -> Self
+    pub fn on<E, T, H>(mut self, mut handler: H) -> Self
     where
         E: 'static,
         H: EventHandler<E, S, T> + 'static,
@@ -112,7 +79,7 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn listen_event_once<E, T, H>(mut self, handler: H) -> Self
+    pub fn once<E, T, H>(mut self, handler: H) -> Self
     where
         E: 'static,
         H: EventHandlerOnce<E, S, T> + 'static,
@@ -161,10 +128,7 @@ impl<S: GKState> AppBuilder<S> {
             mut plugins,
             mut runner,
             setup_handler,
-            update_handler,
             event_handler,
-            close_handler,
-            init_handler,
             ..
         } = self;
 
@@ -177,11 +141,9 @@ impl<S: GKState> AppBuilder<S> {
 
         let app = App {
             storage,
-            init_handler,
             event_handler,
-            update_handler,
-            close_handler,
             initialized: false,
+            in_frame: false,
             closed: false,
         };
 

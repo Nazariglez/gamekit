@@ -26,6 +26,8 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
         control_flow.set_wait();
         println!("{evt:?}");
 
+        app.frame_start();
+
         match evt {
             Event::Resumed => {
                 // init the app's logic on the first resumed event
@@ -130,8 +132,13 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
             Event::MainEventsCleared => {
                 app.update();
             }
+            Event::RedrawRequested(_) => {
+                app.draw();
+            }
             _ => (),
         }
+
+        app.frame_end();
 
         let manager = &mut app.get_mut_plugin::<Platform>().unwrap().manager;
         manager.event_loop.unset();

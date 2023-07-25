@@ -138,6 +138,7 @@ pub trait GKWindow: HasRawWindowHandle + HasRawDisplayHandle {
     fn min_size(&self) -> Option<(u32, u32)>;
     fn set_max_size(&mut self, width: u32, height: u32);
     fn max_size(&self) -> Option<(u32, u32)>;
+    fn request_redraw(&mut self);
 }
 
 /// Window's event

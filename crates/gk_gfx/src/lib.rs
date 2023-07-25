@@ -1,4 +1,4 @@
-use gk_app::event::AppEvent;
+use gk_app::event;
 use gk_app::{AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
 use gk_platform::{GKWindow, GKWindowId, Platform, WindowEvent, WindowEventId};
 use hashbrown::HashMap;
@@ -146,6 +146,11 @@ impl Gfx {
     }
 
     pub fn draw(&mut self, id: &GKWindowId) {
+        if !self.surfaces.contains_key(id) {
+            println!("###NOOOOOOP");
+            return;
+        }
+
         let frame = self.current_texture(id);
         let view = frame
             .texture
@@ -197,7 +202,7 @@ impl Default for GfxConfig {
 
 impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
-        let builder = builder.listen_event(
+        let builder = builder.on(
             |evt: &WindowEvent, gfx: &mut Gfx, platform: &mut Platform| match evt.event {
                 WindowEventId::Init => gfx.create_surface(platform.window(evt.id).unwrap()),
                 WindowEventId::Moved { .. } => {}
@@ -218,21 +223,19 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
             },
         );
 
-        let builder = builder.listen_event(
-            |evt: &AppEvent, platform: &mut Platform, gfx: &mut Gfx, events: &mut EventQueue<S>| {
-                match evt {
-                    AppEvent::PostUpdate => {
-                        platform.windows().for_each(|win| {
-                            if win.visible() {
-                                events.queue(Canvas {
-                                    window: win.id(),
-                                    size: (800, 600),
-                                })
-                            }
-                        });
+        let builder = builder.on(
+            |evt: &event::Draw,
+             platform: &mut Platform,
+             gfx: &mut Gfx,
+             events: &mut EventQueue<S>| {
+                platform.windows().for_each(|win| {
+                    if win.visible() {
+                        events.queue(Canvas {
+                            window: win.id(),
+                            size: (800, 600),
+                        })
                     }
-                    _ => {}
-                }
+                });
             },
         );
 

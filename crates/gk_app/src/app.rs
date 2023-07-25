@@ -1,17 +1,15 @@
-use crate::event::{AppEvent, EventListener, EventMap};
+use crate::event::{EventListener, EventMap};
 use crate::handlers::{EventHandlerFn, EventHandlerFnOnce, UpdateHandlerFn};
 use crate::storage::Storage;
-use crate::GKState;
+use crate::{event, GKState};
 use std::any::TypeId;
 
 /// The core of the application, all the systems and backend interacts with it somehow
 pub struct App<S: GKState + 'static> {
     pub(crate) storage: Storage<S>,
-    pub(crate) init_handler: Box<UpdateHandlerFn<S>>,
     pub(crate) event_handler: EventMap,
-    pub(crate) update_handler: Box<UpdateHandlerFn<S>>,
-    pub(crate) close_handler: Box<UpdateHandlerFn<S>>,
     pub(crate) initialized: bool,
+    pub(crate) in_frame: bool,
     pub(crate) closed: bool,
 }
 
@@ -29,8 +27,25 @@ impl<S: GKState> App<S> {
         }
 
         self.initialized = true;
-        self.event(AppEvent::Init);
-        (self.init_handler)(&mut self.storage);
+        self.event(event::Init);
+    }
+
+    pub fn frame_start(&mut self) {
+        if self.in_frame {
+            return;
+        }
+
+        self.in_frame = true;
+        self.event(event::FrameStart);
+    }
+
+    pub fn frame_end(&mut self) {
+        if !self.in_frame {
+            return;
+        }
+
+        self.event(event::FrameEnd);
+        self.in_frame = false;
     }
 
     /// Execute any listener set for the event passed in
@@ -74,16 +89,19 @@ impl<S: GKState> App<S> {
     /// It's called each frame by the backend and it dispatches
     /// the events `PreUpdate`, `Update` and `PostUpdate`
     pub fn update(&mut self) {
-        if !self.initialized {
+        if !(self.initialized && self.in_frame) {
             return;
         }
 
-        self.event(AppEvent::FrameInit);
-        self.event(AppEvent::PreUpdate);
-        self.event(AppEvent::Update);
-        (self.update_handler)(&mut self.storage);
-        self.event(AppEvent::PostUpdate);
-        self.event(AppEvent::FrameEnd);
+        self.event(event::Update);
+    }
+
+    pub fn draw(&mut self) {
+        if !(self.initialized && self.in_frame) {
+            return;
+        }
+
+        self.event(event::Draw);
     }
 
     /// It's called when the backend/app is about to close
@@ -97,10 +115,9 @@ impl<S: GKState> App<S> {
             return;
         }
 
-        self.event(AppEvent::RequestedClose);
+        self.event(event::RequestedClose);
         self.closed = true;
-        (self.close_handler)(&mut self.storage);
-        self.event(AppEvent::Close);
+        self.event(event::Close);
     }
 }
 

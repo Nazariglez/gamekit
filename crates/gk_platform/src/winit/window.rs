@@ -242,4 +242,8 @@ impl GKWindow for Window {
     fn max_size(&self) -> Option<(u32, u32)> {
         self.max_size
     }
+
+    fn request_redraw(&mut self) {
+        self.raw.request_redraw();
+    }
 }
