@@ -39,7 +39,7 @@ gk_gfx.workspace = true
 
 anymap.workspace = true
 # default-features=false...
-notan = { version = "0.9.3" }
+#notan = { version = "0.9.3" }
 
 [features]
 default = ["basic"]

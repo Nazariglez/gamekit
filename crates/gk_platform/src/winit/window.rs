@@ -42,18 +42,22 @@ impl Window {
             .with_transparent(transparent)
             .with_visible(visible);
 
+        #[cfg(all(not(target_os = "ios"), not(target_os = "android")))]
         if let Some((w, h)) = size {
             builder = builder.with_inner_size(LogicalSize::new(w, h));
         }
 
+        #[cfg(all(not(target_os = "ios"), not(target_os = "android")))]
         if let Some((w, h)) = min_size {
             builder = builder.with_min_inner_size(LogicalSize::new(w, h));
         }
 
+        #[cfg(all(not(target_os = "ios"), not(target_os = "android")))]
         if let Some((w, h)) = max_size {
             builder = builder.with_max_inner_size(LogicalSize::new(w, h));
         }
 
+        #[cfg(all(not(target_os = "ios"), not(target_os = "android")))]
         if let Some((x, y)) = position {
             builder = builder.with_position(PhysicalPosition::new(x, y));
         }
