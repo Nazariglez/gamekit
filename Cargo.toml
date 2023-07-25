@@ -21,7 +21,7 @@ members = ["crates/*"]
 [workspace.dependencies]
 gk_app = { path = "./crates/gk_app", version = "0.1.0" }
 gk_macro = { path = "./crates/gk_macro", version = "0.1.0" }
-gk_platform = { path = "./crates/gk_platform", version = "0.1.0" }
+gk_backend = { path = "./crates/gk_backend", version = "0.1.0" }
 gk_gfx = { path = "./crates/gk_gfx", version = "0.1.0" }
 
 serde = { version = "1.0", features = ["serde_derive"] }
@@ -33,19 +33,19 @@ raw-window-handle = "0.5.2"
 
 [dependencies]
 gk_app.workspace = true
-gk_platform.workspace = true
+gk_backend.workspace = true
 gk_macro.workspace = true
 gk_gfx.workspace = true
 
 anymap.workspace = true
-# default-features=false...
-#notan = { version = "0.9.3" }
 
 [features]
-default = ["basic"]
+default = ["basic", "winit"]
 # basic features for most apps
-basic = ["limited_memory", "gk_platform/winit"]
+basic = ["limited_memory"]
+# uses winit as backend
+winit = ["gk_backend/winit"]
 # use arrayvec instead of vec when possible
 limited_memory = ["gk_app/limited_events"]
 # allow serialize and deserialize internal types
-serde = ["gk_app/serde", "gk_platform/serde"]
+serde = ["gk_app/serde", "gk_backend/serde"]

@@ -1,6 +1,7 @@
 use crate::event::{EventListener, EventMap};
 use crate::handlers::{EventHandlerFn, EventHandlerFnOnce, UpdateHandlerFn};
 use crate::storage::Storage;
+use crate::window::GKWindowId;
 use crate::{event, GKState};
 use std::any::TypeId;
 
@@ -96,12 +97,12 @@ impl<S: GKState> App<S> {
         self.event(event::Update);
     }
 
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self, window_id: GKWindowId) {
         if !(self.initialized && self.in_frame) {
             return;
         }
 
-        self.event(event::Draw);
+        self.event(event::Draw { window_id });
     }
 
     /// It's called when the backend/app is about to close

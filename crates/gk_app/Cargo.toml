@@ -6,14 +6,12 @@ edition = "2021"
 [dependencies]
 gk_macro.workspace = true
 anymap.workspace = true
+raw-window-handle.workspace = true
 arrayvec = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 
 paste = "1.0.12"
 indexmap = "2.0.0"
-
-[dev-dependencies]
-gk_platform = { path = "../gk_platform", version = "0.1.0" }
 
 [features]
 # Avoid using a vector per event listener, instead uses a an Array limited to 32 by default. The number can be changed

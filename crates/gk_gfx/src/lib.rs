@@ -1,6 +1,6 @@
 use gk_app::event;
+use gk_app::window::{GKWindow, GKWindowId, WindowEvent, WindowEventId};
 use gk_app::{AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
-use gk_platform::{GKWindow, GKWindowId, Platform, WindowEvent, WindowEventId};
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::{

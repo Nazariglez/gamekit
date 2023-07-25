@@ -1,6 +1,6 @@
 use super::event_loop::EventLoopPtr;
 use super::window::Window;
-use crate::{GKWindow, GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_app::window::{GKWindow, GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
 use hashbrown::HashMap;
 pub use winit::event_loop::EventLoopWindowTarget;

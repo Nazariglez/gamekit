@@ -1,3 +1,4 @@
+use crate::window::GKWindowId;
 use crate::{option_usize_env, App, GKState};
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, VecDeque};
@@ -60,7 +61,9 @@ pub struct FrameStart;
 pub struct Update;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Draw;
+pub struct Draw {
+    pub(crate) window_id: GKWindowId,
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct FrameEnd;

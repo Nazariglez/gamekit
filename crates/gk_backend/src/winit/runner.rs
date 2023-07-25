@@ -1,6 +1,6 @@
 use super::utils::win_id;
-use crate::window::{GKWindow, WindowEvent, WindowEventId};
 use crate::Platform;
+use gk_app::window::{WindowEvent, WindowEventId};
 use gk_app::{App, GKState};
 use hashbrown::HashSet;
 use winit::event::{Event, WindowEvent as WWindowEvent};
@@ -132,8 +132,8 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
             Event::MainEventsCleared => {
                 app.update();
             }
-            Event::RedrawRequested(_) => {
-                app.draw();
+            Event::RedrawRequested(id) => {
+                app.draw(win_id(id));
             }
             _ => (),
         }

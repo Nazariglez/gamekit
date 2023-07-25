@@ -11,9 +11,6 @@ pub(crate) fn default_runner<S: GKState>(mut app: App<S>) -> Result<(), String> 
     // Execute event's callback
     app.update();
 
-    // Execute draw's callback
-    app.draw();
-
     // Frame ends here
     app.frame_end();
 

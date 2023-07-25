@@ -1,6 +1,8 @@
 use crate::backend::{Manager, Window};
 use crate::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_app::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
+use gk_backend::{Manager, Window};
 use hashbrown::hash_map::{Values, ValuesMut};
 
 pub struct Platform {
