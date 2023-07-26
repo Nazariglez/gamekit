@@ -10,8 +10,8 @@ mod winit;
 #[cfg(feature = "winit")]
 pub use crate::winit::*;
 
-mod platform;
 mod config;
+mod platform;
 
-pub use platform::*;
 pub use config::*;
+pub use platform::*;

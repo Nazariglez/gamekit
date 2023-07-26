@@ -1,7 +1,7 @@
-use gk_app::window::{GKWindowAttributes, WindowEvent, WindowEventId, GKWindow};
+use crate::{runner, Platform};
 use gk_app::event;
+use gk_app::window::{GKWindow, GKWindowAttributes, WindowEvent, WindowEventId};
 use gk_app::{AppBuilder, BuildConfig, GKState};
-use crate::{Platform, runner};
 
 pub struct PlatformConfig {
     main_window: Option<GKWindowAttributes>,

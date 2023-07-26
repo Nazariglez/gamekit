@@ -25,10 +25,8 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
 
         control_flow.set_wait();
         println!("{evt:?}");
-
-        app.frame_start();
-
         match evt {
+            // -- App life cycle events
             Event::Resumed => {
                 // init the app's logic on the first resumed event
                 if !initialized_app {
@@ -36,9 +34,23 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                     app.init();
                 }
             }
+            Event::NewEvents(_) => {
+                app.frame_start();
+            }
+            Event::RedrawEventsCleared => {
+                app.frame_end();
+            }
+            Event::MainEventsCleared => {
+                app.update();
+            }
+            Event::RedrawRequested(id) => {
+                app.draw(win_id(id));
+            }
             Event::LoopDestroyed => {
                 app.close();
             }
+
+            // -- Windowing events
             Event::WindowEvent { window_id, event } => {
                 let windows = app.get_mut_plugin::<Platform>().unwrap();
                 let id = win_id(window_id);
@@ -129,16 +141,8 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                     }
                 }
             }
-            Event::MainEventsCleared => {
-                app.update();
-            }
-            Event::RedrawRequested(id) => {
-                app.draw(win_id(id));
-            }
             _ => (),
         }
-
-        app.frame_end();
 
         let manager = &mut app.get_mut_plugin::<Platform>().unwrap().manager;
         manager.event_loop.unset();

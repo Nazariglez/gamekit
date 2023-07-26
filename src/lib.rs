@@ -3,8 +3,8 @@ pub mod prelude;
 // pub mod tween;
 
 pub use gk_app as app;
-pub use gk_gfx as gfx;
 pub use gk_backend as platform;
+pub use gk_gfx as gfx;
 
 use gk_app::GKState;
 
