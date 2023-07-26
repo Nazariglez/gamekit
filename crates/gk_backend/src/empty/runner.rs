@@ -7,7 +7,6 @@ pub fn runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
     loop {
         app.frame_start();
         app.update();
-        app.draw();
 
         let request_exit = app
             .get_mut_plugin::<Platform>()

@@ -40,7 +40,7 @@ gk_gfx.workspace = true
 anymap.workspace = true
 
 [features]
-default = ["basic", "winit"]
+default = ["basic"]
 # basic features for most apps
 basic = ["limited_memory"]
 # uses winit as backend

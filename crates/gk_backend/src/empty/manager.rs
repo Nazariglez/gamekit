@@ -1,11 +1,10 @@
 use super::window::Window;
-use crate::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
-use crate::GKWindowAttributes;
+use gk_app::window::{CursorIcon, GKWindowAttributes, GKWindowId, GKWindowManager};
 use hashbrown::HashMap;
 
 #[derive(Default)]
 pub struct Manager {
-    windows: HashMap<GKWindowId, Window>,
+    pub(crate) windows: HashMap<GKWindowId, Window>,
     pub(crate) request_exit: bool,
 }
 

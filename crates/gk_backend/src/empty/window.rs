@@ -1,4 +1,4 @@
-use crate::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
+use gk_app::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
 use raw_window_handle::{
     HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
 };
@@ -165,4 +165,6 @@ impl GKWindow for Window {
     fn max_size(&self) -> Option<(u32, u32)> {
         self.max_size
     }
+
+    fn request_redraw(&mut self) {}
 }
