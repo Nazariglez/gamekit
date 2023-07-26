@@ -1,11 +1,12 @@
 // pub mod m2d;
 pub mod prelude;
 // pub mod tween;
-pub mod platform;
 
 pub use gk_app as app;
-use gk_app::GKState;
 pub use gk_gfx as gfx;
+pub use gk_backend as platform;
+
+use gk_app::GKState;
 
 pub fn init() -> app::AppBuilder<()> {
     app::AppBuilder::init()

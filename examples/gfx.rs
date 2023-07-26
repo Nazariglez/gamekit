@@ -1,5 +1,6 @@
 use gamekit::app::event;
 use gamekit::gfx::{Canvas, Gfx, GfxConfig};
+use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
 
 fn main() -> Result<(), String> {
@@ -8,8 +9,8 @@ fn main() -> Result<(), String> {
         .add_config(GfxConfig::default())?
         .once(|evt: &event::Init| println!("Init!"))
         .once(|evt: &event::Update| println!("Update!"))
-        .on(|evt: &Canvas, gfx: &mut Gfx| {
-            gfx.draw(&evt.window);
+        .on(|evt: &event::Draw, gfx: &mut Gfx| {
+            gfx.draw(&evt.window_id);
             println!("----> DRAW");
         })
         .build()

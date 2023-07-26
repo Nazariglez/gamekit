@@ -1,7 +1,7 @@
-use crate::window::{GKWindowAttributes, WindowEvent, WindowEventId};
-use crate::{backend, GKWindow, Platform};
+use gk_app::window::{GKWindowAttributes, WindowEvent, WindowEventId, GKWindow};
 use gk_app::event;
 use gk_app::{AppBuilder, BuildConfig, GKState};
+use crate::{Platform, runner};
 
 pub struct PlatformConfig {
     main_window: Option<GKWindowAttributes>,
@@ -65,6 +65,6 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
 
         // let's add the windows plugin
         let platform = Platform::new();
-        Ok(builder.add_plugin(platform).with_runner(backend::runner))
+        Ok(builder.add_plugin(platform).with_runner(runner))
     }
 }

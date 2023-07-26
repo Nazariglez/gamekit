@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 gk_app.workspace = true
+gk_backend.workspace = true
 
 raw-window-handle.workspace = true
 hashbrown.workspace = true

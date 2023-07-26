@@ -1,18 +1,16 @@
-use crate::backend::{Manager, Window};
-use crate::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
+use crate::{Manager, Window};
 use gk_app::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
-use gk_backend::{Manager, Window};
 use hashbrown::hash_map::{Values, ValuesMut};
 
 pub struct Platform {
-    pub(crate) manager: Manager,
+    pub manager: Manager,
     main_window: Option<GKWindowId>,
     window_ids: Vec<GKWindowId>,
 }
 
 impl Platform {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             manager: Manager::new(),
             main_window: None,

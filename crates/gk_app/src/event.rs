@@ -62,7 +62,7 @@ pub struct Update;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Draw {
-    pub(crate) window_id: GKWindowId,
+    pub window_id: GKWindowId,
 }
 
 #[derive(Debug, Copy, Clone)]

@@ -1,6 +1,7 @@
 use gk_app::event;
 use gk_app::window::{GKWindow, GKWindowId, WindowEvent, WindowEventId};
 use gk_app::{AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
+use gk_backend::Platform;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::{
@@ -223,21 +224,21 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
             },
         );
 
-        let builder = builder.on(
-            |evt: &event::Draw,
-             platform: &mut Platform,
-             gfx: &mut Gfx,
-             events: &mut EventQueue<S>| {
-                platform.windows().for_each(|win| {
-                    if win.visible() {
-                        events.queue(Canvas {
-                            window: win.id(),
-                            size: (800, 600),
-                        })
-                    }
-                });
-            },
-        );
+        // let builder = builder.on(
+        //     |evt: &event::Draw,
+        //      platform: &mut Platform,
+        //      gfx: &mut Gfx,
+        //      events: &mut EventQueue<S>| {
+        //         platform.windows().for_each(|win| {
+        //             if win.visible() {
+        //                 events.queue(Canvas {
+        //                     window: win.id(),
+        //                     size: (800, 600),
+        //                 })
+        //             }
+        //         });
+        //     },
+        // );
 
         let gfx = Gfx::new()?;
         Ok(builder.add_plugin(gfx))
