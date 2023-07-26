@@ -1,4 +1,4 @@
-use gamekit::prelude::*;
+use gamekit::platform::PlatformConfig;
 
 fn main() -> Result<(), String> {
     gamekit::init()

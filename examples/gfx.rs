@@ -1,7 +1,6 @@
 use gamekit::app::event;
-use gamekit::gfx::{Canvas, Gfx, GfxConfig};
+use gamekit::gfx::{Gfx, GfxConfig};
 use gamekit::platform::PlatformConfig;
-use gamekit::prelude::*;
 
 fn main() -> Result<(), String> {
     gamekit::init()
