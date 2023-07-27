@@ -223,20 +223,21 @@ impl<'a> Renderer<'a> {
         Default::default()
     }
 
-    pub fn begin(&mut self) {
-        self.passes.push(RenderPass::default());
+    pub fn begin(&mut self, color: Color, width: u32, height: u32) {
+        self.passes.push(RenderPass {
+            color,
+            ..Default::default()
+        });
     }
 
-    pub fn set_pipeline(&mut self, pip: &'a Pipeline) {
+    pub fn apply_pipeline(&mut self, pip: &'a Pipeline) {
         if let Some(rp) = self.passes.last_mut() {
             rp.pipeline = Some(pip);
         }
     }
 
-    pub fn clear_color(&mut self, color: Color) {
-        if let Some(rpass) = self.passes.last_mut() {
-            rpass.color = color;
-        }
+    pub fn apply_bindings(&mut self) {
+        // todo
     }
 
     pub fn draw(&mut self, vertices: Range<u32>) {
