@@ -3,7 +3,7 @@ use gamekit::app::{
     window::{WindowEvent, WindowEventId},
 };
 use gamekit::gfx::{GfxConfig, GfxDevice, Pipeline, Renderer};
-use gamekit::platform::{Platform, PlatformConfig};
+use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
 
 // language=wgsl
@@ -30,28 +30,29 @@ fn main() -> Result<(), String> {
     gamekit::init_with(|| Ok(State::default()))
         .add_config(PlatformConfig::default())?
         .add_config(GfxConfig::default())?
-        .once(|evt: &event::Update| println!("Update!"))
-        .on(
-            |evt: &WindowEvent, gfx: &mut GfxDevice, state: &mut State| {
-                println!("-> window event {:?}", evt);
-                match evt.event {
-                    WindowEventId::Init => {
-                        let pip = gfx.create_pipeline(SHADER).unwrap();
-                        state.pip = Some(pip);
-                    }
-                    _ => {}
-                }
-            },
-        )
-        .on(
-            |evt: &event::Draw, platform: &mut Platform, gfx: &mut GfxDevice, state: &mut State| {
-                println!("-<<<< draw");
-                if let Some(pip) = &state.pip {
-                    let renderer = Renderer::new(pip);
-                    gfx.render(evt.window_id, &renderer).unwrap();
-                }
-                platform.exit();
-            },
-        )
+        .on(on_window_event)
+        .on(on_draw)
         .build()
+}
+
+fn on_window_event(evt: &WindowEvent, gfx: &mut GfxDevice, state: &mut State) {
+    // Initialize the pipeline when the first window is created
+    if state.pip.is_some() {
+        return;
+    }
+
+    match evt.event {
+        WindowEventId::Init => {
+            let pip = gfx.create_pipeline(SHADER).unwrap();
+            state.pip = Some(pip);
+        }
+        _ => {}
+    }
+}
+
+fn on_draw(evt: &event::Draw, gfx: &mut GfxDevice, state: &mut State) {
+    if let Some(pip) = &state.pip {
+        let renderer = Renderer::new(pip);
+        gfx.render(evt.window_id, &renderer).unwrap();
+    }
 }
