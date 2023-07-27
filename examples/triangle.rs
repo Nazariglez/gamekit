@@ -2,9 +2,10 @@ use gamekit::app::{
     event,
     window::{WindowEvent, WindowEventId},
 };
-use gamekit::gfx::{GfxConfig, GfxDevice, Pipeline, Renderer};
+use gamekit::gfx::{Color, GfxConfig, GfxDevice, Pipeline, Renderer};
 use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
+use gk_backend::Platform;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -50,9 +51,13 @@ fn on_window_event(evt: &WindowEvent, gfx: &mut GfxDevice, state: &mut State) {
     }
 }
 
-fn on_draw(evt: &event::Draw, gfx: &mut GfxDevice, state: &mut State) {
+fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut GfxDevice, state: &mut State) {
     if let Some(pip) = &state.pip {
-        let renderer = Renderer::new(pip);
+        let mut renderer = Renderer::new();
+        renderer.begin();
+        renderer.set_pipeline(pip);
+        renderer.clear_color(Color::WHITE);
+        renderer.draw(0..3);
         gfx.render(evt.window_id, &renderer).unwrap();
     }
 }

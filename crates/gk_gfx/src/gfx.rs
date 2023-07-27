@@ -3,6 +3,8 @@ use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
+use std::ops::Range;
+pub use wgpu::Color;
 use wgpu::{
     Device, Instance, PowerPreference, Queue, Surface, SurfaceCapabilities, SurfaceConfiguration,
     SurfaceTexture,
@@ -175,23 +177,27 @@ impl GfxDevice {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
-        {
+        renderer.passes.iter().for_each(|rp| {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLUE),
+                        load: wgpu::LoadOp::Clear(rp.color),
                         store: true,
                     },
                 })],
                 depth_stencil_attachment: None,
             });
 
-            rpass.set_pipeline(&renderer.pipeline.raw);
-            rpass.draw(0..3, 0..1);
-        }
+            if let Some(pip) = rp.pipeline {
+                rpass.set_pipeline(&pip.raw);
+                if !rp.vertices.is_empty() {
+                    rpass.draw(rp.vertices.clone(), 0..1);
+                }
+            }
+        });
 
         ctx.queue.submit(Some(encoder.finish()));
         frame.present();
@@ -200,12 +206,42 @@ impl GfxDevice {
     }
 }
 
+#[derive(Default)]
+struct RenderPass<'a> {
+    pipeline: Option<&'a Pipeline>,
+    color: Color,
+    vertices: Range<u32>,
+}
+
+#[derive(Default)]
 pub struct Renderer<'a> {
-    pipeline: &'a Pipeline,
+    passes: Vec<RenderPass<'a>>,
 }
 
 impl<'a> Renderer<'a> {
-    pub fn new(pip: &'a Pipeline) -> Self {
-        Self { pipeline: pip }
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn begin(&mut self) {
+        self.passes.push(RenderPass::default());
+    }
+
+    pub fn set_pipeline(&mut self, pip: &'a Pipeline) {
+        if let Some(rp) = self.passes.last_mut() {
+            rp.pipeline = Some(pip);
+        }
+    }
+
+    pub fn clear_color(&mut self, color: Color) {
+        if let Some(rpass) = self.passes.last_mut() {
+            rpass.color = color;
+        }
+    }
+
+    pub fn draw(&mut self, vertices: Range<u32>) {
+        if let Some(rp) = self.passes.last_mut() {
+            rp.vertices = vertices;
+        }
     }
 }

@@ -11,8 +11,7 @@ use gk_backend::Platform;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::{
-    Adapter, Color, Device, Instance, Queue, RenderPipeline, Surface, SurfaceConfiguration,
-    SurfaceTexture,
+    Adapter, Device, Instance, Queue, RenderPipeline, Surface, SurfaceConfiguration, SurfaceTexture,
 };
 
 pub struct GfxSurface {
