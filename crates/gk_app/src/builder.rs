@@ -18,6 +18,7 @@ pub struct AppBuilder<S: GKState + 'static> {
     setup_handler: Box<SetupHandlerFn<S>>,
     event_handler: EventMap,
     late_configs: Option<IndexMap<TypeId, Box<dyn BuildConfig<S>>>>,
+    event_ids: u64,
 }
 
 impl GKState for () {}
@@ -45,6 +46,7 @@ impl<S: GKState> AppBuilder<S> {
             setup_handler,
             event_handler,
             late_configs,
+            event_ids: 0,
         }
     }
 
@@ -75,7 +77,8 @@ impl<S: GKState> AppBuilder<S> {
         self.event_handler
             .entry(k)
             .or_default()
-            .push(EventListener::Mut(Box::new(cb)));
+            .push(EventListener::Mut(self.event_ids, Box::new(cb)));
+        self.event_ids += 1;
         self
     }
 
@@ -90,7 +93,8 @@ impl<S: GKState> AppBuilder<S> {
         self.event_handler
             .entry(k)
             .or_default()
-            .push(EventListener::Once(Some(Box::new(cb))));
+            .push(EventListener::Once(self.event_ids, Some(Box::new(cb))));
+        self.event_ids += 1;
         self
     }
 

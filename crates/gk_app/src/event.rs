@@ -13,18 +13,24 @@ pub(crate) type EventMap = HashMap<TypeId, arrayvec::ArrayVec<EventListener, MAX
 pub(crate) type EventMap = HashMap<TypeId, Vec<EventListener>>;
 
 pub(crate) enum EventListener {
-    Once(Option<Box<dyn Any>>),
-    Mut(Box<dyn Any>),
+    Once(u64, Option<Box<dyn Any>>),
+    Mut(u64, Box<dyn Any>),
 }
 
 impl EventListener {
     pub(crate) fn is_once(&self) -> bool {
-        if let Self::Once(_) = self {
+        if let Self::Once(_, _) = self {
             return true;
         }
 
         return false;
     }
+}
+
+enum EventCommand<S: GKState + 'static> {
+    Queue(Box<dyn FnOnce(&mut App<S>)>),
+    Add(TypeId, EventListener),
+    Off(TypeId, u64),
 }
 
 /// A list of events pushed by plugins to be processed
