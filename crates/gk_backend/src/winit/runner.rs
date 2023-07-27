@@ -1,6 +1,6 @@
 use super::utils::win_id;
 use crate::Platform;
-use gk_app::window::{GKWindow, WindowEvent, WindowEventId};
+use gk_app::window::{GKWindow, GKWindowId, WindowEvent, WindowEventId};
 use gk_app::{App, GKState};
 use hashbrown::HashSet;
 use winit::event::{Event, WindowEvent as WWindowEvent};
@@ -15,7 +15,19 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
         .ok_or_else(|| "Something went wrong acquiring the Winit's EventLoop.".to_string())?;
 
     let mut initialized_app = false;
+
+    // Send initialize event if this is a new window
     let mut initialized_windows = HashSet::new();
+    let mut init_window = move |id: GKWindowId, app: &mut App<S>| {
+        if !initialized_windows.contains(&id) {
+            initialized_windows.insert(id);
+            app.event(WindowEvent {
+                id,
+                event: WindowEventId::Init,
+            });
+        }
+    };
+
     event_loop.run(move |evt, event_loop, control_flow| {
         app.get_mut_plugin::<Platform>()
             .unwrap()
@@ -44,7 +56,13 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                 app.update();
             }
             Event::RedrawRequested(id) => {
-                app.draw(win_id(id));
+                let id = win_id(id);
+
+                // Sometimes this event comes before any any WindowEvent
+                // Initializing windows here too we avoid a first blank frame
+                init_window(id, &mut app);
+
+                app.draw(id);
             }
             Event::LoopDestroyed => {
                 app.close();
@@ -56,15 +74,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                 let id = win_id(window_id);
                 if let Some(win) = windows.window(id) {
                     let scale_factor = win.scale();
-
-                    // Send initialize event if this is a new window
-                    if !initialized_windows.contains(&id) {
-                        initialized_windows.insert(id);
-                        app.event(WindowEvent {
-                            id,
-                            event: WindowEventId::Init,
-                        });
-                    }
+                    init_window(id, &mut app);
 
                     match event {
                         WWindowEvent::Resized(size) => {
