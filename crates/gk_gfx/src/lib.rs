@@ -3,6 +3,7 @@ mod pipeline;
 
 pub use pipeline::*;
 
+pub use crate::gfx::*;
 use gk_app::event;
 use gk_app::window::{GKWindow, GKWindowId, WindowEvent, WindowEventId};
 use gk_app::{AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
@@ -209,8 +210,11 @@ impl Default for GfxConfig {
 impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
         let builder = builder.on(
-            |evt: &WindowEvent, gfx: &mut Gfx, platform: &mut Platform| match evt.event {
-                WindowEventId::Init => gfx.create_surface(platform.window(evt.id).unwrap()),
+            |evt: &WindowEvent, gfx: &mut GfxDevice, platform: &mut Platform| match evt.event {
+                WindowEventId::Init => {
+                    gfx.add_context(platform.window(evt.id).unwrap()).unwrap();
+                    println!("Init window -> {:?}", evt.id);
+                }
                 WindowEventId::Moved { .. } => {}
                 WindowEventId::Resized {
                     width,
@@ -245,7 +249,7 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
         //     },
         // );
 
-        let gfx = Gfx::new()?;
+        let gfx = GfxDevice::new()?;
         Ok(builder.add_plugin(gfx))
     }
 }

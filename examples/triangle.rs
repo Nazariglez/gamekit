@@ -1,6 +1,8 @@
-use gamekit::app::event;
-use gamekit::gfx::{Gfx, GfxConfig, Pipeline};
-use gamekit::platform::PlatformConfig;
+use gamekit::app::{event, window::WindowEvent};
+use gamekit::gfx::{GfxConfig, GfxDevice, Pipeline, Renderer};
+use gamekit::platform::{Platform, PlatformConfig};
+use gamekit::prelude::*;
+use gk_app::window::WindowEventId;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -13,23 +15,43 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) ve
 
 @fragment
 fn fs_main() -> @location(0) vec4<f32> {
-    return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+    return vec4<f32>(1.0, 1.0, 0.0, 1.0);
 }
 "#;
 
+#[derive(AppState, Default)]
 struct State {
-    pip: Pipeline,
+    pip: Option<Pipeline>,
 }
 
 fn main() -> Result<(), String> {
-    gamekit::init()
+    gamekit::init_with(|| Ok(State::default()))
         .add_config(PlatformConfig::default())?
         .add_config(GfxConfig::default())?
-        .once(|evt: &event::Init| println!("Init!"))
+        .once(
+            |evt: &event::Init, gfx: &mut GfxDevice, state: &mut State| {
+                println!("Init?");
+            },
+        )
         .once(|evt: &event::Update| println!("Update!"))
-        .on(|evt: &event::Draw, gfx: &mut Gfx| {
-            gfx.draw(&evt.window_id);
-            println!("----> DRAW");
-        })
+        .on(
+            |evt: &WindowEvent, gfx: &mut GfxDevice, state: &mut State| match evt.event {
+                WindowEventId::Init => {
+                    let pip = gfx.create_pipeline(SHADER).unwrap();
+                    state.pip = Some(pip);
+                }
+                _ => {}
+            },
+        )
+        .on(
+            |evt: &event::Draw, platform: &mut Platform, gfx: &mut GfxDevice, state: &mut State| {
+                println!("----> DRAW");
+                if let Some(pip) = &state.pip {
+                    let renderer = Renderer::new(pip);
+                    gfx.render(evt.window_id, &renderer).unwrap();
+                }
+                // platform.exit();
+            },
+        )
         .build()
 }

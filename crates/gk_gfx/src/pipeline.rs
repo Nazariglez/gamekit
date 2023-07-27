@@ -1,5 +1,5 @@
 use wgpu::RenderPipeline;
 
 pub struct Pipeline {
-    raw: RenderPipeline,
+    pub(crate) raw: RenderPipeline,
 }
