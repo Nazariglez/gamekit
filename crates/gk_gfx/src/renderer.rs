@@ -1,17 +1,17 @@
-use std::ops::Range;
-use crate::Pipeline;
 use crate::color::Color;
+use crate::Pipeline;
+use std::ops::Range;
 
 #[derive(Default)]
-struct RenderPass<'a> {
-    pipeline: Option<&'a Pipeline>,
-    color: Color,
-    vertices: Range<u32>,
+pub struct RenderPass<'a> {
+    pub(crate) pipeline: Option<&'a Pipeline>,
+    pub(crate) color: Color,
+    pub(crate) vertices: Range<u32>,
 }
 
 #[derive(Default)]
 pub struct Renderer<'a> {
-    passes: Vec<RenderPass<'a>>,
+    pub(crate) passes: Vec<RenderPass<'a>>,
 }
 
 impl<'a> Renderer<'a> {

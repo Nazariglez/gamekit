@@ -1,7 +1,7 @@
-use gk_app::{AppBuilder, BuildConfig, GKState};
-use gk_app::window::{WindowEvent, WindowEventId};
-use gk_backend::Platform;
 use crate::gfx::Gfx;
+use gk_app::window::{WindowEvent, WindowEventId};
+use gk_app::{AppBuilder, BuildConfig, GKState};
+use gk_backend::Platform;
 
 pub struct GfxConfig;
 

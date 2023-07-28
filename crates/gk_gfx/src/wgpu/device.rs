@@ -1,39 +1,20 @@
-use crate::Pipeline;
+use super::context::Context;
+use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
+use crate::wgpu::utils::wgpu_color;
+use crate::{Pipeline, Renderer};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
+use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 use std::borrow::Cow;
 use std::ops::Range;
 pub use wgpu::Color;
 use wgpu::{
-    Device, Instance, PowerPreference, Queue, Surface, SurfaceCapabilities, SurfaceConfiguration,
-    SurfaceTexture,
+    Device as RawDevice, Instance, PowerPreference, Queue, Surface, SurfaceCapabilities,
+    SurfaceConfiguration, SurfaceTexture,
 };
-use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
 
-pub struct Context {
-    surface: Surface,
-    config: SurfaceConfiguration,
-    device: Device,
-    queue: Queue,
-    capabilities: SurfaceCapabilities,
-}
-
-impl Context {
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.config.width = width;
-        self.config.height = height;
-        self.surface.configure(&self.device, &self.config);
-    }
-
-    pub fn frame(&self) -> Result<SurfaceTexture, String> {
-        self.surface
-            .get_current_texture()
-            .map_err(|e| e.to_string())
-    }
-}
-
-pub struct GfxDevice {
+pub struct Device {
     instance: Instance,
     contexts: HashMap<GKWindowId, Context>,
     vsync: bool,
@@ -41,10 +22,10 @@ pub struct GfxDevice {
     integrated_gpu: bool,
 }
 
-impl Plugin for GfxDevice {}
+impl Plugin for Device {}
 
-impl GfxDevice {
-    pub fn new() -> Result<Self, String> {
+impl GKDevice<Pipeline> for Device {
+    fn new() -> Result<Self, String> {
         let instance = Instance::default();
         Ok(Self {
             instance,
@@ -55,7 +36,11 @@ impl GfxDevice {
         })
     }
 
-    pub fn add_context<W: GKWindow>(&mut self, window: &W) -> Result<(), String> {
+    fn init_context<W: GKWindow>(&mut self, window: &W) -> Result<(), String> {
+        if self.contexts.contains_key(&window.id()) {
+            return Ok(());
+        }
+
         let surface = unsafe { self.instance.create_surface(window) }.unwrap();
         let adapter =
             pollster::block_on(self.instance.request_adapter(&wgpu::RequestAdapterOptions {
@@ -67,7 +52,7 @@ impl GfxDevice {
                 force_fallback_adapter: false,
                 compatible_surface: Some(&surface),
             }))
-            .ok_or_else(|| format!("Cannot create WGPU Adapter for {:?}", window.id()))?;
+            .ok_or_else(|| "Cannot create WGPU Adapter for {:?}".to_string())?;
 
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
@@ -114,14 +99,61 @@ impl GfxDevice {
         Ok(())
     }
 
+    fn create_render_pipeline(
+        &mut self,
+        desc: RenderPipelineDescriptor,
+    ) -> Result<Pipeline, String> {
+        let (_, ctx) = self.contexts.iter().next().ok_or_else(|| {
+            "There is no context available yet. Try to create a window first.".to_string()
+        })?;
+        let shader = ctx
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: desc.label,
+                source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(desc.shader)),
+            });
 
-    pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
+        let pipeline_layout = ctx
+            .device
+            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: desc.label,
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            });
+
+        let swapchain_format = ctx.capabilities.formats[0];
+
+        let raw = ctx
+            .device
+            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: desc.label,
+                layout: Some(&pipeline_layout),
+                vertex: wgpu::VertexState {
+                    module: &shader,
+                    entry_point: "vs_main",
+                    buffers: &[],
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader,
+                    entry_point: "fs_main",
+                    targets: &[Some(swapchain_format.into())],
+                }),
+                primitive: wgpu::PrimitiveState::default(),
+                depth_stencil: None, // todo from desc
+                multisample: wgpu::MultisampleState::default(),
+                multiview: None,
+            });
+
+        Ok(Pipeline { raw })
+    }
+
+    fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
         if let Some(ctx) = self.contexts.get_mut(&id) {
             ctx.resize(width, height);
         }
     }
 
-    pub fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
+    fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
         let ctx = self
             .contexts
             .get(&window)
@@ -141,7 +173,7 @@ impl GfxDevice {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(rp.color),
+                        load: wgpu::LoadOp::Clear(wgpu_color(rp.color)),
                         store: true,
                     },
                 })],
@@ -160,52 +192,5 @@ impl GfxDevice {
         frame.present();
 
         Ok(())
-    }
-}
-
-impl GKDevice<Pipeline> for GfxDevice {
-    fn create_render_pipeline(&mut self, desc: RenderPipelineDescriptor) -> Result<Pipeline, String> {
-            let (_, ctx) = self.contexts.iter().next().ok_or_else(|| {
-                "There is no context available yet. Try to create a window first.".to_string()
-            })?;
-            let shader = ctx
-                .device
-                .create_shader_module(wgpu::ShaderModuleDescriptor {
-                    label: desc.label,
-                    source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(desc.shader)),
-                });
-
-            let pipeline_layout = ctx
-                .device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: desc.label,
-                    bind_group_layouts: &[],
-                    push_constant_ranges: &[],
-                });
-
-            let swapchain_format = ctx.capabilities.formats[0];
-
-            let raw = ctx
-                .device
-                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                    label: desc.label,
-                    layout: Some(&pipeline_layout),
-                    vertex: wgpu::VertexState {
-                        module: &shader,
-                        entry_point: "vs_main",
-                        buffers: &[],
-                    },
-                    fragment: Some(wgpu::FragmentState {
-                        module: &shader,
-                        entry_point: "fs_main",
-                        targets: &[Some(swapchain_format.into())],
-                    }),
-                    primitive: wgpu::PrimitiveState::default(),
-                    depth_stencil: None, // todo from desc
-                    multisample: wgpu::MultisampleState::default(),
-                    multiview: None,
-                });
-
-            Ok(Pipeline { raw })
     }
 }

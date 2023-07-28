@@ -1,8 +1,14 @@
-use raw_window_handle::HasRawWindowHandle;
+use crate::renderer::Renderer;
+use gk_app::window::{GKWindow, GKWindowId};
 
 pub trait GKDevice<RP: GKRenderPipeline> {
-    fn init_context<H: HasRawWindowHandle>(&mut self, id: &H) -> Result<(), String>;
+    fn new() -> Result<Self, String>
+    where
+        Self: Sized;
+    fn init_context<W: GKWindow>(&mut self, win: &W) -> Result<(), String>;
     fn create_render_pipeline(&mut self, desc: RenderPipelineDescriptor) -> Result<RP, String>;
+    fn resize(&mut self, id: GKWindowId, width: u32, height: u32);
+    fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String>;
 }
 
 pub trait GKRenderPipeline {}

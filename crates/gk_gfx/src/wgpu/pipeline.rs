@@ -1,5 +1,5 @@
-use wgpu::RenderPipeline as RawRenderPipeline;
 use crate::GKRenderPipeline;
+use wgpu::RenderPipeline as RawRenderPipeline;
 
 pub struct Pipeline {
     pub(crate) raw: RawRenderPipeline,

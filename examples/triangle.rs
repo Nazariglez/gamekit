@@ -5,7 +5,7 @@ use gamekit::app::{
 use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
 use gk_backend::Platform;
-use gk_gfx::{Color, Gfx, GfxConfig, GKDevice, Pipeline, Renderer, RenderPipelineDescriptor};
+use gk_gfx::{Color, GKDevice, Gfx, GfxConfig, Pipeline, RenderPipelineDescriptor, Renderer};
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -44,10 +44,12 @@ fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, state: &mut State) {
 
     match evt.event {
         WindowEventId::Init => {
-            let pip = gfx.create_render_pipeline(RenderPipelineDescriptor {
-                shader: SHADER,
-                ..Default::default()
-            }).unwrap();
+            let pip = gfx
+                .create_render_pipeline(RenderPipelineDescriptor {
+                    shader: SHADER,
+                    ..Default::default()
+                })
+                .unwrap();
             state.pip = Some(pip);
         }
         _ => {}

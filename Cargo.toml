@@ -40,11 +40,13 @@ gk_gfx.workspace = true
 anymap.workspace = true
 
 [features]
-default = ["basic", "winit"]
+default = ["basic", "winit", "wgpu"]
 # basic features for most apps
 basic = ["limited_memory"]
 # uses winit as backend
 winit = ["gk_backend/winit"]
+# uses wgpu as renderer
+wgpu = ["gk_gfx/wgpu"]
 # use arrayvec instead of vec when possible
 limited_memory = ["gk_app/limited_events"]
 # allow serialize and deserialize internal types
