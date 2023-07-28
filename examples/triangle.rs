@@ -2,10 +2,10 @@ use gamekit::app::{
     event,
     window::{WindowEvent, WindowEventId},
 };
-use gamekit::gfx::{Color, GfxConfig, GfxDevice, Pipeline, Renderer};
 use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
 use gk_backend::Platform;
+use gk_gfx::{Color, Gfx, GfxConfig, GKDevice, Pipeline, Renderer, RenderPipelineDescriptor};
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -36,7 +36,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_window_event(evt: &WindowEvent, gfx: &mut GfxDevice, state: &mut State) {
+fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, state: &mut State) {
     // Initialize the pipeline when the first window is created
     if state.pip.is_some() {
         return;
@@ -44,14 +44,17 @@ fn on_window_event(evt: &WindowEvent, gfx: &mut GfxDevice, state: &mut State) {
 
     match evt.event {
         WindowEventId::Init => {
-            let pip = gfx.create_pipeline(SHADER).unwrap();
+            let pip = gfx.create_render_pipeline(RenderPipelineDescriptor {
+                shader: SHADER,
+                ..Default::default()
+            }).unwrap();
             state.pip = Some(pip);
         }
         _ => {}
     }
 }
 
-fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut GfxDevice, state: &mut State) {
+fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut Gfx, state: &mut State) {
     if let Some(pip) = &state.pip {
         let mut renderer = Renderer::new();
         renderer.begin(Color::RED, 0, 0);
