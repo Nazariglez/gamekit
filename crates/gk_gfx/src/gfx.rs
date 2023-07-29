@@ -3,7 +3,6 @@ use crate::{Device, Pipeline};
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
-use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
 pub struct Gfx {
     pub(crate) raw: Device,
@@ -21,11 +20,8 @@ impl Gfx {
         self.raw.init_context(win)
     }
 
-    pub fn create_render_pipeline(
-        &mut self,
-        desc: RenderPipelineDescriptor,
-    ) -> Result<Pipeline, String> {
-        self.raw.create_render_pipeline(desc)
+    pub fn create_render_pipeline<'a>(&'a mut self, shader: &'a str) -> RenderPipelineBuilder {
+        RenderPipelineBuilder::new(self, shader)
     }
 
     pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
@@ -34,5 +30,30 @@ impl Gfx {
 
     pub fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
         self.raw.render(window, renderer)
+    }
+}
+
+pub struct RenderPipelineBuilder<'a> {
+    desc: RenderPipelineDescriptor<'a>,
+    gfx: &'a mut Gfx,
+}
+
+impl<'a> RenderPipelineBuilder<'a> {
+    fn new(gfx: &'a mut Gfx, shader: &'a str) -> Self {
+        let desc = RenderPipelineDescriptor {
+            shader,
+            ..Default::default()
+        };
+        Self { desc, gfx }
+    }
+
+    pub fn with_label(mut self, label: &'a str) -> Self {
+        self.desc.label = Some(label);
+        self
+    }
+
+    pub fn build(self) -> Result<Pipeline, String> {
+        let Self { desc, gfx } = self;
+        gfx.raw.create_render_pipeline(desc)
     }
 }

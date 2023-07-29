@@ -44,12 +44,7 @@ fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, state: &mut State) {
 
     match evt.event {
         WindowEventId::Init => {
-            let pip = gfx
-                .create_render_pipeline(RenderPipelineDescriptor {
-                    shader: SHADER,
-                    ..Default::default()
-                })
-                .unwrap();
+            let pip = gfx.create_render_pipeline(SHADER).build().unwrap();
             state.pip = Some(pip);
         }
         _ => {}
