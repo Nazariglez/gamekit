@@ -1,13 +1,15 @@
+use super::buffer::Buffer;
 use super::context::Context;
+use super::pipeline::RenderPipeline;
+use super::utils::wgpu_color;
 use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
-use crate::wgpu::utils::wgpu_color;
-use crate::{RenderPipeline, Renderer};
+use crate::wgpu::utils::wgpu_buffer_usages;
+use crate::{BufferDescriptor, Renderer};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
-use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 use std::borrow::Cow;
-use std::ops::Range;
+use wgpu::util::{BufferInitDescriptor, DeviceExt};
 pub use wgpu::Color;
 use wgpu::{
     Device as RawDevice, Instance, PowerPreference, Queue, Surface, SurfaceCapabilities,
@@ -24,7 +26,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<RenderPipeline> for Device {
+impl GKDevice<RenderPipeline, Buffer> for Device {
     fn new() -> Result<Self, String> {
         let instance = Instance::default();
         Ok(Self {
@@ -145,6 +147,20 @@ impl GKDevice<RenderPipeline> for Device {
             });
 
         Ok(RenderPipeline { raw })
+    }
+
+    fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<Buffer, String> {
+        let (_, ctx) = self.contexts.iter().next().ok_or_else(|| {
+            "There is no context available yet. Try to create a window first.".to_string()
+        })?;
+
+        let raw = ctx.device.create_buffer_init(&BufferInitDescriptor {
+            label: desc.label,
+            contents: desc.content,
+            usage: wgpu_buffer_usages(desc.usage),
+        });
+
+        Ok(Buffer { raw })
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
