@@ -1,8 +1,8 @@
 use crate::GKRenderPipeline;
 use wgpu::RenderPipeline as RawRenderPipeline;
 
-pub struct Pipeline {
+pub struct RenderPipeline {
     pub(crate) raw: RawRenderPipeline,
 }
 
-impl GKRenderPipeline for Pipeline {}
+impl GKRenderPipeline for RenderPipeline {}

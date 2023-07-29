@@ -1,10 +1,10 @@
 use crate::color::Color;
-use crate::Pipeline;
+use crate::RenderPipeline;
 use std::ops::Range;
 
 #[derive(Default)]
 pub struct RenderPass<'a> {
-    pub(crate) pipeline: Option<&'a Pipeline>,
+    pub(crate) pipeline: Option<&'a RenderPipeline>,
     pub(crate) color: Color,
     pub(crate) vertices: Range<u32>,
 }
@@ -26,7 +26,7 @@ impl<'a> Renderer<'a> {
         });
     }
 
-    pub fn apply_pipeline(&mut self, pip: &'a Pipeline) {
+    pub fn apply_pipeline(&mut self, pip: &'a RenderPipeline) {
         if let Some(rp) = self.passes.last_mut() {
             rp.pipeline = Some(pip);
         }

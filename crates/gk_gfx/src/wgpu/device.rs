@@ -1,7 +1,7 @@
 use super::context::Context;
 use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
 use crate::wgpu::utils::wgpu_color;
-use crate::{Pipeline, Renderer};
+use crate::{RenderPipeline, Renderer};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
@@ -24,7 +24,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<Pipeline> for Device {
+impl GKDevice<RenderPipeline> for Device {
     fn new() -> Result<Self, String> {
         let instance = Instance::default();
         Ok(Self {
@@ -102,7 +102,7 @@ impl GKDevice<Pipeline> for Device {
     fn create_render_pipeline(
         &mut self,
         desc: RenderPipelineDescriptor,
-    ) -> Result<Pipeline, String> {
+    ) -> Result<RenderPipeline, String> {
         let (_, ctx) = self.contexts.iter().next().ok_or_else(|| {
             "There is no context available yet. Try to create a window first.".to_string()
         })?;
@@ -144,7 +144,7 @@ impl GKDevice<Pipeline> for Device {
                 multiview: None,
             });
 
-        Ok(Pipeline { raw })
+        Ok(RenderPipeline { raw })
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {

@@ -1,5 +1,5 @@
 use crate::renderer::Renderer;
-use crate::{Device, Pipeline};
+use crate::{Device, RenderPipeline};
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
@@ -52,7 +52,7 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
-    pub fn build(self) -> Result<Pipeline, String> {
+    pub fn build(self) -> Result<RenderPipeline, String> {
         let Self { desc, gfx } = self;
         gfx.raw.create_render_pipeline(desc)
     }

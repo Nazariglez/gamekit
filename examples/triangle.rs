@@ -5,7 +5,7 @@ use gamekit::app::{
 use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
 use gk_backend::Platform;
-use gk_gfx::{Color, GKDevice, Gfx, GfxConfig, Pipeline, RenderPipelineDescriptor, Renderer};
+use gk_gfx::{Color, GKDevice, Gfx, GfxConfig, RenderPipeline, RenderPipelineDescriptor, Renderer};
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -24,7 +24,7 @@ fn fs_main() -> @location(0) vec4<f32> {
 
 #[derive(AppState, Default)]
 struct State {
-    pip: Option<Pipeline>,
+    pip: Option<RenderPipeline>,
 }
 
 fn main() -> Result<(), String> {
