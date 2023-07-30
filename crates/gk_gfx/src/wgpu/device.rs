@@ -31,7 +31,7 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
         })
     }
 
-    fn init_context<W: GKWindow>(&mut self, window: &W) -> Result<(), String> {
+    fn init_surface<W: GKWindow>(&mut self, window: &W) -> Result<(), String> {
         if self.surfaces.contains_key(&window.id()) {
             return Ok(());
         }

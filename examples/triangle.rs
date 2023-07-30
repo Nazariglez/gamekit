@@ -4,6 +4,7 @@ use gamekit::app::{
 };
 use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
+use gk_app::window::GKWindowAttributes;
 use gk_backend::Platform;
 use gk_gfx::{Color, GKDevice, Gfx, GfxConfig, RenderPipeline, RenderPipelineDescriptor, Renderer};
 
@@ -34,32 +35,14 @@ fn main() -> Result<(), String> {
     })
     .add_config(PlatformConfig::default())?
     .add_config(GfxConfig::default())?
-    // .on(on_window_event)
     .on(on_draw)
     .build()
 }
 
-// fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, state: &mut State) {
-//     // Initialize the pipeline when the first window is created
-//     if state.pip.is_some() {
-//         return;
-//     }
-//
-//     match evt.event {
-//         WindowEventId::Init => {
-//             let pip = gfx.create_render_pipeline(SHADER).build().unwrap();
-//             // state.pip = Some(pip);
-//         }
-//         _ => {}
-//     }
-// }
-
 fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut Gfx, state: &mut State) {
-    // if let Some(pip) = &state.pip {
     let mut renderer = Renderer::new();
     renderer.begin(Color::RED, 0, 0);
     renderer.apply_pipeline(&state.pip);
     renderer.draw(0..3);
     gfx.render(evt.window_id, &renderer).unwrap();
-    // }
 }

@@ -33,11 +33,14 @@ impl PlatformConfig {
 impl<S: GKState> BuildConfig<S> for PlatformConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
         let mut platform = Platform::new();
+
+        // Initialize main windows if is not windowless mode
         if let Some(attrs) = self.main_window.take() {
             let id = platform.create_window(attrs)?;
             platform.set_main_window(id);
         }
 
+        // Call request_draw on each frame
         let builder = if self.auto_redraw {
             builder.on(|_: &event::Update, platform: &mut Platform| {
                 platform.windows_mut().for_each(|win| win.request_redraw())

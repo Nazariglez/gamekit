@@ -6,7 +6,7 @@ pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer> {
     fn new(attrs: GfxAttributes) -> Result<Self, String>
     where
         Self: Sized;
-    fn init_context<W: GKWindow>(&mut self, win: &W) -> Result<(), String>;
+    fn init_surface<W: GKWindow>(&mut self, win: &W) -> Result<(), String>;
     fn create_render_pipeline(&mut self, desc: RenderPipelineDescriptor) -> Result<RP, String>;
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<B, String>;
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32);

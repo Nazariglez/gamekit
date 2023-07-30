@@ -16,8 +16,8 @@ impl Gfx {
         Ok(Self { raw })
     }
 
-    pub fn init_context<W: GKWindow>(&mut self, win: &W) -> Result<(), String> {
-        self.raw.init_context(win)
+    pub fn init_surface<W: GKWindow>(&mut self, win: &W) -> Result<(), String> {
+        self.raw.init_surface(win)
     }
 
     pub fn create_render_pipeline<'a>(&'a mut self, shader: &'a str) -> RenderPipelineBuilder {

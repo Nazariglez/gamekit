@@ -37,8 +37,9 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
         let builder = builder.on(
             |evt: &WindowEvent, gfx: &mut Gfx, platform: &mut Platform| match evt.event {
+                // when a new window is created let's initialize the surface for it
                 WindowEventId::Init => {
-                    gfx.init_context(platform.window(evt.id).unwrap()).unwrap();
+                    gfx.init_surface(platform.window(evt.id).unwrap()).unwrap();
                 }
                 WindowEventId::Moved { .. } => {}
                 WindowEventId::Resized {
@@ -62,7 +63,7 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
         Ok(builder.add_plugin_with(move |platform: &mut Platform| {
             let mut gfx = Gfx::new(attrs)?;
             if let Some(win) = platform.main_window() {
-                let _ = gfx.init_context(win)?;
+                let _ = gfx.init_surface(win)?;
             }
 
             Ok(gfx)
