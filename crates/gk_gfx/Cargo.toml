@@ -9,6 +9,7 @@ gk_backend.workspace = true
 
 raw-window-handle.workspace = true
 hashbrown.workspace = true
+log.workspace = true
 wgpu = { version = "0.16.2", optional = true }
 pollster = "0.3.0"
 bytemuck = "1.13.1"

@@ -1,8 +1,9 @@
+use crate::attrs::GfxAttributes;
 use crate::renderer::Renderer;
 use gk_app::window::{GKWindow, GKWindowId};
 
 pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer> {
-    fn new() -> Result<Self, String>
+    fn new(attrs: GfxAttributes) -> Result<Self, String>
     where
         Self: Sized;
     fn init_context<W: GKWindow>(&mut self, win: &W) -> Result<(), String>;

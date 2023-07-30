@@ -1,102 +1,43 @@
 use super::buffer::Buffer;
 use super::context::Context;
 use super::pipeline::RenderPipeline;
+use super::surface::Surface;
 use super::utils::wgpu_color;
 use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
 use crate::wgpu::utils::wgpu_buffer_usages;
-use crate::{BufferDescriptor, Renderer};
+use crate::{BufferDescriptor, GfxAttributes, Renderer};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 pub use wgpu::Color;
-use wgpu::{
-    Device as RawDevice, Instance, PowerPreference, Queue, Surface, SurfaceCapabilities,
-    SurfaceConfiguration, SurfaceTexture,
-};
 
 pub struct Device {
-    instance: Instance,
-    contexts: HashMap<GKWindowId, Context>,
-    vsync: bool,
-    compatibility_mode: bool,
-    integrated_gpu: bool,
+    attrs: GfxAttributes,
+    ctx: Context,
+    surfaces: HashMap<GKWindowId, Surface>,
 }
 
 impl Plugin for Device {}
 
 impl GKDevice<RenderPipeline, Buffer> for Device {
-    fn new() -> Result<Self, String> {
-        let instance = Instance::default();
+    fn new(attrs: GfxAttributes) -> Result<Self, String> {
+        let context = Context::new(attrs)?;
         Ok(Self {
-            instance,
-            contexts: HashMap::default(),
-            vsync: false,
-            compatibility_mode: false,
-            integrated_gpu: false,
+            attrs,
+            ctx: context,
+            surfaces: HashMap::default(),
         })
     }
 
     fn init_context<W: GKWindow>(&mut self, window: &W) -> Result<(), String> {
-        if self.contexts.contains_key(&window.id()) {
+        if self.surfaces.contains_key(&window.id()) {
             return Ok(());
         }
 
-        let surface = unsafe { self.instance.create_surface(window) }.unwrap();
-        let adapter =
-            pollster::block_on(self.instance.request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: if self.integrated_gpu {
-                    PowerPreference::LowPower
-                } else {
-                    PowerPreference::HighPerformance
-                },
-                force_fallback_adapter: false,
-                compatible_surface: Some(&surface),
-            }))
-            .ok_or_else(|| "Cannot create WGPU Adapter for {:?}".to_string())?;
-
-        let (device, queue) = pollster::block_on(adapter.request_device(
-            &wgpu::DeviceDescriptor {
-                label: None,
-                features: wgpu::Features::default(),
-                limits: if self.compatibility_mode {
-                    wgpu::Limits::downlevel_webgl2_defaults()
-                } else {
-                    wgpu::Limits::default()
-                },
-            },
-            None,
-        ))
-        .map_err(|err| err.to_string())?;
-
-        let (width, height) = window.physical_size();
-        let capabilities = surface.get_capabilities(&adapter);
-        let config = SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: capabilities.formats[0],
-            width,
-            height,
-            present_mode: if self.vsync {
-                wgpu::PresentMode::AutoVsync
-            } else {
-                wgpu::PresentMode::AutoNoVsync
-            },
-            alpha_mode: capabilities.alpha_modes[0],
-            view_formats: vec![],
-        };
-
-        surface.configure(&device, &config);
-
-        let ctx = Context {
-            surface,
-            config,
-            device,
-            queue,
-            capabilities,
-        };
-
-        self.contexts.insert(window.id(), ctx);
+        let surface = Surface::new(&mut self.ctx, window, self.attrs)?;
+        self.surfaces.insert(window.id(), surface);
 
         Ok(())
     }
@@ -105,27 +46,33 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
         &mut self,
         desc: RenderPipelineDescriptor,
     ) -> Result<RenderPipeline, String> {
-        let (_, ctx) = self.contexts.iter().next().ok_or_else(|| {
-            "There is no context available yet. Try to create a window first.".to_string()
-        })?;
-        let shader = ctx
+        let shader = self
+            .ctx
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: desc.label,
                 source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(desc.shader)),
             });
 
-        let pipeline_layout = ctx
-            .device
-            .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: desc.label,
-                bind_group_layouts: &[],
-                push_constant_ranges: &[],
+        let pipeline_layout =
+            self.ctx
+                .device
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: desc.label,
+                    bind_group_layouts: &[],
+                    push_constant_ranges: &[],
+                });
+
+        let swapchain_format = self
+            .surfaces
+            .iter()
+            .next()
+            .map_or(wgpu::TextureFormat::Rgba8UnormSrgb, |(_, surface)| {
+                surface.capabilities.formats[0]
             });
 
-        let swapchain_format = ctx.capabilities.formats[0];
-
-        let raw = ctx
+        let raw = self
+            .ctx
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: desc.label,
@@ -150,11 +97,7 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
     }
 
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<Buffer, String> {
-        let (_, ctx) = self.contexts.iter().next().ok_or_else(|| {
-            "There is no context available yet. Try to create a window first.".to_string()
-        })?;
-
-        let raw = ctx.device.create_buffer_init(&BufferInitDescriptor {
+        let raw = self.ctx.device.create_buffer_init(&BufferInitDescriptor {
             label: desc.label,
             contents: desc.content,
             usage: wgpu_buffer_usages(desc.usage),
@@ -164,21 +107,22 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
-        if let Some(ctx) = self.contexts.get_mut(&id) {
-            ctx.resize(width, height);
+        if let Some(surface) = self.surfaces.get_mut(&id) {
+            surface.resize(&self.ctx.device, width, height);
         }
     }
 
     fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
-        let ctx = self
-            .contexts
+        let surface = self
+            .surfaces
             .get(&window)
             .ok_or_else(|| format!("No WGPU context for {:?}", window))?;
-        let frame = ctx.frame()?;
+        let frame = surface.frame()?;
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = ctx
+        let mut encoder = self
+            .ctx
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
@@ -204,7 +148,7 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
             }
         });
 
-        ctx.queue.submit(Some(encoder.finish()));
+        self.ctx.queue.submit(Some(encoder.finish()));
         frame.present();
 
         Ok(())

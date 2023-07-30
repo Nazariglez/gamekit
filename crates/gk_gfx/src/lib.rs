@@ -10,12 +10,14 @@ mod wgpu;
 #[cfg(feature = "wgpu")]
 pub use crate::wgpu::*;
 
+mod attrs;
 mod color;
 mod config;
 mod device;
 mod gfx;
 mod renderer;
 
+pub use attrs::*;
 pub use color::Color;
 pub use config::*;
 pub use device::*;

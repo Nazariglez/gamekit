@@ -3,6 +3,7 @@ mod context;
 mod buffer;
 mod device;
 mod pipeline;
+mod surface;
 mod utils;
 
 pub use buffer::*;

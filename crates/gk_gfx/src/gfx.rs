@@ -1,5 +1,5 @@
 use crate::renderer::Renderer;
-use crate::{Buffer, BufferDescriptor, BufferUsage, Device, RenderPipeline};
+use crate::{Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, RenderPipeline};
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
@@ -11,8 +11,8 @@ pub struct Gfx {
 impl Plugin for Gfx {}
 
 impl Gfx {
-    pub fn new() -> Result<Self, String> {
-        let raw = Device::new()?;
+    pub fn new(attrs: GfxAttributes) -> Result<Self, String> {
+        let raw = Device::new(attrs)?;
         Ok(Self { raw })
     }
 

@@ -32,14 +32,11 @@ impl PlatformConfig {
 
 impl<S: GKState> BuildConfig<S> for PlatformConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
-        // start the app with a window
-        let builder = match self.main_window.take() {
-            None => builder,
-            Some(attrs) => builder.once(move |evt: &event::Init, platform: &mut Platform| {
-                let id = platform.create_window(attrs).unwrap();
-                platform.set_main_window(id);
-            }),
-        };
+        let mut platform = Platform::new();
+        if let Some(attrs) = self.main_window.take() {
+            let id = platform.create_window(attrs)?;
+            platform.set_main_window(id);
+        }
 
         let builder = if self.auto_redraw {
             builder.on(|_: &event::Update, platform: &mut Platform| {
@@ -64,7 +61,6 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
         );
 
         // let's add the windows plugin
-        let platform = Platform::new();
         Ok(builder.add_plugin(platform).with_runner(runner))
     }
 }
