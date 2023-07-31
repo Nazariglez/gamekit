@@ -139,6 +139,8 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
 
         let usage = desc.usage;
 
+        println!("Create buffer {:?}", desc);
+
         Ok(Buffer { raw, usage })
     }
 

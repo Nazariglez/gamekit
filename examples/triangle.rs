@@ -53,13 +53,13 @@ impl State {
             .build()?;
 
         #[rustfmt::skip]
-        let vertices = [
+        let vertices: &[f32] = &[
             0.0, 0.5, 0.0,      1.0, 0.0, 0.0,
             -0.5, -0.5, 0.0,    0.0, 1.0, 0.0,
             0.5, -0.5, 0.0,     0.0, 0.0, 1.0,
         ];
 
-        let vbo = gfx.create_vertex_buffer(&vertices).build()?;
+        let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
         Ok(State { pip, vbo })
     }

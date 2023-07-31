@@ -19,7 +19,7 @@ pub trait GKBuffer {
     fn usage(&self) -> BufferUsage;
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct RenderPipelineDescriptor<'a> {
     pub label: Option<&'a str>,
     pub shader: &'a str,
@@ -27,14 +27,14 @@ pub struct RenderPipelineDescriptor<'a> {
     pub vertex_layout: Option<VertexLayout>,
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct BufferDescriptor<'a> {
     pub label: Option<&'a str>,
     pub usage: BufferUsage,
     pub content: &'a [u8],
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub enum BufferUsage {
     #[default]
     Vertex,
@@ -42,5 +42,5 @@ pub enum BufferUsage {
     Uniform,
 }
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct DepthStencil;
