@@ -1,5 +1,7 @@
 use gamekit::app::event;
-use gamekit::gfx::{Color, Gfx, GfxConfig, RenderPipeline, Renderer};
+use gamekit::gfx::{
+    Buffer, Color, Gfx, GfxConfig, RenderPipeline, Renderer, VertexFormat, VertexLayout,
+};
 use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
 
@@ -21,12 +23,30 @@ fn fs_main() -> @location(0) vec4<f32> {
 #[derive(AppState)]
 struct State {
     pip: RenderPipeline,
+    vbo: Buffer,
 }
 
 impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
-        let pip = gfx.create_render_pipeline(SHADER).build().unwrap();
-        Ok(State { pip })
+        let pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_attr(0, VertexFormat::Float32x2)
+                    .with_attr(1, VertexFormat::Float32x3),
+            )
+            .build()?;
+
+        #[rustfmt::skip]
+        let vertices = [
+            0.0, 0.0,   0.0, 0.0, 0.0,
+            0.0, 0.0,   0.0, 0.0, 0.0,
+            0.0, 0.0,   0.0, 0.0, 0.0,
+        ];
+
+        let vbo = gfx.create_vertex_buffer(&vertices).build()?;
+
+        Ok(State { pip, vbo })
     }
 }
 
@@ -42,6 +62,7 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(Color::RED, 0, 0);
     renderer.apply_pipeline(&state.pip);
+    renderer.apply_bindings(&[&state.vbo]);
     renderer.draw(0..3);
     gfx.render(evt.window_id, &renderer).unwrap();
 }
