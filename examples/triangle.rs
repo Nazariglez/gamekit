@@ -9,7 +9,7 @@ use gamekit::prelude::*;
 const SHADER: &str = r#"
 // Vertex shader
 struct VertexInput {
-    @location(0) position: vec3<f32>,
+    @location(0) position: vec2<f32>,
     @location(1) color: vec3<f32>,
 };
 
@@ -24,7 +24,7 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.color = model.color;
-    out.clip_position = vec4<f32>(model.position, 1.0);
+    out.clip_position = vec4<f32>(model.position - 0.5, 1.0, 1.0);
     return out;
 }
 
@@ -47,16 +47,16 @@ impl State {
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
                 VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x3)
+                    .with_attr(0, VertexFormat::Float32x2)
                     .with_attr(1, VertexFormat::Float32x3),
             )
             .build()?;
 
         #[rustfmt::skip]
         let vertices: &[f32] = &[
-            0.0, 0.5, 0.0,      1.0, 0.0, 0.0,
-            -0.5, -0.5, 0.0,    0.0, 1.0, 0.0,
-            0.5, -0.5, 0.0,     0.0, 0.0, 1.0,
+            0.5, 1.0,   1.0, 0.2, 0.3,
+            0.0, 0.0,   0.1, 1.0, 0.3,
+            1.0, 0.0,   0.1, 0.2, 1.0,
         ];
 
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
@@ -75,7 +75,7 @@ fn main() -> Result<(), String> {
 
 fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
-    renderer.begin(Color::WHITE, 0, 0);
+    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);
     let bindings = [&state.vbo];
     renderer.apply_bindings(&bindings);
