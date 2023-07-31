@@ -1,10 +1,11 @@
 use crate::color::Color;
-use crate::RenderPipeline;
+use crate::{Buffer, RenderPipeline};
 use std::ops::Range;
 
 #[derive(Default)]
 pub struct RenderPass<'a> {
     pub(crate) pipeline: Option<&'a RenderPipeline>,
+    pub(crate) buffers: &'a [&'a Buffer],
     pub(crate) color: Color,
     pub(crate) vertices: Range<u32>,
 }
@@ -32,8 +33,10 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub fn apply_bindings(&mut self) {
-        // todo
+    pub fn apply_bindings(&mut self, buffers: &'a [&Buffer]) {
+        if let Some(rp) = self.passes.last_mut() {
+            rp.buffers = buffers;
+        }
     }
 
     pub fn draw(&mut self, vertices: Range<u32>) {

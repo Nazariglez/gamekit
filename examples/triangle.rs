@@ -62,7 +62,8 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(Color::RED, 0, 0);
     renderer.apply_pipeline(&state.pip);
-    renderer.apply_bindings(&[&state.vbo]);
+    let bindings = [&state.vbo];
+    renderer.apply_bindings(&bindings);
     renderer.draw(0..3);
     gfx.render(evt.window_id, &renderer).unwrap();
 }

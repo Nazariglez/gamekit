@@ -5,13 +5,14 @@ use super::surface::Surface;
 use super::utils::wgpu_color;
 use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
 use crate::wgpu::utils::wgpu_buffer_usages;
-use crate::{BufferDescriptor, GfxAttributes, Renderer};
+use crate::{BufferDescriptor, BufferUsage, GfxAttributes, Renderer};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 pub use wgpu::Color;
+use wgpu::IndexFormat;
 
 pub struct Device {
     attrs: GfxAttributes,
@@ -103,7 +104,9 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
             usage: wgpu_buffer_usages(desc.usage),
         });
 
-        Ok(Buffer { raw })
+        let usage = desc.usage;
+
+        Ok(Buffer { raw, usage })
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
@@ -142,6 +145,19 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
 
             if let Some(pip) = rp.pipeline {
                 rpass.set_pipeline(&pip.raw);
+
+                rp.buffers.iter().for_each(|buff| {
+                    match buff.usage {
+                        BufferUsage::Vertex => rpass.set_vertex_buffer(0, buff.raw.slice(..)),
+                        BufferUsage::Index => {
+                            rpass.set_index_buffer(buff.raw.slice(..), IndexFormat::default())
+                        } // TODO indexformat!
+                        BufferUsage::Uniform => {
+                            // TODO
+                        }
+                    }
+                });
+
                 if !rp.vertices.is_empty() {
                     rpass.draw(rp.vertices.clone(), 0..1);
                 }

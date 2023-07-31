@@ -1,5 +1,7 @@
 use crate::renderer::Renderer;
-use crate::{Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, RenderPipeline};
+use crate::{
+    Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, RenderPipeline, VertexLayout,
+};
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
@@ -31,6 +33,7 @@ impl Gfx {
         BufferBuilder::new(self, BufferUsage::Vertex, data)
     }
 
+    // TODO IndexFormat!
     pub fn create_index_buffer<'a, D: bytemuck::Pod>(&'a mut self, data: &'a [D]) -> BufferBuilder {
         BufferBuilder::new(self, BufferUsage::Index, data)
     }
@@ -67,6 +70,11 @@ impl<'a> RenderPipelineBuilder<'a> {
 
     pub fn with_label(mut self, label: &'a str) -> Self {
         self.desc.label = Some(label);
+        self
+    }
+
+    pub fn with_vertex_layout(mut self, layout: VertexLayout) -> Self {
+        self.desc.vertex_layout = Some(layout);
         self
     }
 
