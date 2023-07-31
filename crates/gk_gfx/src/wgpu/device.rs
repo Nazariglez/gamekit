@@ -4,7 +4,7 @@ use super::pipeline::RenderPipeline;
 use super::surface::Surface;
 use super::utils::wgpu_color;
 use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
-use crate::wgpu::utils::wgpu_buffer_usages;
+use crate::wgpu::utils::{wgpu_buffer_usages, wgpu_step_mode, wgpu_vertex_format};
 use crate::{BufferDescriptor, BufferUsage, GfxAttributes, Renderer};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
@@ -72,6 +72,39 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
                 surface.capabilities.formats[0]
             });
 
+        let (attrs, mut buffers) = match &desc.vertex_layout {
+            Some(vl) => {
+                let mut offset = 0;
+                let attrs = vl
+                    .attributes
+                    .iter()
+                    .map(|attr| {
+                        let a = wgpu::VertexAttribute {
+                            format: wgpu_vertex_format(attr.format),
+                            offset,
+                            shader_location: attr.location as _,
+                        };
+                        offset += a.format.size();
+                        a
+                    })
+                    .collect::<Vec<_>>();
+
+                let layout = wgpu::VertexBufferLayout {
+                    array_stride: offset,
+                    step_mode: wgpu_step_mode(vl.step_mode),
+                    attributes: &[],
+                };
+
+                (vec![attrs], vec![layout]) // todo multple layout?
+            }
+            _ => (vec![], vec![]),
+        };
+
+        buffers
+            .iter_mut()
+            .enumerate()
+            .for_each(|(i, buff)| buff.attributes = &attrs[i]);
+
         let raw = self
             .ctx
             .device
@@ -81,7 +114,7 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
                 vertex: wgpu::VertexState {
                     module: &shader,
                     entry_point: "vs_main",
-                    buffers: &[],
+                    buffers: &buffers,
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
