@@ -2,6 +2,9 @@ use crate::color::Color;
 use crate::{Buffer, RenderPipeline};
 use std::ops::Range;
 
+// TODO gfx works with RenderPass, then we have Render2D, and Render3D
+// for things like the old notan draw, or a new 3d API
+
 #[derive(Default)]
 pub struct RenderPass<'a> {
     pub(crate) pipeline: Option<&'a RenderPipeline>,
