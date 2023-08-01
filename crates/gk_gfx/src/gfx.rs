@@ -1,7 +1,7 @@
 use crate::renderer::Renderer;
 use crate::{
-    Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, Primitive, RenderPipeline,
-    VertexLayout,
+    Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, GfxConfig, Primitive,
+    RenderPipeline, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -17,6 +17,10 @@ impl Gfx {
     pub fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let raw = Device::new(attrs)?;
         Ok(Self { raw })
+    }
+
+    pub fn config() -> GfxConfig {
+        GfxConfig::default()
     }
 
     pub fn init_surface<W: GKWindow>(&mut self, win: &W) -> Result<(), String> {

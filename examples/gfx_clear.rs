@@ -1,13 +1,13 @@
 use gamekit::app::event;
-use gamekit::gfx::{Color, Gfx, GfxConfig, Renderer};
-use gamekit::platform::PlatformConfig;
-use gamekit::time::{Time, TimeConfig};
+use gamekit::gfx::{Color, Gfx, Renderer};
+use gamekit::platform::Platform;
+use gamekit::time::Time;
 
 fn main() -> Result<(), String> {
     gamekit::init()
-        .add_config(PlatformConfig::default())?
-        .add_config(GfxConfig::default())?
-        .add_config(TimeConfig::default())?
+        .add_config(Platform::config())?
+        .add_config(Gfx::config())?
+        .add_config(Time::config())?
         .on(on_draw)
         .build()
 }

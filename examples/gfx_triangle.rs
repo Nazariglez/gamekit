@@ -1,9 +1,7 @@
 use gamekit::app::event;
-use gamekit::gfx::{
-    Buffer, Color, Gfx, GfxConfig, RenderPipeline, Renderer, VertexFormat, VertexLayout,
-};
-use gamekit::platform::PlatformConfig;
+use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
 use gamekit::prelude::*;
+use gk_backend::Platform;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -65,8 +63,8 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(PlatformConfig::default())?
-        .add_config(GfxConfig::default())?
+        .add_config(Platform::config())?
+        .add_config(Gfx::config())?
         .on(on_draw)
         .build()
 }

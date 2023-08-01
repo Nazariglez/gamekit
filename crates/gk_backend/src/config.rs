@@ -10,23 +10,22 @@ pub struct PlatformConfig {
 
 impl Default for PlatformConfig {
     fn default() -> Self {
-        Self::with_window(Default::default())
+        Self {
+            main_window: Some(Default::default()),
+            auto_redraw: true,
+        }
     }
 }
 
 impl PlatformConfig {
-    pub fn windowless() -> Self {
-        Self {
-            main_window: None,
-            auto_redraw: true,
-        }
+    pub fn with_windowless(mut self) -> Self {
+        self.main_window = None;
+        self
     }
 
-    pub fn with_window(attrs: GKWindowAttributes) -> Self {
-        Self {
-            main_window: Some(attrs),
-            auto_redraw: true,
-        }
+    pub fn with_window(mut self, attrs: GKWindowAttributes) -> Self {
+        self.main_window = Some(attrs);
+        self
     }
 }
 

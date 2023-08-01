@@ -1,4 +1,4 @@
-use crate::{Manager, Window};
+use crate::{Manager, PlatformConfig, Window};
 use gk_app::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
 use gk_app::Plugin;
 use hashbrown::hash_map::{Values, ValuesMut};
@@ -16,6 +16,10 @@ impl Platform {
             main_window: None,
             window_ids: vec![],
         }
+    }
+
+    pub fn config() -> PlatformConfig {
+        PlatformConfig::default()
     }
 
     pub fn create_window(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {

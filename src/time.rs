@@ -38,6 +38,10 @@ impl Default for Time {
 }
 
 impl Time {
+    pub fn config() -> TimeConfig {
+        TimeConfig::default()
+    }
+
     #[inline]
     pub(crate) fn update(&mut self) {
         let now = Instant::now();
