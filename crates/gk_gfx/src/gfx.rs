@@ -1,6 +1,7 @@
 use crate::renderer::Renderer;
 use crate::{
-    Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, RenderPipeline, VertexLayout,
+    Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, Primitive, RenderPipeline,
+    VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -75,6 +76,11 @@ impl<'a> RenderPipelineBuilder<'a> {
 
     pub fn with_vertex_layout(mut self, layout: VertexLayout) -> Self {
         self.desc.vertex_layout = Some(layout);
+        self
+    }
+
+    pub fn with_primitive(mut self, primitive: Primitive) -> Self {
+        self.desc.primitive = primitive;
         self
     }
 

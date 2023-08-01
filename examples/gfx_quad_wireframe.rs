@@ -4,6 +4,7 @@ use gamekit::gfx::{
 };
 use gamekit::platform::PlatformConfig;
 use gamekit::prelude::*;
+use gk_gfx::Primitive;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -29,6 +30,7 @@ impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
         let pip = gfx
             .create_render_pipeline(SHADER)
+            .with_primitive(Primitive::Lines)
             .with_vertex_layout(VertexLayout::new().with_attr(0, VertexFormat::Float32x2))
             .build()?;
 

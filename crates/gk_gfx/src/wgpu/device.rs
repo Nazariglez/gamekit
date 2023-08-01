@@ -8,7 +8,7 @@ use crate::buffer::{BufferDescriptor, BufferUsage};
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
-use crate::wgpu::utils::{wgpu_buffer_usages, wgpu_step_mode, wgpu_vertex_format};
+use crate::wgpu::utils::{wgpu_buffer_usages, wgpu_primitive, wgpu_step_mode, wgpu_vertex_format};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
@@ -123,7 +123,10 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
                     entry_point: "fs_main",
                     targets: &[Some(swapchain_format.into())],
                 }),
-                primitive: wgpu::PrimitiveState::default(),
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu_primitive(desc.primitive),
+                    ..Default::default()
+                },
                 depth_stencil: None, // todo from desc
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
@@ -190,6 +193,7 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
                             vertex_buffers_slot += 1;
                         }
                         BufferUsage::Index => {
+                            debug_assert!(!indexed, "Cannot bind more than one Index buffer");
                             indexed = true;
                             rpass.set_index_buffer(buff.raw.slice(..), IndexFormat::Uint16)
                         } // TODO indexformat!
