@@ -1,3 +1,22 @@
+pub trait GKBuffer {
+    fn usage(&self) -> BufferUsage;
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub struct BufferDescriptor<'a> {
+    pub label: Option<&'a str>,
+    pub usage: BufferUsage,
+    pub content: &'a [u8],
+}
+
+#[derive(Default, Debug, Copy, Clone)]
+pub enum BufferUsage {
+    #[default]
+    Vertex,
+    Index,
+    Uniform,
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct VertexLayout {
     pub step_mode: VertexStepMode,

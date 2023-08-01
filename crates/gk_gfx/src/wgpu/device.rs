@@ -3,15 +3,17 @@ use super::context::Context;
 use super::pipeline::RenderPipeline;
 use super::surface::Surface;
 use super::utils::wgpu_color;
-use crate::device::{GKDevice, GKRenderPipeline, RenderPipelineDescriptor};
+use crate::attrs::GfxAttributes;
+use crate::buffer::{BufferDescriptor, BufferUsage};
+use crate::device::GKDevice;
+use crate::pipeline::RenderPipelineDescriptor;
+use crate::renderer::Renderer;
 use crate::wgpu::utils::{wgpu_buffer_usages, wgpu_step_mode, wgpu_vertex_format};
-use crate::{BufferDescriptor, BufferUsage, GfxAttributes, Renderer};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
-pub use wgpu::Color;
 use wgpu::IndexFormat;
 
 pub struct Device {

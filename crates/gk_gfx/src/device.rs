@@ -1,6 +1,7 @@
 use crate::attrs::GfxAttributes;
+use crate::buffer::{BufferDescriptor, GKBuffer, VertexLayout};
+use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
 use crate::renderer::Renderer;
-use crate::VertexLayout;
 use gk_app::window::{GKWindow, GKWindowId};
 
 pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer> {
@@ -13,34 +14,3 @@ pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer> {
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32);
     fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String>;
 }
-
-pub trait GKRenderPipeline {}
-pub trait GKBuffer {
-    fn usage(&self) -> BufferUsage;
-}
-
-#[derive(Default, Debug, Clone)]
-pub struct RenderPipelineDescriptor<'a> {
-    pub label: Option<&'a str>,
-    pub shader: &'a str,
-    pub depth_stencil: Option<DepthStencil>,
-    pub vertex_layout: Option<VertexLayout>,
-}
-
-#[derive(Default, Debug, Copy, Clone)]
-pub struct BufferDescriptor<'a> {
-    pub label: Option<&'a str>,
-    pub usage: BufferUsage,
-    pub content: &'a [u8],
-}
-
-#[derive(Default, Debug, Copy, Clone)]
-pub enum BufferUsage {
-    #[default]
-    Vertex,
-    Index,
-    Uniform,
-}
-
-#[derive(Default, Debug, Copy, Clone)]
-pub struct DepthStencil;

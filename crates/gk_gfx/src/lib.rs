@@ -16,6 +16,7 @@ mod color;
 mod config;
 mod device;
 mod gfx;
+mod pipeline;
 mod renderer;
 
 pub use attrs::*;
@@ -24,4 +25,5 @@ pub use color::Color;
 pub use config::*;
 pub use device::*;
 pub use gfx::*;
+pub use pipeline::*;
 pub use renderer::*;

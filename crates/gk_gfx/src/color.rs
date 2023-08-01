@@ -1,4 +1,4 @@
-/// Represents a visual color
+/// Represents a color in the sRGB space
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Color {
     /// Red value
