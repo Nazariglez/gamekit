@@ -84,7 +84,7 @@ impl GKWindowAttributes {
 impl Default for GKWindowAttributes {
     fn default() -> Self {
         Self {
-            size: None,
+            size: Some((800, 600)),
             min_size: None,
             max_size: None,
             position: None,
