@@ -141,8 +141,6 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
 
         let usage = desc.usage;
 
-        println!("Create buffer {:?}", desc);
-
         Ok(Buffer { raw, usage })
     }
 
@@ -183,11 +181,17 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
             if let Some(pip) = rp.pipeline {
                 rpass.set_pipeline(&pip.raw);
 
+                let mut vertex_buffers_slot = 0;
+                let mut indexed = false;
                 rp.buffers.iter().for_each(|buff| {
                     match buff.usage {
-                        BufferUsage::Vertex => rpass.set_vertex_buffer(0, buff.raw.slice(..)),
+                        BufferUsage::Vertex => {
+                            rpass.set_vertex_buffer(vertex_buffers_slot, buff.raw.slice(..));
+                            vertex_buffers_slot += 1;
+                        }
                         BufferUsage::Index => {
-                            rpass.set_index_buffer(buff.raw.slice(..), IndexFormat::default())
+                            indexed = true;
+                            rpass.set_index_buffer(buff.raw.slice(..), IndexFormat::Uint16)
                         } // TODO indexformat!
                         BufferUsage::Uniform => {
                             // TODO
@@ -196,7 +200,11 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
                 });
 
                 if !rp.vertices.is_empty() {
-                    rpass.draw(rp.vertices.clone(), 0..1);
+                    if indexed {
+                        rpass.draw_indexed(rp.vertices.clone(), 0, 0..1);
+                    } else {
+                        rpass.draw(rp.vertices.clone(), 0..1);
+                    }
                 }
             }
         });
