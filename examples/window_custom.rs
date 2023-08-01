@@ -6,9 +6,9 @@ fn main() -> Result<(), String> {
         GKWindowAttributes::default()
             .with_title("Custom Title - GameKit")
             .with_size(400, 300)
-            .with_resizable(true)
             .with_max_size(450, 350)
-            .with_min_size(350, 250),
+            .with_min_size(350, 250)
+            .with_resizable(true),
     );
     gamekit::init().add_config(config)?.build()
 }
