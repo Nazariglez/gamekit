@@ -1,4 +1,4 @@
-use crate::limits::MAX_VERTEX_ATTRIBUTES;
+use crate::consts::MAX_VERTEX_ATTRIBUTES;
 use arrayvec::ArrayVec;
 
 pub trait GKBuffer {
