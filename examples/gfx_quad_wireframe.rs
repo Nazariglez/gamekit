@@ -1,6 +1,7 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    Buffer, Color, Gfx, Primitive, RenderPipeline, Renderer, VertexFormat, VertexLayout,
+    Buffer, Color, Gfx, IndexFormat, Primitive, RenderPipeline, Renderer, VertexFormat,
+    VertexLayout,
 };
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
@@ -31,6 +32,7 @@ impl State {
             .create_render_pipeline(SHADER)
             .with_primitive(Primitive::Lines)
             .with_vertex_layout(VertexLayout::new().with_attr(0, VertexFormat::Float32x2))
+            .with_index_format(IndexFormat::UInt16)
             .build()?;
 
         #[rustfmt::skip]
