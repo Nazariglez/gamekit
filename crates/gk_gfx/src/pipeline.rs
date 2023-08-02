@@ -2,6 +2,8 @@ use crate::buffer::{IndexFormat, VertexLayout};
 
 pub trait GKRenderPipeline {}
 
+// https://github.com/floooh/sokol/blob/master/sokol_gfx.h#L2213
+
 #[derive(Default, Debug, Clone)]
 pub struct RenderPipelineDescriptor<'a> {
     pub label: Option<&'a str>,

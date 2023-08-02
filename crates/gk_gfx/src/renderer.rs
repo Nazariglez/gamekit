@@ -1,14 +1,18 @@
 use crate::color::Color;
+use crate::consts::{MAX_UNIFORM_BUFFERS_PER_SHADER_STAGE, MAX_VERTEX_BUFFERS};
 use crate::{Buffer, RenderPipeline};
+use arrayvec::ArrayVec;
 use std::ops::Range;
 
 // TODO gfx works with RenderPass, then we have Render2D, and Render3D
 // for things like the old notan draw, or a new 3d API
 
+const MAX_BUFFERS: usize = MAX_VERTEX_BUFFERS + MAX_UNIFORM_BUFFERS_PER_SHADER_STAGE + 1;
+
 #[derive(Default)]
 pub struct RenderPass<'a> {
     pub(crate) pipeline: Option<&'a RenderPipeline>,
-    pub(crate) buffers: &'a [&'a Buffer],
+    pub(crate) buffers: ArrayVec<&'a Buffer, MAX_BUFFERS>,
     pub(crate) color: Color,
     pub(crate) vertices: Range<u32>,
 }
@@ -36,9 +40,10 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub fn apply_bindings(&mut self, buffers: &'a [&Buffer]) {
+    pub fn apply_buffers(&mut self, buffers: &[&'a Buffer]) {
         if let Some(rp) = self.passes.last_mut() {
-            rp.buffers = buffers;
+            rp.buffers = ArrayVec::new();
+            rp.buffers.try_extend_from_slice(buffers).unwrap();
         }
     }
 
