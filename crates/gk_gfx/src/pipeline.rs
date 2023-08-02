@@ -1,4 +1,4 @@
-use crate::buffer::VertexLayout;
+use crate::buffer::{IndexFormat, VertexLayout};
 
 pub trait GKRenderPipeline {}
 
@@ -9,6 +9,7 @@ pub struct RenderPipelineDescriptor<'a> {
     pub depth_stencil: Option<DepthStencil>,
     pub vertex_layout: Option<VertexLayout>,
     pub primitive: Primitive,
+    pub index_format: IndexFormat,
 }
 
 #[derive(Default, Debug, Copy, Clone)]

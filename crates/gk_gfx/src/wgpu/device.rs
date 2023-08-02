@@ -11,7 +11,8 @@ use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
-    wgpu_buffer_usages, wgpu_primitive, wgpu_step_mode, wgpu_texture_format, wgpu_vertex_format,
+    wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_step_mode, wgpu_texture_format,
+    wgpu_vertex_format,
 };
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
@@ -136,7 +137,8 @@ impl GKDevice<RenderPipeline, Buffer, Texture> for Device {
                 multiview: None,
             });
 
-        Ok(RenderPipeline { raw })
+        let index_format = wgpu_index_format(desc.index_format);
+        Ok(RenderPipeline { raw, index_format })
     }
 
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<Buffer, String> {
@@ -214,8 +216,8 @@ impl GKDevice<RenderPipeline, Buffer, Texture> for Device {
                         BufferUsage::Index => {
                             debug_assert!(!indexed, "Cannot bind more than one Index buffer");
                             indexed = true;
-                            rpass.set_index_buffer(buff.raw.slice(..), IndexFormat::Uint16)
-                        } // TODO indexformat!
+                            rpass.set_index_buffer(buff.raw.slice(..), pip.index_format)
+                        }
                         BufferUsage::Uniform => {
                             // TODO
                         }

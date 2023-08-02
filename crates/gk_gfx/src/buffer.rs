@@ -86,3 +86,10 @@ pub enum VertexFormat {
     Int32x3,
     Int32x4,
 }
+
+#[derive(Debug, Default, Copy, Clone)]
+pub enum IndexFormat {
+    UInt16,
+    #[default]
+    UInt32,
+}

@@ -9,29 +9,34 @@ use gamekit::prelude::*;
 const SHADER: &str = r#"
 struct VertexInput {
     @location(0) position: vec3<f32>,
-    @location(1) texcoord: vec2<f32>,
-};
+    @location(1) tex_coords: vec2<f32>,
+}
 
 struct VertexOutput {
-    @builtin(position) position: vec3<f32>,
-    @location(0) texcoord: vec2<f32>,
-};
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) tex_coords: vec2<f32>,
+}
 
 @vertex
 fn vs_main(
     model: VertexInput,
 ) -> VertexOutput {
     var out: VertexOutput;
-    out.texcoord = model.texcoord;
-//    out.position = vec4<f32>(model.position.x, ap - 0.5, 0.0, 1.0);
-    out.position = model.position;
+    out.tex_coords = model.tex_coords;
+    out.clip_position = vec4<f32>(model.position, 1.0);
     return out;
 }
 
+@group(0) @binding(0)
+var t_texture: texture_2d<f32>;
+@group(0) @binding(1)
+var s_texture: sampler;
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return vec4<f32>(in.color, 1.0);
+    return textureSample(t_texture, s_texture, in.tex_coords);
 }
+
 "#;
 
 #[derive(AppState)]

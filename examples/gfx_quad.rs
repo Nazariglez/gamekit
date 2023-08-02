@@ -2,6 +2,7 @@ use gamekit::app::event;
 use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gk_gfx::IndexFormat;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -47,6 +48,7 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x2)
                     .with_attr(1, VertexFormat::Float32x3),
             )
+            .with_index_format(IndexFormat::UInt16)
             .build()?;
 
         #[rustfmt::skip]
