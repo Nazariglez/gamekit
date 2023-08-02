@@ -10,6 +10,10 @@ gk_backend.workspace = true
 raw-window-handle.workspace = true
 hashbrown.workspace = true
 log.workspace = true
-wgpu = { version = "0.16.2", optional = true }
+arrayvec.workspace = true
+wgpu = { version = "0.17.0", optional = true }
 pollster = "0.3.0"
 bytemuck = "1.13.1"
+
+[features]
+webgl = ["wgpu?/webgl"]

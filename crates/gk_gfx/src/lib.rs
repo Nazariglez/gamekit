@@ -16,6 +16,7 @@ mod color;
 mod config;
 mod device;
 mod gfx;
+mod limits;
 mod pipeline;
 mod renderer;
 mod texture;

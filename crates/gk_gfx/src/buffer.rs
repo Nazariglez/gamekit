@@ -1,3 +1,6 @@
+use crate::limits::MAX_VERTEX_ATTRIBUTES;
+use arrayvec::ArrayVec;
+
 pub trait GKBuffer {
     fn usage(&self) -> BufferUsage;
 }
@@ -20,7 +23,7 @@ pub enum BufferUsage {
 #[derive(Default, Debug, Clone)]
 pub struct VertexLayout {
     pub step_mode: VertexStepMode,
-    pub attributes: Vec<VertexAttribute>,
+    pub attributes: ArrayVec<VertexAttribute, MAX_VERTEX_ATTRIBUTES>,
 }
 
 impl VertexLayout {
@@ -34,6 +37,10 @@ impl VertexLayout {
     }
 
     pub fn with_attr(mut self, location: u64, format: VertexFormat) -> Self {
+        debug_assert!(
+            self.attributes.len() < MAX_VERTEX_ATTRIBUTES,
+            "Cannot set more than {MAX_VERTEX_ATTRIBUTES} attributes in VertexLayout"
+        );
         self.attributes.push(VertexAttribute { location, format });
         self
     }
