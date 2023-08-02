@@ -1,6 +1,6 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    Buffer, Color, Gfx, RenderPipeline, Renderer, Texture, VertexFormat, VertexLayout,
+    Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, Texture, VertexFormat, VertexLayout,
 };
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
@@ -56,6 +56,7 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x3)
                     .with_attr(1, VertexFormat::Float32x2),
             )
+            .with_index_format(IndexFormat::UInt16)
             .build()?;
 
         let texture = gfx.create_texture_2d().build()?;
@@ -71,7 +72,7 @@ impl State {
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
         #[rustfmt::skip]
-            let indices = &[
+        let indices: &[u16] = &[
             0, 1, 3,
             1, 2, 3,
         ];
