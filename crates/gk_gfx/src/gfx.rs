@@ -1,7 +1,7 @@
 use crate::renderer::Renderer;
 use crate::{
     Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, GfxConfig, Primitive,
-    RenderPipeline, VertexLayout,
+    RenderPipeline, Texture, TextureDescriptor, TextureFormat, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -48,6 +48,10 @@ impl Gfx {
         data: &'a [D],
     ) -> BufferBuilder {
         BufferBuilder::new(self, BufferUsage::Uniform, data)
+    }
+
+    pub fn create_texture_2d(&mut self) -> TextureBuilder {
+        TextureBuilder::new(self)
     }
 
     pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
@@ -117,5 +121,32 @@ impl<'a> BufferBuilder<'a> {
     pub fn build(self) -> Result<Buffer, String> {
         let Self { gfx, desc } = self;
         gfx.raw.create_buffer(desc)
+    }
+}
+
+pub struct TextureBuilder<'a> {
+    gfx: &'a mut Gfx,
+    desc: TextureDescriptor<'a>,
+}
+
+impl<'a> TextureBuilder<'a> {
+    pub fn new(gfx: &'a mut Gfx) -> Self {
+        let desc = TextureDescriptor::default();
+        Self { gfx, desc }
+    }
+
+    pub fn with_label(mut self, label: &'a str) -> Self {
+        self.desc.label = Some(label);
+        self
+    }
+
+    pub fn with_format(mut self, format: TextureFormat) -> Self {
+        self.desc.format = format;
+        self
+    }
+
+    pub fn build(self) -> Result<Texture, String> {
+        let Self { gfx, desc } = self;
+        gfx.raw.create_texture(desc)
     }
 }

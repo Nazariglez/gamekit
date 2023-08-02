@@ -1,5 +1,5 @@
 use crate::color::Color;
-use crate::{BufferUsage, Primitive, VertexFormat, VertexStepMode};
+use crate::{BufferUsage, Primitive, TextureFormat, VertexFormat, VertexStepMode};
 use wgpu::BufferUsages;
 
 pub fn wgpu_color(color: Color) -> wgpu::Color {
@@ -68,5 +68,11 @@ pub fn wgpu_primitive(primitive: Primitive) -> wgpu::PrimitiveTopology {
         Primitive::LineStrip => wgpu::PrimitiveTopology::LineStrip,
         Primitive::Triangles => wgpu::PrimitiveTopology::TriangleList,
         Primitive::TriangleStrip => wgpu::PrimitiveTopology::TriangleStrip,
+    }
+}
+
+pub fn wgpu_texture_format(format: TextureFormat) -> wgpu::TextureFormat {
+    match format {
+        TextureFormat::Rgba8UnormSrgb => wgpu::TextureFormat::Rgba8UnormSrgb,
     }
 }

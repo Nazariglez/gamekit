@@ -2,19 +2,23 @@ use super::buffer::Buffer;
 use super::context::Context;
 use super::pipeline::RenderPipeline;
 use super::surface::Surface;
+use super::texture::Texture;
 use super::utils::wgpu_color;
 use crate::attrs::GfxAttributes;
 use crate::buffer::{BufferDescriptor, BufferUsage};
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
-use crate::wgpu::utils::{wgpu_buffer_usages, wgpu_primitive, wgpu_step_mode, wgpu_vertex_format};
+use crate::texture::TextureDescriptor;
+use crate::wgpu::utils::{
+    wgpu_buffer_usages, wgpu_primitive, wgpu_step_mode, wgpu_texture_format, wgpu_vertex_format,
+};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
-use wgpu::IndexFormat;
+use wgpu::{IndexFormat, TextureDimension};
 
 pub struct Device {
     attrs: GfxAttributes,
@@ -24,7 +28,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<RenderPipeline, Buffer> for Device {
+impl GKDevice<RenderPipeline, Buffer, Texture> for Device {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let context = Context::new(attrs)?;
         Ok(Self {
@@ -145,6 +149,21 @@ impl GKDevice<RenderPipeline, Buffer> for Device {
         let usage = desc.usage;
 
         Ok(Buffer { raw, usage })
+    }
+
+    fn create_texture(&mut self, desc: TextureDescriptor) -> Result<Texture, String> {
+        let raw = self.ctx.device.create_texture(&wgpu::TextureDescriptor {
+            label: desc.label,
+            size: Default::default(), // TODO size
+            mip_level_count: 0,
+            sample_count: 0,
+            dimension: TextureDimension::D2,
+            format: wgpu_texture_format(desc.format),
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+
+        Ok(Texture { raw })
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
