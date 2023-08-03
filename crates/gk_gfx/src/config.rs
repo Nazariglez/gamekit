@@ -14,18 +14,6 @@ impl GfxConfig {
         Self::default()
     }
 
-    /// Use of the integrated gpu if possible
-    pub fn with_integrated_gpu(mut self, value: bool) -> Self {
-        self.attrs.integrated_gpu = value;
-        self
-    }
-
-    /// GPU limits compatible with webgl2, D3D11 and GLES-3.0
-    pub fn with_compatible_mode(mut self, compatible: bool) -> Self {
-        self.attrs.compatible_mode = compatible;
-        self
-    }
-
     /// Use VSync mode if possible
     pub fn with_vsync(mut self, enable: bool) -> Self {
         self.attrs.vsync = enable;
