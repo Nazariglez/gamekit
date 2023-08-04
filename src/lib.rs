@@ -1,6 +1,7 @@
 // pub mod m2d;
 pub mod prelude;
 pub mod time;
+pub mod utils;
 // pub mod tween;
 
 pub use gk_app as app;

@@ -17,4 +17,6 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, time: &mut Time) {
     let mut renderer = Renderer::new();
     renderer.begin(color, 0, 0);
     gfx.render(evt.window_id, &renderer).unwrap();
+
+    println!("FPS: {} -> {:.5}", time.fps(), time.delta_f32());
 }

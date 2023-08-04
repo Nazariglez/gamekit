@@ -1,5 +1,5 @@
+use crate::utils::RingBuffer;
 use gk_app::{event, AppBuilder, BuildConfig, GKState, Plugin};
-use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
 /// Measure Application times
@@ -11,19 +11,12 @@ pub struct Time {
     delta_seconds: f32,
     elapsed: Duration,
     elapsed_time: f32,
-    fps_cache: VecDeque<f32>,
+    fps_cache: RingBuffer<f32, 60>,
     fps: f32,
 }
 
 impl Default for Time {
     fn default() -> Time {
-        let fps = 60.0;
-
-        // calculate the average fps for the last 60 frames
-        let max_frames = 60;
-        let mut fps_cache = VecDeque::with_capacity(max_frames);
-        fps_cache.resize(max_frames, 1.0 / fps);
-
         Time {
             init_time: Instant::now(),
             last_time: None,
@@ -31,8 +24,8 @@ impl Default for Time {
             delta_seconds: 0.0,
             elapsed: Duration::from_secs(0),
             elapsed_time: 0.0,
-            fps_cache,
-            fps,
+            fps_cache: Default::default(),
+            fps: 0.0,
         }
     }
 }
@@ -56,8 +49,7 @@ impl Time {
         self.elapsed = now - self.init_time;
         self.elapsed_time = self.elapsed.as_secs_f32();
 
-        self.fps_cache.pop_front();
-        self.fps_cache.push_back(self.delta_seconds);
+        self.fps_cache.push(self.delta_seconds);
         self.fps = 1.0 / (self.fps_cache.iter().sum::<f32>() / self.fps_cache.len() as f32);
     }
 
