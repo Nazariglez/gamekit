@@ -32,6 +32,7 @@ arrayvec = "0.7.4"
 raw-window-handle = "0.5.2"
 
 [dependencies]
+simple_logger = "4.2.0"
 gk_app.workspace = true
 gk_backend.workspace = true
 gk_macro.workspace = true
