@@ -1,8 +1,9 @@
 use crate::renderer::Renderer;
 use crate::{
-    Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, GfxConfig, IndexFormat,
-    Primitive, RenderPipeline, SamplerDescriptor, Texture, TextureData, TextureDescriptor,
-    TextureFilter, TextureFormat, TextureWrap, VertexLayout, Sampler
+    BindGroup, BindGroupDescriptor, BindGroupEntry, Buffer, BufferDescriptor, BufferUsage, Device,
+    GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor,
+    Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter, TextureFormat,
+    TextureWrap, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -40,7 +41,6 @@ impl Gfx {
         BufferBuilder::new(self, BufferUsage::Vertex, data)
     }
 
-    // TODO IndexFormat!
     pub fn create_index_buffer<'a, D: bytemuck::Pod>(&'a mut self, data: &'a [D]) -> BufferBuilder {
         BufferBuilder::new(self, BufferUsage::Index, data)
     }
@@ -58,6 +58,10 @@ impl Gfx {
 
     pub fn create_sampler(&mut self) -> SamplerBuilder {
         SamplerBuilder::new(self)
+    }
+
+    pub fn create_bind_group(&mut self) -> BindGroupBuilder {
+        BindGroupBuilder::new(self)
     }
 
     pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
@@ -249,5 +253,27 @@ impl<'a> SamplerBuilder<'a> {
     pub fn build(self) -> Result<Sampler, String> {
         let Self { gfx, desc } = self;
         gfx.raw.create_sampler(desc)
+    }
+}
+
+pub struct BindGroupBuilder<'a> {
+    gfx: &'a mut Gfx,
+    desc: BindGroupDescriptor<'a>,
+}
+
+impl<'a> BindGroupBuilder<'a> {
+    fn new(gfx: &'a mut Gfx) -> Self {
+        let desc = Default::default();
+        Self { gfx, desc }
+    }
+
+    pub fn with_texture(mut self, texture: TextureBinding<'a>) -> Self {
+        self.desc.entry.push(BindGroupEntry::Texture(texture));
+        self
+    }
+
+    pub fn build(self) -> Result<BindGroup, String> {
+        let Self { gfx, desc } = self;
+        gfx.raw.create_bind_group(desc)
     }
 }

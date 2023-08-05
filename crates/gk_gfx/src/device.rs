@@ -3,9 +3,10 @@ use crate::buffer::{BufferDescriptor, GKBuffer};
 use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
 use crate::renderer::Renderer;
 use crate::texture::{GKSampler, GKTexture, SamplerDescriptor, TextureData, TextureDescriptor};
+use crate::{BindGroupDescriptor, GKBindGroup};
 use gk_app::window::{GKWindow, GKWindowId};
 
-pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture, S: GKSampler> {
+pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture, S: GKSampler, BG: GKBindGroup> {
     fn new(attrs: GfxAttributes) -> Result<Self, String>
     where
         Self: Sized;
@@ -18,6 +19,7 @@ pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture, S: GKSampler
         data: Option<TextureData>,
     ) -> Result<T, String>;
     fn create_sampler(&mut self, desc: SamplerDescriptor) -> Result<S, String>;
+    fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BG, String>;
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32);
     fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String>;
 }

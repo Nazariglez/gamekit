@@ -11,10 +11,14 @@ use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
-    wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_step_mode, wgpu_texture_filter,
-    wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format,
+    wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_shader_visibility, wgpu_step_mode,
+    wgpu_texture_filter, wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format,
 };
-use crate::{Sampler, SamplerDescriptor, TextureData};
+use crate::{
+    BindGroup, BindGroupDescriptor, BindGroupEntry, Sampler, SamplerDescriptor, TextureData,
+    MAX_BINDING_ENTRIES,
+};
+use arrayvec::ArrayVec;
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
@@ -30,7 +34,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<RenderPipeline, Buffer, Texture, Sampler> for Device {
+impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let context = Context::new(attrs)?;
         Ok(Self {
@@ -214,6 +218,78 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler> for Device {
         Ok(Sampler { raw })
     }
 
+    fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BindGroup, String> {
+        let mut layout_entries: ArrayVec<_, MAX_BINDING_ENTRIES> = Default::default();
+        desc.entry.iter().for_each(|entry| match entry {
+            BindGroupEntry::Texture(binding) => {
+                let visibility = wgpu_shader_visibility(
+                    binding.visible_vertex,
+                    binding.visible_fragment,
+                    binding.visible_compute,
+                );
+                if let Some((loc, _tex)) = binding.texture {
+                    layout_entries.push(wgpu::BindGroupLayoutEntry {
+                        binding: loc,
+                        visibility,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    });
+                }
+
+                if let Some((loc, _sampler)) = binding.sampler {
+                    layout_entries.push(wgpu::BindGroupLayoutEntry {
+                        binding: loc,
+                        visibility,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    });
+                }
+            }
+            BindGroupEntry::Uniform => {}
+        });
+        let layout = self
+            .ctx
+            .device
+            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: desc.label,
+                entries: &layout_entries,
+            });
+
+        let mut entries: ArrayVec<_, MAX_BINDING_ENTRIES> = Default::default();
+        desc.entry.iter().for_each(|entry| match entry {
+            BindGroupEntry::Texture(binding) => {
+                if let Some((loc, tex)) = binding.texture {
+                    entries.push(wgpu::BindGroupEntry {
+                        binding: loc,
+                        resource: wgpu::BindingResource::TextureView(&tex.view),
+                    });
+                }
+
+                if let Some((loc, sampler)) = binding.sampler {
+                    entries.push(wgpu::BindGroupEntry {
+                        binding: loc,
+                        resource: wgpu::BindingResource::Sampler(&sampler.raw),
+                    });
+                }
+            }
+            BindGroupEntry::Uniform => {}
+        });
+        let raw = self
+            .ctx
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: desc.label,
+                layout: &layout,
+                entries: &[],
+            });
+
+        Ok(BindGroup { raw })
+    }
+
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
         if let Some(surface) = self.surfaces.get_mut(&id) {
             surface.resize(&self.ctx.device, width, height);
@@ -269,6 +345,11 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler> for Device {
                         }
                     }
                 });
+
+                if let Some(bg) = rp.bind_group {
+                    println!("HERE...");
+                    rpass.set_bind_group(0, &bg.raw, &[]);
+                }
 
                 if !rp.vertices.is_empty() {
                     if indexed {

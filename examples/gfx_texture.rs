@@ -1,6 +1,7 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, Texture, VertexFormat, VertexLayout,
+    BindGroup, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, Texture, TextureBinding,
+    VertexFormat, VertexLayout,
 };
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
@@ -44,7 +45,7 @@ struct State {
     pip: RenderPipeline,
     vbo: Buffer,
     ebo: Buffer,
-    texture: Texture,
+    bind_group: BindGroup,
 }
 
 impl State {
@@ -65,6 +66,16 @@ impl State {
             .build()?;
 
         let sampler = gfx.create_sampler().build()?;
+
+        let bind_group = gfx
+            .create_bind_group()
+            .with_texture(
+                TextureBinding::new()
+                    .with_texture(0, &texture)
+                    .with_sampler(1, &sampler)
+                    .with_fragment_visibility(true),
+            )
+            .build()?;
 
         #[rustfmt::skip]
         let vertices: &[f32] = &[
@@ -87,7 +98,7 @@ impl State {
             pip,
             vbo,
             ebo,
-            texture,
+            bind_group,
         })
     }
 }
@@ -105,6 +116,7 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
+    renderer.apply_bindings(&state.bind_group);
     renderer.draw(0..6);
     gfx.render(evt.window_id, &renderer).unwrap();
 }

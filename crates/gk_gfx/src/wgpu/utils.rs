@@ -101,3 +101,20 @@ pub fn wgpu_texture_filter(filter: TextureFilter) -> wgpu::FilterMode {
         TextureFilter::Nearest => wgpu::FilterMode::Nearest,
     }
 }
+
+pub fn wgpu_shader_visibility(vertex: bool, fragment: bool, compute: bool) -> wgpu::ShaderStages {
+    let mut v = wgpu::ShaderStages::NONE;
+    if vertex {
+        v |= wgpu::ShaderStages::VERTEX;
+    }
+
+    if fragment {
+        v |= wgpu::ShaderStages::FRAGMENT;
+    }
+
+    if compute {
+        v |= wgpu::ShaderStages::COMPUTE;
+    }
+
+    v
+}

@@ -1,6 +1,6 @@
 use crate::color::Color;
 use crate::consts::{MAX_UNIFORM_BUFFERS_PER_SHADER_STAGE, MAX_VERTEX_BUFFERS};
-use crate::{Buffer, RenderPipeline};
+use crate::{BindGroup, Buffer, RenderPipeline};
 use arrayvec::ArrayVec;
 use std::ops::Range;
 
@@ -15,6 +15,7 @@ pub struct RenderPass<'a> {
     pub(crate) buffers: ArrayVec<&'a Buffer, MAX_BUFFERS>,
     pub(crate) color: Color,
     pub(crate) vertices: Range<u32>,
+    pub(crate) bind_group: Option<&'a BindGroup>,
 }
 
 #[derive(Default)]
@@ -44,6 +45,12 @@ impl<'a> Renderer<'a> {
         if let Some(rp) = self.passes.last_mut() {
             rp.buffers = ArrayVec::new();
             rp.buffers.try_extend_from_slice(buffers).unwrap();
+        }
+    }
+
+    pub fn apply_bindings(&mut self, group: &'a BindGroup) {
+        if let Some(rp) = self.passes.last_mut() {
+            rp.bind_group = Some(group);
         }
     }
 

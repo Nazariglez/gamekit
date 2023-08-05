@@ -11,6 +11,7 @@ raw-window-handle.workspace = true
 hashbrown.workspace = true
 log.workspace = true
 arrayvec.workspace = true
+bitflags.workspace = true
 
 wgpu = { version = "0.17.0", optional = true }
 pollster = "0.3.0"
