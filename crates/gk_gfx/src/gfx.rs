@@ -56,6 +56,10 @@ impl Gfx {
         TextureBuilder::new(self)
     }
 
+    pub fn create_sampler(&mut self) -> SamplerBuilder {
+        SamplerBuilder::new(self)
+    }
+
     pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
         self.raw.resize(id, width, height);
     }
@@ -200,3 +204,9 @@ impl<'a> TextureBuilder<'a> {
         }
     }
 }
+
+pub struct SamplerBuilder<'a> {
+    gfx: &'a mut Gfx,
+    desc: SamplerDescriptor<'a>,
+}
+
