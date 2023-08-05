@@ -52,7 +52,7 @@ impl Gfx {
         BufferBuilder::new(self, BufferUsage::Uniform, data)
     }
 
-    pub fn create_texture_2d(&mut self) -> TextureBuilder {
+    pub fn create_texture(&mut self) -> TextureBuilder {
         TextureBuilder::new(self)
     }
 
@@ -185,7 +185,18 @@ impl<'a> TextureBuilder<'a> {
                     }),
                 )
             }
-            TextureRawData::Raw { .. } => gfx.raw.create_texture(desc, None),
+            TextureRawData::Raw {
+                bytes,
+                width,
+                height,
+            } => gfx.raw.create_texture(
+                desc,
+                Some(TextureData {
+                    bytes,
+                    width,
+                    height,
+                }),
+            ),
         }
     }
 }

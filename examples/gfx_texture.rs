@@ -60,7 +60,7 @@ impl State {
             .build()?;
 
         let texture = gfx
-            .create_texture_2d()
+            .create_texture()
             .from_image(include_bytes!("assets/bunny.png"))
             .build()?;
 

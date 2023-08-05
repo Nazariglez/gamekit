@@ -193,7 +193,9 @@ impl GKDevice<RenderPipeline, Buffer, Texture> for Device {
             );
         }
 
-        Ok(Texture { raw })
+        let view = raw.create_view(&wgpu::TextureViewDescriptor::default());
+
+        Ok(Texture { raw, view })
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
