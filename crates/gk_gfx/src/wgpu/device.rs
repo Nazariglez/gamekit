@@ -11,10 +11,10 @@ use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
-    wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_step_mode, wgpu_texture_format,
-    wgpu_vertex_format,
+    wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_step_mode, wgpu_texture_filter,
+    wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format,
 };
-use crate::TextureData;
+use crate::{Sampler, SamplerDescriptor, TextureData};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
@@ -30,7 +30,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<RenderPipeline, Buffer, Texture> for Device {
+impl GKDevice<RenderPipeline, Buffer, Texture, Sampler> for Device {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let context = Context::new(attrs)?;
         Ok(Self {
@@ -196,6 +196,22 @@ impl GKDevice<RenderPipeline, Buffer, Texture> for Device {
         let view = raw.create_view(&wgpu::TextureViewDescriptor::default());
 
         Ok(Texture { raw, view })
+    }
+
+    fn create_sampler(&mut self, desc: SamplerDescriptor) -> Result<Sampler, String> {
+        let raw = self.ctx.device.create_sampler(&wgpu::SamplerDescriptor {
+            label: desc.label,
+            address_mode_u: wgpu_texture_wrap(desc.wrap_x),
+            address_mode_v: wgpu_texture_wrap(desc.wrap_y),
+            address_mode_w: wgpu_texture_wrap(desc.wrap_z),
+            mag_filter: wgpu_texture_filter(desc.mag_filter),
+            min_filter: wgpu_texture_filter(desc.min_filter),
+            mipmap_filter: desc
+                .mipmap_filter
+                .map_or(Default::default(), |f| wgpu_texture_filter(f)),
+            ..Default::default()
+        });
+        Ok(Sampler { raw })
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {

@@ -64,6 +64,8 @@ impl State {
             .from_image(include_bytes!("assets/bunny.png"))
             .build()?;
 
+        let sampler = gfx.create_sampler().build()?;
+
         #[rustfmt::skip]
         let vertices: &[f32] = &[
             //pos               //coords

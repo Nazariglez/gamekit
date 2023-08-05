@@ -1,5 +1,8 @@
 use crate::color::Color;
-use crate::{BufferUsage, IndexFormat, Primitive, TextureFormat, VertexFormat, VertexStepMode};
+use crate::{
+    BufferUsage, IndexFormat, Primitive, Texture, TextureFilter, TextureFormat, TextureWrap,
+    VertexFormat, VertexStepMode,
+};
 use wgpu::BufferUsages;
 
 pub fn wgpu_color(color: Color) -> wgpu::Color {
@@ -81,5 +84,20 @@ pub fn wgpu_index_format(format: IndexFormat) -> wgpu::IndexFormat {
     match format {
         IndexFormat::UInt16 => wgpu::IndexFormat::Uint16,
         IndexFormat::UInt32 => wgpu::IndexFormat::Uint32,
+    }
+}
+
+pub fn wgpu_texture_wrap(wrap: TextureWrap) -> wgpu::AddressMode {
+    match wrap {
+        TextureWrap::Clamp => wgpu::AddressMode::ClampToEdge,
+        TextureWrap::Repeat => wgpu::AddressMode::Repeat,
+        TextureWrap::MirrorRepeat => wgpu::AddressMode::MirrorRepeat,
+    }
+}
+
+pub fn wgpu_texture_filter(filter: TextureFilter) -> wgpu::FilterMode {
+    match filter {
+        TextureFilter::Linear => wgpu::FilterMode::Linear,
+        TextureFilter::Nearest => wgpu::FilterMode::Nearest,
     }
 }

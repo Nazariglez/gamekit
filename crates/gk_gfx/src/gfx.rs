@@ -1,8 +1,8 @@
 use crate::renderer::Renderer;
 use crate::{
     Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, GfxConfig, IndexFormat,
-    Primitive, RenderPipeline, Texture, TextureData, TextureDescriptor, TextureFormat,
-    VertexLayout,
+    Primitive, RenderPipeline, SamplerDescriptor, Texture, TextureData, TextureDescriptor,
+    TextureFilter, TextureFormat, TextureWrap, VertexLayout, Sampler
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -210,3 +210,44 @@ pub struct SamplerBuilder<'a> {
     desc: SamplerDescriptor<'a>,
 }
 
+impl<'a> SamplerBuilder<'a> {
+    pub fn new(gfx: &'a mut Gfx) -> Self {
+        let desc = SamplerDescriptor::default();
+        Self { gfx, desc }
+    }
+
+    pub fn with_wrap_x(mut self, wrap: TextureWrap) -> Self {
+        self.desc.wrap_x = wrap;
+        self
+    }
+
+    pub fn with_wrap_y(mut self, wrap: TextureWrap) -> Self {
+        self.desc.wrap_y = wrap;
+        self
+    }
+
+    pub fn with_wrap_z(mut self, wrap: TextureWrap) -> Self {
+        self.desc.wrap_z = wrap;
+        self
+    }
+
+    pub fn with_min_filter(mut self, filter: TextureFilter) -> Self {
+        self.desc.min_filter = filter;
+        self
+    }
+
+    pub fn with_mag_filter(mut self, filter: TextureFilter) -> Self {
+        self.desc.mag_filter = filter;
+        self
+    }
+
+    pub fn with_mipmap_filter(mut self, filter: TextureFilter) -> Self {
+        self.desc.mipmap_filter = Some(filter);
+        self
+    }
+
+    pub fn build(self) -> Result<Sampler, String> {
+        let Self { gfx, desc } = self;
+        gfx.raw.create_sampler(desc)
+    }
+}

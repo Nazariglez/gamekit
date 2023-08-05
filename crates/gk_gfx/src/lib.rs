@@ -20,7 +20,6 @@ mod gfx;
 mod pipeline;
 mod renderer;
 mod texture;
-mod sampler;
 
 pub use attrs::*;
 pub use buffer::*;
@@ -31,4 +30,3 @@ pub use gfx::*;
 pub use pipeline::*;
 pub use renderer::*;
 pub use texture::*;
-pub use sampler::*;

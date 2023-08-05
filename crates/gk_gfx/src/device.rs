@@ -1,12 +1,11 @@
 use crate::attrs::GfxAttributes;
-use crate::buffer::{BufferDescriptor, GKBuffer, VertexLayout};
+use crate::buffer::{BufferDescriptor, GKBuffer};
 use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
 use crate::renderer::Renderer;
-use crate::texture::{GKTexture, TextureDescriptor};
-use crate::TextureData;
+use crate::texture::{GKSampler, GKTexture, SamplerDescriptor, TextureData, TextureDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
 
-pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture> {
+pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture, S: GKSampler> {
     fn new(attrs: GfxAttributes) -> Result<Self, String>
     where
         Self: Sized;
@@ -18,6 +17,7 @@ pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture> {
         desc: TextureDescriptor,
         data: Option<TextureData>,
     ) -> Result<T, String>;
+    fn create_sampler(&mut self, desc: SamplerDescriptor) -> Result<S, String>;
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32);
     fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String>;
 }
