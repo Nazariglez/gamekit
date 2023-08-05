@@ -14,6 +14,7 @@ use crate::wgpu::utils::{
     wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_step_mode, wgpu_texture_format,
     wgpu_vertex_format,
 };
+use crate::TextureData;
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
 use hashbrown::HashMap;
@@ -153,17 +154,44 @@ impl GKDevice<RenderPipeline, Buffer, Texture> for Device {
         Ok(Buffer { raw, usage })
     }
 
-    fn create_texture(&mut self, desc: TextureDescriptor) -> Result<Texture, String> {
+    fn create_texture(
+        &mut self,
+        desc: TextureDescriptor,
+        data: Option<TextureData>,
+    ) -> Result<Texture, String> {
+        let size = data.map_or(wgpu::Extent3d::default(), |d| wgpu::Extent3d {
+            width: d.width,
+            height: d.height,
+            depth_or_array_layers: 1,
+        });
         let raw = self.ctx.device.create_texture(&wgpu::TextureDescriptor {
             label: desc.label,
-            size: Default::default(), // TODO size
-            mip_level_count: 0,
-            sample_count: 0,
+            size,
+            mip_level_count: 1,
+            sample_count: 1,
             dimension: TextureDimension::D2,
             format: wgpu_texture_format(desc.format),
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             view_formats: &[],
         });
+
+        if let Some(d) = data {
+            self.ctx.queue.write_texture(
+                wgpu::ImageCopyTexture {
+                    texture: &raw,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                    aspect: wgpu::TextureAspect::All,
+                },
+                d.bytes,
+                wgpu::ImageDataLayout {
+                    offset: 0,
+                    bytes_per_row: Some(d.width * 4),
+                    rows_per_image: Some(d.height),
+                },
+                size,
+            );
+        }
 
         Ok(Texture { raw })
     }

@@ -11,9 +11,11 @@ raw-window-handle.workspace = true
 hashbrown.workspace = true
 log.workspace = true
 arrayvec.workspace = true
+
 wgpu = { version = "0.17.0", optional = true }
 pollster = "0.3.0"
 bytemuck = "1.13.1"
+image = { version = "0.24.6", features = ["png", "jpeg"] }
 
 [features]
 webgl = ["wgpu?/webgl"]

@@ -1,11 +1,13 @@
 use crate::renderer::Renderer;
 use crate::{
     Buffer, BufferDescriptor, BufferUsage, Device, GfxAttributes, GfxConfig, IndexFormat,
-    Primitive, RenderPipeline, Texture, TextureDescriptor, TextureFormat, VertexLayout,
+    Primitive, RenderPipeline, Texture, TextureData, TextureDescriptor, TextureFormat,
+    VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
+use image::EncodableLayout;
 
 pub struct Gfx {
     pub(crate) raw: Device,
@@ -129,15 +131,32 @@ impl<'a> BufferBuilder<'a> {
     }
 }
 
+enum TextureRawData<'a> {
+    Empty,
+    Image(&'a [u8]),
+    Raw {
+        bytes: &'a [u8],
+        width: u32,
+        height: u32,
+    },
+}
+
 pub struct TextureBuilder<'a> {
     gfx: &'a mut Gfx,
     desc: TextureDescriptor<'a>,
+    data: TextureRawData<'a>,
 }
 
 impl<'a> TextureBuilder<'a> {
     pub fn new(gfx: &'a mut Gfx) -> Self {
         let desc = TextureDescriptor::default();
-        Self { gfx, desc }
+        let data = TextureRawData::Empty;
+        Self { gfx, desc, data }
+    }
+
+    pub fn from_image(mut self, image: &'a [u8]) -> Self {
+        self.data = TextureRawData::Image(image);
+        self
     }
 
     pub fn with_label(mut self, label: &'a str) -> Self {
@@ -151,7 +170,22 @@ impl<'a> TextureBuilder<'a> {
     }
 
     pub fn build(self) -> Result<Texture, String> {
-        let Self { gfx, desc } = self;
-        gfx.raw.create_texture(desc)
+        let Self { gfx, desc, data } = self;
+        match data {
+            TextureRawData::Empty => gfx.raw.create_texture(desc, None),
+            TextureRawData::Image(bytes) => {
+                let img = image::load_from_memory(bytes).map_err(|e| e.to_string())?;
+                let rgba = img.to_rgba8();
+                gfx.raw.create_texture(
+                    desc,
+                    Some(TextureData {
+                        bytes: rgba.as_bytes(),
+                        width: rgba.width(),
+                        height: rgba.height(),
+                    }),
+                )
+            }
+            TextureRawData::Raw { .. } => gfx.raw.create_texture(desc, None),
+        }
     }
 }

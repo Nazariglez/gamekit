@@ -59,7 +59,10 @@ impl State {
             .with_index_format(IndexFormat::UInt16)
             .build()?;
 
-        let texture = gfx.create_texture_2d().build()?;
+        let texture = gfx
+            .create_texture_2d()
+            .from_image(include_bytes!("assets/bunny.png"))
+            .build()?;
 
         #[rustfmt::skip]
         let vertices: &[f32] = &[
