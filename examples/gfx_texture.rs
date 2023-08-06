@@ -1,12 +1,11 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, Texture, TextureBinding,
-    VertexFormat, VertexLayout,
+    BindGroup, BlendMode, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer,
+    TextureBinding, VertexFormat, VertexLayout,
 };
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
 use gamekit::time::Time;
-use gk_gfx::BlendMode;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -39,7 +38,6 @@ var s_texture: sampler;
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     return textureSample(t_texture, s_texture, in.tex_coords);
 }
-
 "#;
 
 #[derive(AppState)]
@@ -83,11 +81,11 @@ impl State {
 
         #[rustfmt::skip]
         let vertices: &[f32] = &[
-            //pos               //coords
-            0.5,  0.5,     1.0, 1.0,
-            0.5, -0.5,     1.0, 0.0,
-            -0.5, -0.5,    0.0, 0.0,
-            -0.5,  0.5,    0.0, 1.0
+            //pos           //coords
+             0.5,  0.5,     1.0, 1.0,
+             0.5, -0.5,     1.0, 0.0,
+            -0.5, -0.5,     0.0, 0.0,
+            -0.5,  0.5,     0.0, 1.0
         ];
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
