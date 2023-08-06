@@ -17,4 +17,8 @@ Cargo.lock
 
 notes.txt
 
+# idea config
 .idea
+
+# idea profiling
+*.collapsed

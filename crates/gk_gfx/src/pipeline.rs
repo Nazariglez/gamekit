@@ -1,5 +1,5 @@
 use crate::buffer::{IndexFormat, VertexLayout};
-use crate::{BindGroup, BindGroupEntry};
+use crate::{BindGroup, BindGroupEntry, BlendMode};
 
 pub trait GKRenderPipeline {}
 
@@ -14,6 +14,7 @@ pub struct RenderPipelineDescriptor<'a> {
     pub primitive: Primitive,
     pub index_format: IndexFormat,
     pub bind_group_layout: Option<&'a BindGroup>,
+    pub blend_mode: Option<BlendMode>,
 }
 
 #[derive(Default, Debug, Copy, Clone)]

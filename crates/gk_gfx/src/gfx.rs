@@ -1,9 +1,9 @@
 use crate::renderer::Renderer;
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, Buffer, BufferDescriptor, BufferUsage, Device,
-    GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor,
-    Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter, TextureFormat,
-    TextureWrap, VertexLayout,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
+    BufferUsage, Device, GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler,
+    SamplerDescriptor, Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter,
+    TextureFormat, TextureWrap, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -109,6 +109,11 @@ impl<'a> RenderPipelineBuilder<'a> {
 
     pub fn with_bind_group(mut self, bind_group: &'a BindGroup) -> Self {
         self.desc.bind_group_layout = Some(bind_group);
+        self
+    }
+
+    pub fn with_blend_mode(mut self, mode: BlendMode) -> Self {
+        self.desc.blend_mode = Some(mode);
         self
     }
 

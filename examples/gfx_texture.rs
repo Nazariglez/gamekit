@@ -5,6 +5,8 @@ use gamekit::gfx::{
 };
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gamekit::time::Time;
+use gk_gfx::BlendMode;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -24,7 +26,7 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.tex_coords = model.tex_coords;
-    out.clip_position = vec4<f32>(model.position, 1.0);
+    out.clip_position = vec4<f32>(model.position.x, model.position.y * -1.0, 0.0, 1.0);
     return out;
 }
 
@@ -71,20 +73,21 @@ impl State {
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
                 VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x3)
+                    .with_attr(0, VertexFormat::Float32x2)
                     .with_attr(1, VertexFormat::Float32x2),
             )
-            .with_bind_group(&bind_group)
             .with_index_format(IndexFormat::UInt16)
+            .with_bind_group(&bind_group)
+            .with_blend_mode(BlendMode::NORMAL)
             .build()?;
 
         #[rustfmt::skip]
         let vertices: &[f32] = &[
             //pos               //coords
-            0.5,  0.5, 0.0,     1.0, 1.0,
-            0.5, -0.5, 0.0,     1.0, 0.0,
-            -0.5, -0.5, 0.0,    0.0, 0.0,
-            -0.5,  0.5, 0.0,    0.0, 1.0
+            0.5,  0.5,     1.0, 1.0,
+            0.5, -0.5,     1.0, 0.0,
+            -0.5, -0.5,    0.0, 0.0,
+            -0.5,  0.5,    0.0, 1.0
         ];
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
@@ -108,11 +111,18 @@ fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
         .add_config(Platform::config())?
         .add_config(Gfx::config())?
+        .add_config(Time::config())?
         .on(on_draw)
         .build()
 }
 
-fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(
+    evt: &event::Draw,
+    platform: &mut Platform,
+    gfx: &mut Gfx,
+    state: &mut State,
+    time: &mut Time,
+) {
     let mut renderer = Renderer::new();
     renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);
@@ -120,4 +130,8 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_bindings(&state.bind_group);
     renderer.draw(0..6);
     gfx.render(evt.window_id, &renderer).unwrap();
+    // println!("{}, {:.5}", time.fps(), time.delta_f32());
+    if time.elapsed_f32() > 1.0 {
+        platform.exit();
+    }
 }

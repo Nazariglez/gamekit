@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::{
-    BufferUsage, IndexFormat, Primitive, Texture, TextureFilter, TextureFormat, TextureWrap,
-    VertexFormat, VertexStepMode,
+    BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, IndexFormat, Primitive,
+    Texture, TextureFilter, TextureFormat, TextureWrap, VertexFormat, VertexStepMode,
 };
 use wgpu::BufferUsages;
 
@@ -117,4 +117,44 @@ pub fn wgpu_shader_visibility(vertex: bool, fragment: bool, compute: bool) -> wg
     }
 
     v
+}
+
+pub fn wgpu_blend_mode(mode: BlendMode) -> wgpu::BlendState {
+    wgpu::BlendState {
+        color: wgpu_blend_component(mode.color),
+        alpha: wgpu_blend_component(mode.alpha),
+    }
+}
+
+fn wgpu_blend_component(component: BlendComponent) -> wgpu::BlendComponent {
+    wgpu::BlendComponent {
+        src_factor: wgpu_blend_factor(component.src),
+        dst_factor: wgpu_blend_factor(component.dst),
+        operation: wgpu_blend_operation(component.op),
+    }
+}
+
+fn wgpu_blend_factor(factor: BlendFactor) -> wgpu::BlendFactor {
+    match factor {
+        BlendFactor::Zero => wgpu::BlendFactor::Zero,
+        BlendFactor::One => wgpu::BlendFactor::One,
+        BlendFactor::SourceColor => wgpu::BlendFactor::Src,
+        BlendFactor::InverseSourceColor => wgpu::BlendFactor::OneMinusSrc,
+        BlendFactor::DestinationColor => wgpu::BlendFactor::Dst,
+        BlendFactor::InverseDestinationColor => wgpu::BlendFactor::OneMinusDst,
+        BlendFactor::SourceAlpha => wgpu::BlendFactor::SrcAlpha,
+        BlendFactor::InverseSourceAlpha => wgpu::BlendFactor::OneMinusSrcAlpha,
+        BlendFactor::DestinationAlpha => wgpu::BlendFactor::DstAlpha,
+        BlendFactor::InverseDestinationAlpha => wgpu::BlendFactor::OneMinusDstAlpha,
+    }
+}
+
+fn wgpu_blend_operation(operation: BlendOperation) -> wgpu::BlendOperation {
+    match operation {
+        BlendOperation::Add => wgpu::BlendOperation::Add,
+        BlendOperation::Subtract => wgpu::BlendOperation::Subtract,
+        BlendOperation::ReverseSubtract => wgpu::BlendOperation::ReverseSubtract,
+        BlendOperation::Min => wgpu::BlendOperation::Min,
+        BlendOperation::Max => wgpu::BlendOperation::Max,
+    }
 }

@@ -12,6 +12,7 @@ pub use crate::wgpu::*;
 
 mod attrs;
 mod bind_group;
+mod blend_mode;
 mod buffer;
 mod color;
 mod config;
@@ -24,6 +25,7 @@ mod texture;
 
 pub use attrs::*;
 pub use bind_group::*;
+pub use blend_mode::*;
 pub use buffer::*;
 pub use color::Color;
 pub use config::*;

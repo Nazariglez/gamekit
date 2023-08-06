@@ -13,7 +13,10 @@ description = "A set of helpers for making games with notan"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
-lto = true
+opt-level = 2
+
+[profile.dev.package."*"]
+opt-level = 2
 
 [workspace]
 members = ["crates/*"]

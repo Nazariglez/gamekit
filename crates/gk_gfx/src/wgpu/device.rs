@@ -11,8 +11,9 @@ use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
-    wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_shader_visibility, wgpu_step_mode,
-    wgpu_texture_filter, wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format,
+    wgpu_blend_mode, wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_shader_visibility,
+    wgpu_step_mode, wgpu_texture_filter, wgpu_texture_format, wgpu_texture_wrap,
+    wgpu_vertex_format,
 };
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, Sampler, SamplerDescriptor, TextureData,
@@ -24,7 +25,7 @@ use gk_app::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
-use wgpu::{IndexFormat, TextureDimension};
+use wgpu::{BlendComponent, IndexFormat, TextureDimension};
 
 pub struct Device {
     attrs: GfxAttributes,
@@ -118,6 +119,12 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             .enumerate()
             .for_each(|(i, buff)| buff.attributes = &attrs[i]);
 
+        let swapchain_color_target: wgpu::ColorTargetState = swapchain_format.into();
+        let color_target = wgpu::ColorTargetState {
+            blend: desc.blend_mode.map_or(None, |bm| Some(wgpu_blend_mode(bm))),
+            ..swapchain_color_target
+        };
+
         let raw = self
             .ctx
             .device
@@ -132,7 +139,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
                     entry_point: "fs_main",
-                    targets: &[Some(swapchain_format.into())],
+                    targets: &[Some(color_target)],
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu_primitive(desc.primitive),
@@ -348,7 +355,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 });
 
                 if let Some(bg) = rp.bind_group {
-                    println!("HERE...");
                     rpass.set_bind_group(0, &bg.raw, &[]);
                 }
 
