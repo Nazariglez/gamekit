@@ -23,6 +23,7 @@ impl<S: GKState> App<S> {
     /// It's called when the backend is ready
     /// it dispatched the event `Init`
     pub fn init(&mut self) {
+        gk_profile::function!();
         if self.initialized {
             return;
         }
@@ -32,6 +33,9 @@ impl<S: GKState> App<S> {
     }
 
     pub fn frame_start(&mut self) {
+        gk_profile::tick!();
+        gk_profile::function!();
+
         if self.in_frame {
             return;
         }
@@ -41,6 +45,8 @@ impl<S: GKState> App<S> {
     }
 
     pub fn frame_end(&mut self) {
+        gk_profile::function!();
+
         if !self.in_frame {
             return;
         }
@@ -51,6 +57,8 @@ impl<S: GKState> App<S> {
 
     /// Execute any listener set for the event passed in
     pub fn event<E: 'static>(&mut self, evt: E) {
+        gk_profile::function!();
+
         if !self.initialized {
             return;
         }
@@ -88,8 +96,10 @@ impl<S: GKState> App<S> {
     }
 
     /// It's called each frame by the backend and it dispatches
-    /// the events `PreUpdate`, `Update` and `PostUpdate`
+    /// the event `Update`.
     pub fn update(&mut self) {
+        gk_profile::function!();
+
         if !(self.initialized && self.in_frame) {
             return;
         }
@@ -98,6 +108,8 @@ impl<S: GKState> App<S> {
     }
 
     pub fn draw(&mut self, window_id: GKWindowId) {
+        gk_profile::function!();
+
         if !(self.initialized && self.in_frame) {
             return;
         }
@@ -108,6 +120,8 @@ impl<S: GKState> App<S> {
     /// It's called when the backend/app is about to close
     /// it dispatched the events `RequestedClose` and `Close`
     pub fn close(&mut self) {
+        gk_profile::function!();
+
         if !self.initialized {
             return;
         }

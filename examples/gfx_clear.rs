@@ -13,10 +13,11 @@ fn main() -> Result<(), String> {
 }
 
 fn on_draw(evt: &event::Draw, gfx: &mut Gfx, time: &mut Time) {
+    gk_profile::function!();
     let color = Color::rgb(time.elapsed_f32().cos(), time.elapsed_f32().sin(), 1.0);
     let mut renderer = Renderer::new();
     renderer.begin(color, 0, 0);
     gfx.render(evt.window_id, &renderer).unwrap();
 
-    println!("FPS: {} -> {:.5}", time.fps(), time.delta_f32());
+    // println!("FPS: {} -> {:.5}", time.fps(), time.delta_f32());
 }

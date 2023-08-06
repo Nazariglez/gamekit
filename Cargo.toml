@@ -26,23 +26,31 @@ gk_app = { path = "./crates/gk_app", version = "0.1.0" }
 gk_macro = { path = "./crates/gk_macro", version = "0.1.0" }
 gk_backend = { path = "./crates/gk_backend", version = "0.1.0" }
 gk_gfx = { path = "./crates/gk_gfx", version = "0.1.0" }
+gk_math = { path = "./crates/gk_math", version = "0.1.0" }
+gk_profile = { path = "./crates/gk_profile", version = "0.1.0" }
 
 serde = { version = "1.0", features = ["serde_derive"] }
+
 log = "0.4.19"
 hashbrown = "0.14.0"
 anymap = "0.12.1"
 arrayvec = "0.7.4"
 raw-window-handle = "0.5.2"
 bitflags = "2.3.3"
+puffin = "0.16.0"
 
 [dependencies]
-simple_logger = "4.2.0"
 gk_app.workspace = true
 gk_backend.workspace = true
 gk_macro.workspace = true
 gk_gfx.workspace = true
+gk_profile.workspace = true
 
+log.workspace = true
 anymap.workspace = true
+puffin = { workspace = true, optional = true}
+
+simple_logger = "4.2.0"
 
 [features]
 default = ["basic", "winit", "wgpu"]
@@ -56,3 +64,5 @@ wgpu = ["gk_gfx/wgpu"]
 limited_memory = ["gk_app/limited_events"]
 # allow serialize and deserialize internal types
 serde = ["gk_app/serde", "gk_backend/serde"]
+# enable profiling using puffin
+puffin = ["dep:puffin", "gk_app/puffin", "gk_gfx/puffin"]

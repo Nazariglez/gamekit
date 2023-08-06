@@ -11,7 +11,11 @@ pub use gk_gfx as gfx;
 use gk_app::GKState;
 
 pub fn init() -> app::AppBuilder<()> {
-    // simple_logger::SimpleLogger::new().init().unwrap();
+    simple_logger::SimpleLogger::new()
+        .without_timestamps()
+        .with_level(log::LevelFilter::Debug)
+        .init()
+        .unwrap();
     app::AppBuilder::init()
 }
 
@@ -20,6 +24,10 @@ where
     S: GKState + 'static,
     H: app::handlers::SetupHandler<S, T> + 'static,
 {
-    // simple_logger::SimpleLogger::new().init().unwrap();
+    simple_logger::SimpleLogger::new()
+        .without_timestamps()
+        .with_level(log::LevelFilter::Debug)
+        .init()
+        .unwrap();
     app::AppBuilder::init_with(handler)
 }

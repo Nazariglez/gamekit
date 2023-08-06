@@ -13,7 +13,13 @@ primarily on platforms such as [Steam](https://store.steampowered.com/) and [Itc
 * Tier 2: Linux (Ubuntu)
 * Tier 3: Android, iOS
 
-## notes
+## Profiling
+The crate `puffin` is used to profile the application. 
+You need to install [puffin_viewer](https://github.com/EmbarkStudios/puffin/tree/main/puffin_viewer).
 
-use fluent-rs for translations?
-use pollster to block futures
+Then run your application with feature `puffin` and use `puffin_viewer --url 127.0.0.1:8585` to see the result.
+
+## notes
+- If possible, move to notan everything that's is core and consume notas as dependency on gamekit
+- use fluent-rs for translations?
+- use pollster to block futures

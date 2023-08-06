@@ -5,10 +5,14 @@ edition = "2021"
 
 [dependencies]
 gk_macro.workspace = true
+gk_profile.workspace = true
+
 anymap.workspace = true
 raw-window-handle.workspace = true
 arrayvec = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
+puffin = { workspace = true, optional = true }
+puffin_http = { version = "0.13.0", optional = true }
 
 paste = "1.0.12"
 indexmap = "2.0.0"
@@ -17,3 +21,5 @@ indexmap = "2.0.0"
 # Avoid using a vector per event listener, instead uses a an Array limited to 32 by default. The number can be changed
 # passing `GK_LIMIT_EVENTS_TO=N` with the desired size as compilation variable.
 limited_events = ["arrayvec"]
+# enable profiling using puffin
+puffin = ["dep:puffin", "puffin_http"]

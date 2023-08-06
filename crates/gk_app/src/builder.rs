@@ -34,6 +34,14 @@ impl<S: GKState> AppBuilder<S> {
     where
         H: SetupHandler<S, T> + 'static,
     {
+        #[cfg(feature = "puffin")]
+        {
+            let server_addr = format!("0.0.0.0:{}", puffin_http::DEFAULT_PORT);
+            eprintln!("Serving profiling at {server_addr}");
+
+            let _puffin_server = puffin_http::Server::new(&server_addr).unwrap();
+        }
+        gk_profile::init!();
         let plugins = Plugins::new();
         let runner = Box::new(default_runner);
         let setup_handler: Box<SetupHandlerFn<S>> = Box::new(|plugins| handler.call(plugins));
