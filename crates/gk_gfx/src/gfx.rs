@@ -107,6 +107,11 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
+    pub fn with_bind_group(mut self, bind_group: &'a BindGroup) -> Self {
+        self.desc.bind_group_layout = Some(bind_group);
+        self
+    }
+
     pub fn build(self) -> Result<RenderPipeline, String> {
         let Self { desc, gfx } = self;
         gfx.raw.create_render_pipeline(desc)

@@ -50,16 +50,6 @@ struct State {
 
 impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
-        let pip = gfx
-            .create_render_pipeline(SHADER)
-            .with_vertex_layout(
-                VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x3)
-                    .with_attr(1, VertexFormat::Float32x2),
-            )
-            .with_index_format(IndexFormat::UInt16)
-            .build()?;
-
         let texture = gfx
             .create_texture()
             .from_image(include_bytes!("assets/bunny.png"))
@@ -75,6 +65,17 @@ impl State {
                     .with_sampler(1, &sampler)
                     .with_fragment_visibility(true),
             )
+            .build()?;
+
+        let pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_attr(0, VertexFormat::Float32x3)
+                    .with_attr(1, VertexFormat::Float32x2),
+            )
+            .with_bind_group(&bind_group)
+            .with_index_format(IndexFormat::UInt16)
             .build()?;
 
         #[rustfmt::skip]

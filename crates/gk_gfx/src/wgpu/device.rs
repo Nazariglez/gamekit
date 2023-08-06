@@ -67,12 +67,13 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(desc.shader)),
             });
 
+        let bind_group_layouts = &desc.bind_group_layout.map_or(vec![], |bg| vec![&bg.layout]);
         let pipeline_layout =
             self.ctx
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: desc.label,
-                    bind_group_layouts: &[],
+                    bind_group_layouts,
                     push_constant_ranges: &[],
                 });
 
@@ -284,10 +285,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 label: desc.label,
                 layout: &layout,
-                entries: &[],
+                entries: &entries,
             });
 
-        Ok(BindGroup { raw })
+        Ok(BindGroup { raw, layout })
     }
 
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
