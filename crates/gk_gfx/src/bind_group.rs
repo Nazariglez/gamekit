@@ -1,5 +1,5 @@
 use crate::consts::{MAX_SAMPLED_TEXTURES_PER_SHADER_STAGE, MAX_UNIFORM_BUFFERS_PER_SHADER_STAGE};
-use crate::{Sampler, Texture};
+use crate::{Buffer, Sampler, Texture};
 use arrayvec::ArrayVec;
 
 pub trait GKBindGroup {}
@@ -16,7 +16,43 @@ pub struct BindGroupDescriptor<'a> {
 #[derive(Copy, Clone)]
 pub enum BindGroupEntry<'a> {
     Texture(TextureBinding<'a>),
-    Uniform,
+    Uniform(UniformBinding<'a>),
+}
+
+#[derive(Copy, Clone)]
+pub struct UniformBinding<'a> {
+    pub location: u32,
+    pub uniform: &'a Buffer,
+    pub visible_fragment: bool,
+    pub visible_vertex: bool,
+    pub visible_compute: bool,
+}
+
+impl<'a> UniformBinding<'a> {
+    pub fn new(location: u32, buffer: &'a Buffer) -> Self {
+        Self {
+            location,
+            uniform: buffer,
+            visible_fragment: false,
+            visible_vertex: false,
+            visible_compute: false,
+        }
+    }
+
+    pub fn with_fragment_visibility(mut self, visible: bool) -> Self {
+        self.visible_fragment = visible;
+        self
+    }
+
+    pub fn with_vertex_visibility(mut self, visible: bool) -> Self {
+        self.visible_vertex = visible;
+        self
+    }
+
+    pub fn with_compute_visibility(mut self, visible: bool) -> Self {
+        self.visible_compute = visible;
+        self
+    }
 }
 
 #[derive(Default, Copy, Clone)]

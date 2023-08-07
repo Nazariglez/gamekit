@@ -7,6 +7,7 @@ use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
 use gamekit::time::Time;
+use gk_gfx::UniformBinding;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -119,7 +120,10 @@ impl State {
 
         let ubo = gfx.create_uniform_buffer(mvp.as_ref()).build()?;
 
-        let bind_group = gfx.create_bind_group().build()?;
+        let bind_group = gfx
+            .create_bind_group()
+            .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
+            .build()?;
 
         Ok(State {
             pip,

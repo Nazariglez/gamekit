@@ -3,7 +3,7 @@ use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
     BufferUsage, Device, GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler,
     SamplerDescriptor, Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter,
-    TextureFormat, TextureWrap, VertexLayout,
+    TextureFormat, TextureWrap, UniformBinding, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -279,6 +279,11 @@ impl<'a> BindGroupBuilder<'a> {
 
     pub fn with_texture(mut self, texture: TextureBinding<'a>) -> Self {
         self.desc.entry.push(BindGroupEntry::Texture(texture));
+        self
+    }
+
+    pub fn with_uniform(mut self, uniform: UniformBinding<'a>) -> Self {
+        self.desc.entry.push(BindGroupEntry::Uniform(uniform));
         self
     }
 

@@ -257,7 +257,24 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     });
                 }
             }
-            BindGroupEntry::Uniform => {}
+            BindGroupEntry::Uniform(binding) => {
+                let visibility = wgpu_shader_visibility(
+                    binding.visible_vertex,
+                    binding.visible_fragment,
+                    binding.visible_compute,
+                );
+
+                layout_entries.push(wgpu::BindGroupLayoutEntry {
+                    binding: binding.location,
+                    visibility,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                });
+            }
         });
         let layout = self
             .ctx
@@ -284,7 +301,12 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     });
                 }
             }
-            BindGroupEntry::Uniform => {}
+            BindGroupEntry::Uniform(binding) => {
+                entries.push(wgpu::BindGroupEntry {
+                    binding: binding.location,
+                    resource: binding.uniform.raw.as_entire_binding(),
+                });
+            }
         });
         let raw = self
             .ctx
@@ -337,21 +359,17 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
                 let mut vertex_buffers_slot = 0;
                 let mut indexed = false;
-                rp.buffers.iter().for_each(|buff| {
-                    match buff.usage {
-                        BufferUsage::Vertex => {
-                            rpass.set_vertex_buffer(vertex_buffers_slot, buff.raw.slice(..));
-                            vertex_buffers_slot += 1;
-                        }
-                        BufferUsage::Index => {
-                            debug_assert!(!indexed, "Cannot bind more than one Index buffer");
-                            indexed = true;
-                            rpass.set_index_buffer(buff.raw.slice(..), pip.index_format)
-                        }
-                        BufferUsage::Uniform => {
-                            // TODO
-                        }
+                rp.buffers.iter().for_each(|buff| match buff.usage {
+                    BufferUsage::Vertex => {
+                        rpass.set_vertex_buffer(vertex_buffers_slot, buff.raw.slice(..));
+                        vertex_buffers_slot += 1;
                     }
+                    BufferUsage::Index => {
+                        debug_assert!(!indexed, "Cannot bind more than one Index buffer");
+                        indexed = true;
+                        rpass.set_index_buffer(buff.raw.slice(..), pip.index_format)
+                    }
+                    BufferUsage::Uniform => {}
                 });
 
                 if let Some(bg) = rp.bind_group {
