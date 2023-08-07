@@ -1,13 +1,12 @@
 use gamekit::app::event;
 use gamekit::gfx::{
     BindGroup, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, VertexFormat,
-    VertexLayout,
+    VertexLayout, UniformBinding
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
 use gamekit::time::Time;
-use gk_gfx::UniformBinding;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -55,16 +54,6 @@ struct State {
 
 impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
-        let pip = gfx
-            .create_render_pipeline(SHADER)
-            .with_vertex_layout(
-                VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x2)
-                    .with_attr(1, VertexFormat::Float32x3),
-            )
-            .with_index_format(IndexFormat::UInt16)
-            .build()?;
-
         #[rustfmt::skip]
         let vertices: &[f32] = &[
             -1.0, -1.0, -1.0,   1.0, 0.0, 0.0, 1.0,
@@ -124,6 +113,18 @@ impl State {
             .create_bind_group()
             .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
             .build()?;
+
+        let pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_attr(0, VertexFormat::Float32x2)
+                    .with_attr(1, VertexFormat::Float32x3),
+            )
+            .with_bind_group(&bind_group)
+            .with_index_format(IndexFormat::UInt16)
+            .build()?;
+
 
         Ok(State {
             pip,

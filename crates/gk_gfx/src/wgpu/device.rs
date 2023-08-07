@@ -125,6 +125,9 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             ..swapchain_color_target
         };
 
+        // https://github.com/jack1232/wgpu07/blob/89863fd1cbfd74d8993cb854bd03573b9041e3d7/src/main.rs
+
+
         let raw = self
             .ctx
             .device
@@ -143,9 +146,18 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu_primitive(desc.primitive),
+                    // front_face: wgpu::FrontFace::Ccw,
+                    // cull_mode: Some(wgpu::Face::Back),
                     ..Default::default()
                 },
-                depth_stencil: None, // todo from desc
+                // depth_stencil: None,
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: wgpu::TextureFormat::Depth24Plus,
+                    depth_write_enabled: true,
+                    depth_compare: wgpu::CompareFunction::LessEqual,
+                    stencil: wgpu::StencilState::default(),
+                    bias: wgpu::DepthBiasState::default(),
+                }),
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
             });
@@ -351,7 +363,14 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &depth_view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: false,
+                    }),
+                    stencil_ops: None,
+                }),
             });
 
             if let Some(pip) = rp.pipeline {
