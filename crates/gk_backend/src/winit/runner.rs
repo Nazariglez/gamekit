@@ -35,7 +35,8 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
             .event_loop
             .set(event_loop);
 
-        control_flow.set_wait();
+        control_flow.set_poll();
+        // control_flow.set_wait();
         // println!("{evt:?}");
         match evt {
             // -- App life cycle events
