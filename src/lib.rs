@@ -7,6 +7,7 @@ pub mod utils;
 pub use gk_app as app;
 pub use gk_backend as platform;
 pub use gk_gfx as gfx;
+pub use gk_math as math;
 
 use gk_app::GKState;
 

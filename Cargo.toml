@@ -45,6 +45,7 @@ gk_backend.workspace = true
 gk_macro.workspace = true
 gk_gfx.workspace = true
 gk_profile.workspace = true
+gk_math.workspace = true
 
 log.workspace = true
 anymap.workspace = true
