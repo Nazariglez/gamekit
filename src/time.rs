@@ -11,7 +11,7 @@ pub struct Time {
     delta_seconds: f32,
     elapsed: Duration,
     elapsed_time: f32,
-    fps_cache: RingBuffer<f32, 60>,
+    fps_cache: RingBuffer<f32, 600>,
     fps: f32,
 }
 
