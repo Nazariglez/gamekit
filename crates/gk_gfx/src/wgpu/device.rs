@@ -159,7 +159,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<Buffer, String> {
         let mut usage = wgpu_buffer_usages(desc.usage);
-        if !desc.write {
+        if desc.write {
             usage |= wgpu::BufferUsages::COPY_DST;
         }
 
