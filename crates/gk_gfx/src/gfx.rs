@@ -126,6 +126,16 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
+    pub fn with_vertex_entry(mut self, entry: &'a str) -> Self {
+        self.desc.vs_entry = Some(entry);
+        self
+    }
+
+    pub fn with_fragment_entry(mut self, entry: &'a str) -> Self {
+        self.desc.fs_entry = Some(entry);
+        self
+    }
+
     pub fn build(self) -> Result<RenderPipeline, String> {
         let Self { desc, gfx } = self;
         gfx.raw.create_render_pipeline(desc)

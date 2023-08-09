@@ -16,6 +16,8 @@ pub struct RenderPipelineDescriptor<'a> {
     pub bind_group_layout: Option<&'a BindGroup>,
     pub blend_mode: Option<BlendMode>,
     pub cull_mode: Option<CullMode>,
+    pub vs_entry: Option<&'a str>,
+    pub fs_entry: Option<&'a str>,
 }
 
 #[derive(Default, Debug, Copy, Clone)]

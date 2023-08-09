@@ -135,12 +135,12 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &shader,
-                    entry_point: "vs_main",
+                    entry_point: desc.vs_entry.unwrap_or("vs_main"),
                     buffers: &buffers,
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &shader,
-                    entry_point: "fs_main",
+                    entry_point: desc.fs_entry.unwrap_or("fs_main"),
                     targets: &[Some(color_target)],
                 }),
                 primitive: wgpu::PrimitiveState {
