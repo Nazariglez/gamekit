@@ -18,6 +18,7 @@ pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture, S: GKSampler
         desc: TextureDescriptor,
         data: Option<TextureData>,
     ) -> Result<T, String>;
+    fn write_buffer(&mut self, buffer: &B, offset: u64, data: &[u8]) -> Result<(), String>;
     fn create_sampler(&mut self, desc: SamplerDescriptor) -> Result<S, String>;
     fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BG, String>;
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32);

@@ -1,7 +1,7 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, VertexFormat,
-    VertexLayout, UniformBinding
+    BindGroup, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
+    VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
@@ -48,8 +48,10 @@ struct State {
     pip: RenderPipeline,
     vbo: Buffer,
     ebo: Buffer,
+    ubo: Buffer,
     bind_group: BindGroup,
     angle: f32,
+    mvp: Mat4,
 }
 
 impl State {
@@ -125,13 +127,14 @@ impl State {
             .with_index_format(IndexFormat::UInt16)
             .build()?;
 
-
         Ok(State {
             pip,
             vbo,
             ebo,
+            ubo,
             bind_group,
             angle: 0.0,
+            mvp,
         })
     }
 }
@@ -151,6 +154,13 @@ fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
 }
 
 fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+    // update mvp
+    let mvp = state.mvp * Mat4::from_rotation_x(state.angle) * Mat4::from_rotation_y(state.angle);
+    gfx.write_buffer(&state.ubo)
+        .with_data(mvp.as_ref())
+        .build()
+        .unwrap();
+
     let mut renderer = Renderer::new();
     renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);

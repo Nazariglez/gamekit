@@ -1,9 +1,9 @@
 use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
-    BufferUsage, Device, GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler,
-    SamplerDescriptor, Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter,
-    TextureFormat, TextureWrap, UniformBinding, VertexLayout,
+    BufferUsage, Device, GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive,
+    RenderPipeline, Sampler, SamplerDescriptor, Texture, TextureBinding, TextureData,
+    TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, UniformBinding, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -54,6 +54,10 @@ impl Gfx {
 
     pub fn create_texture(&mut self) -> TextureBuilder {
         TextureBuilder::new(self)
+    }
+
+    pub fn write_buffer<'a>(&'a mut self, buffer: &'a Buffer) -> BufferWriteBuilder {
+        BufferWriteBuilder::new(self, buffer)
     }
 
     pub fn create_sampler(&mut self) -> SamplerBuilder {
@@ -140,6 +144,11 @@ impl<'a> BufferBuilder<'a> {
 
     pub fn with_label(mut self, label: &'a str) -> Self {
         self.desc.label = Some(label);
+        self
+    }
+
+    pub fn with_static(mut self, is_static: bool) -> Self {
+        self.desc.is_static = is_static;
         self
     }
 
@@ -290,5 +299,48 @@ impl<'a> BindGroupBuilder<'a> {
     pub fn build(self) -> Result<BindGroup, String> {
         let Self { gfx, desc } = self;
         gfx.raw.create_bind_group(desc)
+    }
+}
+
+pub struct BufferWriteBuilder<'a> {
+    gfx: &'a mut Gfx,
+    buffer: &'a Buffer,
+    offset: u64,
+    data: Option<&'a [u8]>,
+}
+
+impl<'a> BufferWriteBuilder<'a> {
+    pub fn new(gfx: &'a mut Gfx, buffer: &'a Buffer) -> Self {
+        Self {
+            gfx,
+            buffer,
+            offset: 0,
+            data: None,
+        }
+    }
+
+    pub fn with_data<D: bytemuck::Pod>(mut self, data: &'a [D]) -> Self {
+        self.data = Some(bytemuck::cast_slice(data));
+        self
+    }
+
+    pub fn with_offset(mut self, offset: u64) -> Self {
+        self.offset = offset;
+        self
+    }
+
+    pub fn build(mut self) -> Result<(), String> {
+        let Self {
+            gfx,
+            buffer,
+            offset,
+            data,
+        } = self;
+
+        if buffer.is_static() {
+            return Err("Cannot write data to a Static Buffer".to_string());
+        }
+
+        gfx.raw.write_buffer(buffer, offset, data.unwrap_or(&[]))
     }
 }

@@ -3,6 +3,7 @@ use arrayvec::ArrayVec;
 
 pub trait GKBuffer {
     fn usage(&self) -> BufferUsage;
+    fn is_static(&self) -> bool;
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -10,6 +11,7 @@ pub struct BufferDescriptor<'a> {
     pub label: Option<&'a str>,
     pub usage: BufferUsage,
     pub content: &'a [u8],
+    pub is_static: bool,
 }
 
 #[derive(Default, Debug, Copy, Clone)]

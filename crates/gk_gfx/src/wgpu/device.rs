@@ -16,8 +16,8 @@ use crate::wgpu::utils::{
     wgpu_vertex_format,
 };
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, Sampler, SamplerDescriptor, TextureData,
-    MAX_BINDING_ENTRIES,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
+    TextureData, MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
 use gk_app::window::{GKWindow, GKWindowId};
@@ -127,7 +127,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
         // https://github.com/jack1232/wgpu07/blob/89863fd1cbfd74d8993cb854bd03573b9041e3d7/src/main.rs
 
-
         let raw = self
             .ctx
             .device
@@ -150,14 +149,14 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     // cull_mode: Some(wgpu::Face::Back),
                     ..Default::default()
                 },
-                // depth_stencil: None,
-                depth_stencil: Some(wgpu::DepthStencilState {
+                depth_stencil: None,
+                /*                depth_stencil: Some(wgpu::DepthStencilState {
                     format: wgpu::TextureFormat::Depth24Plus,
                     depth_write_enabled: true,
                     depth_compare: wgpu::CompareFunction::LessEqual,
                     stencil: wgpu::StencilState::default(),
                     bias: wgpu::DepthBiasState::default(),
-                }),
+                })*/
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
             });
@@ -167,15 +166,30 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
     }
 
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<Buffer, String> {
+        let mut usage = wgpu_buffer_usages(desc.usage);
+        if !desc.is_static {
+            usage |= wgpu::BufferUsages::COPY_DST;
+        }
+
         let raw = self.ctx.device.create_buffer_init(&BufferInitDescriptor {
             label: desc.label,
             contents: desc.content,
-            usage: wgpu_buffer_usages(desc.usage),
+            usage,
         });
 
         let usage = desc.usage;
 
-        Ok(Buffer { raw, usage })
+        Ok(Buffer {
+            raw,
+            usage,
+            is_static: desc.is_static,
+        })
+    }
+
+    fn write_buffer(&mut self, buffer: &Buffer, offset: u64, data: &[u8]) -> Result<(), String> {
+        debug_assert!(!buffer.is_static, "Cannot write data to a static buffer");
+        self.ctx.queue.write_buffer(&buffer.raw, offset as _, data);
+        Ok(())
     }
 
     fn create_texture(
@@ -363,14 +377,14 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &depth_view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(1.0),
-                        store: false,
-                    }),
-                    stencil_ops: None,
-                }),
+                depth_stencil_attachment: None, /*Some(wgpu::RenderPassDepthStencilAttachment {
+                                                    view: &depth_view,
+                                                    depth_ops: Some(wgpu::Operations {
+                                                        load: wgpu::LoadOp::Clear(1.0),
+                                                        store: false,
+                                                    }),
+                                                    stencil_ops: None,
+                                                }),*/
             });
 
             if let Some(pip) = rp.pipeline {
