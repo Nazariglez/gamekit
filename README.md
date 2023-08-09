@@ -23,3 +23,4 @@ Then run your application with feature `puffin` and use `puffin_viewer --url 127
 - If possible, move to notan everything that's is core and consume notas as dependency on gamekit
 - use fluent-rs for translations?
 - use pollster to block futures
+- allow to bind multiple binding groups
