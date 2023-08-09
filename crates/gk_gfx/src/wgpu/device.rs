@@ -11,9 +11,9 @@ use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
-    wgpu_blend_mode, wgpu_buffer_usages, wgpu_index_format, wgpu_primitive, wgpu_shader_visibility,
-    wgpu_step_mode, wgpu_texture_filter, wgpu_texture_format, wgpu_texture_wrap,
-    wgpu_vertex_format,
+    wgpu_blend_mode, wgpu_buffer_usages, wgpu_cull_mode, wgpu_index_format, wgpu_primitive,
+    wgpu_shader_visibility, wgpu_step_mode, wgpu_texture_filter, wgpu_texture_format,
+    wgpu_texture_wrap, wgpu_vertex_format,
 };
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
@@ -145,18 +145,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu_primitive(desc.primitive),
-                    // front_face: wgpu::FrontFace::Ccw,
-                    // cull_mode: Some(wgpu::Face::Back),
+                    cull_mode: desc.cull_mode.map(wgpu_cull_mode),
                     ..Default::default()
                 },
                 depth_stencil: None,
-                /*                depth_stencil: Some(wgpu::DepthStencilState {
-                    format: wgpu::TextureFormat::Depth24Plus,
-                    depth_write_enabled: true,
-                    depth_compare: wgpu::CompareFunction::LessEqual,
-                    stencil: wgpu::StencilState::default(),
-                    bias: wgpu::DepthBiasState::default(),
-                })*/
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
             });
@@ -167,7 +159,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<Buffer, String> {
         let mut usage = wgpu_buffer_usages(desc.usage);
-        if !desc.is_static {
+        if !desc.write {
             usage |= wgpu::BufferUsages::COPY_DST;
         }
 
@@ -182,12 +174,12 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
         Ok(Buffer {
             raw,
             usage,
-            is_static: desc.is_static,
+            write: desc.write,
         })
     }
 
     fn write_buffer(&mut self, buffer: &Buffer, offset: u64, data: &[u8]) -> Result<(), String> {
-        debug_assert!(!buffer.is_static, "Cannot write data to a static buffer");
+        debug_assert!(!buffer.write, "Cannot write data to a static buffer");
         self.ctx.queue.write_buffer(&buffer.raw, offset as _, data);
         Ok(())
     }

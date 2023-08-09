@@ -1,6 +1,6 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
+    BindGroup, Buffer, Color, CullMode, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
     VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
@@ -101,15 +101,11 @@ impl State {
         ];
         let ebo = gfx.create_index_buffer(indices).build()?;
 
-        let projection = Mat4::perspective_rh_gl(45.0, 4.0 / 3.0, 0.1, 100.0);
-        let view = Mat4::look_at_rh(
-            Vec3::new(4.0, 3.0, 3.0),
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 1.0, 0.0),
-        );
-        let mvp = Mat4::IDENTITY * projection * view;
-
-        let ubo = gfx.create_uniform_buffer(mvp.as_ref()).build()?;
+        let mvp = create_mvp();
+        let ubo = gfx
+            .create_uniform_buffer(mvp.as_ref())
+            .with_write_flag(true)
+            .build()?;
 
         let bind_group = gfx
             .create_bind_group()
@@ -120,11 +116,12 @@ impl State {
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
                 VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x2)
-                    .with_attr(1, VertexFormat::Float32x3),
+                    .with_attr(0, VertexFormat::Float32x3)
+                    .with_attr(1, VertexFormat::Float32x4),
             )
             .with_bind_group(&bind_group)
             .with_index_format(IndexFormat::UInt16)
+            .with_cull_mode(CullMode::Front)
             .build()?;
 
         Ok(State {
@@ -136,6 +133,10 @@ impl State {
             angle: 0.0,
             mvp,
         })
+    }
+
+    fn rotated_mvp(&self) -> Mat4 {
+        self.mvp * Mat4::from_rotation_x(self.angle) * Mat4::from_rotation_y(self.angle)
     }
 }
 
@@ -155,9 +156,8 @@ fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
 
 fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     // update mvp
-    let mvp = state.mvp * Mat4::from_rotation_x(state.angle) * Mat4::from_rotation_y(state.angle);
     gfx.write_buffer(&state.ubo)
-        .with_data(mvp.as_ref())
+        .with_data(state.rotated_mvp().as_ref())
         .build()
         .unwrap();
 
@@ -168,4 +168,14 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_bindings(&state.bind_group);
     renderer.draw(0..36);
     gfx.render(evt.window_id, &renderer).unwrap();
+}
+
+fn create_mvp() -> Mat4 {
+    let projection = Mat4::perspective_rh_gl(45.0, 4.0 / 3.0, 0.1, 100.0);
+    let view = Mat4::look_at_rh(
+        Vec3::new(4.0, 3.0, 3.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    );
+    Mat4::IDENTITY * projection * view
 }

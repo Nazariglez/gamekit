@@ -4,7 +4,7 @@ use wgpu::Buffer as RawBuffer;
 pub struct Buffer {
     pub(crate) raw: RawBuffer,
     pub(crate) usage: BufferUsage,
-    pub(crate) is_static: bool,
+    pub(crate) write: bool,
 }
 
 impl GKBuffer for Buffer {
@@ -12,7 +12,7 @@ impl GKBuffer for Buffer {
         self.usage
     }
 
-    fn is_static(&self) -> bool {
-        self.is_static
+    fn is_writable(&self) -> bool {
+        self.write
     }
 }

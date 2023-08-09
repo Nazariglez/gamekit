@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::{
-    BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, IndexFormat, Primitive,
-    Texture, TextureFilter, TextureFormat, TextureWrap, VertexFormat, VertexStepMode,
+    BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, CullMode, IndexFormat,
+    Primitive, Texture, TextureFilter, TextureFormat, TextureWrap, VertexFormat, VertexStepMode,
 };
 use wgpu::BufferUsages;
 
@@ -156,5 +156,12 @@ fn wgpu_blend_operation(operation: BlendOperation) -> wgpu::BlendOperation {
         BlendOperation::ReverseSubtract => wgpu::BlendOperation::ReverseSubtract,
         BlendOperation::Min => wgpu::BlendOperation::Min,
         BlendOperation::Max => wgpu::BlendOperation::Max,
+    }
+}
+
+pub fn wgpu_cull_mode(mode: CullMode) -> wgpu::Face {
+    match mode {
+        CullMode::Front => wgpu::Face::Front,
+        CullMode::Back => wgpu::Face::Back,
     }
 }

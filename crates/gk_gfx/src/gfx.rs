@@ -1,7 +1,7 @@
 use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
-    BufferUsage, Device, GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive,
+    BufferUsage, CullMode, Device, GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive,
     RenderPipeline, Sampler, SamplerDescriptor, Texture, TextureBinding, TextureData,
     TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, UniformBinding, VertexLayout,
 };
@@ -121,6 +121,11 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
+    pub fn with_cull_mode(mut self, mode: CullMode) -> Self {
+        self.desc.cull_mode = Some(mode);
+        self
+    }
+
     pub fn build(self) -> Result<RenderPipeline, String> {
         let Self { desc, gfx } = self;
         gfx.raw.create_render_pipeline(desc)
@@ -147,8 +152,8 @@ impl<'a> BufferBuilder<'a> {
         self
     }
 
-    pub fn with_static(mut self, is_static: bool) -> Self {
-        self.desc.is_static = is_static;
+    pub fn with_write_flag(mut self, writable: bool) -> Self {
+        self.desc.write = writable;
         self
     }
 
@@ -337,8 +342,8 @@ impl<'a> BufferWriteBuilder<'a> {
             data,
         } = self;
 
-        if buffer.is_static() {
-            return Err("Cannot write data to a Static Buffer".to_string());
+        if !buffer.is_writable() {
+            return Err("Buffer is not Writable".to_string());
         }
 
         gfx.raw.write_buffer(buffer, offset, data.unwrap_or(&[]))

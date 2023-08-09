@@ -15,6 +15,7 @@ pub struct RenderPipelineDescriptor<'a> {
     pub index_format: IndexFormat,
     pub bind_group_layout: Option<&'a BindGroup>,
     pub blend_mode: Option<BlendMode>,
+    pub cull_mode: Option<CullMode>,
 }
 
 #[derive(Default, Debug, Copy, Clone)]
@@ -28,4 +29,10 @@ pub enum Primitive {
     #[default]
     Triangles,
     TriangleStrip,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum CullMode {
+    Front,
+    Back,
 }
