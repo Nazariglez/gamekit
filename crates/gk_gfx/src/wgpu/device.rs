@@ -179,7 +179,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
     }
 
     fn write_buffer(&mut self, buffer: &Buffer, offset: u64, data: &[u8]) -> Result<(), String> {
-        debug_assert!(!buffer.write, "Cannot write data to a static buffer");
+        debug_assert!(buffer.write, "Cannot write data to a static buffer");
         self.ctx.queue.write_buffer(&buffer.raw, offset as _, data);
         Ok(())
     }
