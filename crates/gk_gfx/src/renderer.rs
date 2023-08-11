@@ -17,6 +17,7 @@ pub struct RenderPass<'a> {
     pub(crate) buffers: ArrayVec<&'a Buffer, MAX_BUFFERS>,
     pub(crate) color: Color,
     pub(crate) vertices: Range<u32>,
+    pub(crate) instances: Option<u32>,
     pub(crate) bind_groups: ArrayVec<&'a BindGroup, MAX_BIND_GROUPS_PER_PIPELINE>,
 }
 
@@ -60,6 +61,13 @@ impl<'a> Renderer<'a> {
     pub fn draw(&mut self, vertices: Range<u32>) {
         if let Some(rp) = self.passes.last_mut() {
             rp.vertices = vertices;
+        }
+    }
+
+    pub fn draw_instanced(&mut self, vertices: Range<u32>, instances: u32) {
+        if let Some(rp) = self.passes.last_mut() {
+            rp.vertices = vertices;
+            rp.instances = Some(instances);
         }
     }
 }

@@ -407,10 +407,11 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 });
 
                 if !rp.vertices.is_empty() {
+                    let instances = 0..rp.instances.unwrap_or(1);
                     if indexed {
-                        rpass.draw_indexed(rp.vertices.clone(), 0, 0..1);
+                        rpass.draw_indexed(rp.vertices.clone(), 0, instances);
                     } else {
-                        rpass.draw(rp.vertices.clone(), 0..1);
+                        rpass.draw(rp.vertices.clone(), instances);
                     }
                 }
             }
