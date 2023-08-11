@@ -1,5 +1,6 @@
 // pub mod m2d;
 pub mod prelude;
+pub mod random;
 pub mod time;
 pub mod utils;
 // pub mod tween;

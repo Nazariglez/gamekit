@@ -1,0 +1,183 @@
+use gamekit::app::event;
+use gamekit::gfx::{
+    BindGroup, Buffer, Color, Gfx, RenderPipeline, Renderer, UniformBinding, VertexFormat,
+    VertexLayout,
+};
+use gamekit::platform::Platform;
+use gamekit::prelude::*;
+use gamekit::time::Time;
+use gk_gfx::VertexStepMode;
+
+// Number of triangles to draw
+const INSTANCES: usize = 1000;
+
+// language=wgsl
+const SHADER: &str = r#"
+struct Locals {
+    mvp: mat4x4<f32>,
+};
+
+@group(0) @binding(0)
+var<uniform> locals: Locals;
+
+struct VertexInput {
+    @location(0) position: vec3<f32>,
+    @location(1) color: vec4<f32>,
+    @builtin(instance_index) instance_index: u32,
+};
+
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) color: vec4<f32>,
+};
+
+fn transate(x: f32, y: f32) -> mat4x4<f32> {
+    return mat4x4<f32>(
+        vec4<f32>(1.0, 0.0, 0.0, 1.0),
+        vec4<f32>(0.0, 1.0, 0.0, 1.0),
+        vec4<f32>(0.0, 0.0, 1.0, 1.0),
+        vec4<f32>(x, y, 1.0, 1.0)
+    );
+}
+
+@vertex
+fn vs_main(
+    model: VertexInput,
+) -> VertexOutput {
+    let i = f32(model.instance_index);
+    let n = select(i, 0.0, i % 2.0 == 0.0);
+    let j = select(i, 0.0, i % 3.0 == 0.0);
+    let pos = vec4<f32>(model.position.x - n * 2.0, model.position.y - i * 2.0, model.position.z - j * 2.0, 1.0);
+
+    var output: VertexOutput;
+    output.color = model.color;
+    output.position = locals.mvp * pos;
+
+    return output;
+}
+
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    return vec4<f32>(in.color, 1.0);
+}
+"#;
+
+#[derive(AppState)]
+struct State {
+    pip: RenderPipeline,
+    vbo: Buffer,
+    ubo: Buffer,
+    bind_group: BindGroup,
+    count: f32,
+}
+
+impl State {
+    fn new(gfx: &mut Gfx) -> Result<Self, String> {
+        #[rustfmt::skip]
+        let positions: &[f32] = &[
+            -1.0, -1.0, -1.0,
+            1.0, -1.0, -1.0,
+            1.0,  1.0, -1.0,
+            -1.0,  1.0, -1.0,
+
+            -1.0, -1.0,  1.0,
+            1.0, -1.0,  1.0,
+            1.0,  1.0,  1.0,
+            -1.0,  1.0,  1.0,
+
+            -1.0, -1.0, -1.0,
+            -1.0,  1.0, -1.0,
+            -1.0,  1.0,  1.0,
+            -1.0, -1.0,  1.0,
+
+            1.0, -1.0, -1.0,
+            1.0,  1.0, -1.0,
+            1.0,  1.0,  1.0,
+            1.0, -1.0,  1.0,
+
+            -1.0, -1.0, -1.0,
+            -1.0, -1.0,  1.0,
+            1.0, -1.0,  1.0,
+            1.0, -1.0, -1.0,
+
+            -1.0,  1.0, -1.0,
+            -1.0,  1.0,  1.0,
+            1.0,  1.0,  1.0,
+            1.0,  1.0, -1.0,
+        ];
+
+        #[rustfmt::skip]
+        let indices = [
+            0, 1, 2,  0, 2, 3,
+            6, 5, 4,  7, 6, 4,
+            8, 9, 10,  8, 10, 11,
+            14, 13, 12,  15, 14, 12,
+            16, 17, 18,  16, 18, 19,
+            22, 21, 20,  23, 22, 20
+        ];
+
+        let pos_vbo = gfx.create_vertex_buffer(positions).build()?;
+        let color_vbo = gfx.create_vertex_buffer(positions).build()?;
+
+        let count: f32 = 0.0;
+        let ubo = gfx
+            .create_uniform_buffer(&[count])
+            .with_write_flag(true)
+            .build()?;
+
+        let bind_group = gfx
+            .create_bind_group()
+            .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
+            .build()?;
+
+        let pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(VertexLayout::new().with_attr(0, VertexFormat::Float32x3))
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_step_mode(VertexStepMode::Instance)
+                    .with_attr(1, VertexFormat::Float32x4),
+            )
+            .with_bind_group(&bind_group)
+            .build()?;
+
+        Ok(State {
+            pip,
+            vbo: pos_vbo,
+            ubo,
+            bind_group,
+            count,
+        })
+    }
+}
+
+fn main() -> Result<(), String> {
+    gamekit::init_with(State::new)
+        .add_config(Platform::config())?
+        .add_config(Gfx::config())?
+        .add_config(Time::config())?
+        .on(on_draw)
+        .on(on_update)
+        .build()
+}
+
+fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
+    state.count += 0.15 * time.delta_f32();
+}
+
+fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+    let mut renderer = Renderer::new();
+    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
+    renderer.apply_pipeline(&state.pip);
+    renderer.apply_buffers(&[&state.vbo]);
+    renderer.apply_bindings(&[&state.bind_group]);
+    renderer.draw_instanced(0..3, INSTANCES as _);
+    gfx.render(evt.window_id, &renderer).unwrap();
+
+    // update the uniform to animate the triangles
+    gfx.write_buffer(&state.ubo)
+        .with_data(&[state.count])
+        .build()
+        .unwrap();
+}
