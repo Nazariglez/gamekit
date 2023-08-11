@@ -112,7 +112,7 @@ impl<'a> RenderPipelineBuilder<'a> {
     }
 
     pub fn with_bind_group(mut self, bind_group: &'a BindGroup) -> Self {
-        self.desc.bind_group_layout = Some(bind_group);
+        self.desc.bind_group_layout.push(bind_group);
         self
     }
 

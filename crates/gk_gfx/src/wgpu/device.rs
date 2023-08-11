@@ -68,7 +68,12 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(desc.shader)),
             });
 
-        let bind_group_layouts = &desc.bind_group_layout.map_or(vec![], |bg| vec![&bg.layout]);
+        let bind_group_layouts = &desc
+            .bind_group_layout
+            .iter()
+            .map(|bg| &bg.layout)
+            .collect::<Vec<_>>();
+
         let pipeline_layout =
             self.ctx
                 .device
@@ -397,9 +402,9 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     BufferUsage::Uniform => {}
                 });
 
-                if let Some(bg) = rp.bind_group {
-                    rpass.set_bind_group(0, &bg.raw, &[]);
-                }
+                rp.bind_groups.iter().enumerate().for_each(|(i, bg)| {
+                    rpass.set_bind_group(i as _, &bg.raw, &[]);
+                });
 
                 if !rp.vertices.is_empty() {
                     if indexed {

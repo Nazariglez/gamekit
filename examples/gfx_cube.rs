@@ -165,7 +165,7 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
-    renderer.apply_bindings(&state.bind_group);
+    renderer.apply_bindings(&[&state.bind_group]);
     renderer.draw(0..36);
     gfx.render(evt.window_id, &renderer).unwrap();
 }

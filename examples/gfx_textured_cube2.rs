@@ -38,9 +38,9 @@ fn vs_main(
     return out;
 }
 
-@group(0) @binding(1)
+@group(1) @binding(0)
 var t_texture: texture_2d<f32>;
-@group(0) @binding(2)
+@group(1) @binding(1)
 var s_texture: sampler;
 
 @fragment
@@ -54,7 +54,8 @@ struct State {
     pip: RenderPipeline,
     vbo: Buffer,
     ubo: Buffer,
-    bind_group: BindGroup,
+    bind_group_1: BindGroup,
+    bind_group_2: BindGroup,
     angle: f32,
     mvp: Mat4,
 }
@@ -115,13 +116,17 @@ impl State {
 
         let sampler = gfx.create_sampler().build()?;
 
-        let bind_group = gfx
+        let bind_group_1 = gfx
             .create_bind_group()
             .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
+            .build()?;
+
+        let bind_group_2 = gfx
+            .create_bind_group()
             .with_texture(
                 TextureBinding::new()
-                    .with_texture(1, &texture)
-                    .with_sampler(2, &sampler)
+                    .with_texture(0, &texture)
+                    .with_sampler(1, &sampler)
                     .with_fragment_visibility(true),
             )
             .build()?;
@@ -133,7 +138,8 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x3)
                     .with_attr(1, VertexFormat::Float32x2),
             )
-            .with_bind_group(&bind_group)
+            .with_bind_group(&bind_group_1)
+            .with_bind_group(&bind_group_2)
             .with_index_format(IndexFormat::UInt16)
             .with_cull_mode(CullMode::Back)
             .build()?;
@@ -142,7 +148,8 @@ impl State {
             pip,
             vbo,
             ubo,
-            bind_group,
+            bind_group_1,
+            bind_group_2,
             angle: 0.0,
             mvp,
         })
@@ -178,7 +185,7 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
-    renderer.apply_bindings(&[&state.bind_group]);
+    renderer.apply_bindings(&[&state.bind_group_1, &state.bind_group_2]);
     renderer.draw(0..36);
     gfx.render(evt.window_id, &renderer).unwrap();
 }
