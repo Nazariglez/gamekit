@@ -1,37 +1,46 @@
 use fastrand::Rng as RawRng;
 use std::ops::RangeBounds;
 
+/// Random generator
 pub struct Rng {
     raw: RawRng,
 }
 
 impl Rng {
+    /// New instance
     pub fn new() -> Self {
         Self { raw: RawRng::new() }
     }
 
+    /// New instance using a seed
     pub fn with_seed(seed: u64) -> Self {
         Self {
             raw: RawRng::with_seed(seed),
         }
     }
 
+    /// Generate a random value for T
+    /// booleans will be true|false while floats will be a number between 0 and 1
     pub fn gen<T: Generator>(&mut self) -> T {
         T::gen(self)
     }
 
+    /// Generate a random value between the range passed
     pub fn range<T: RangeGenerator>(&mut self, range: impl RangeBounds<T>) -> T {
         T::range(self, range)
     }
 
+    /// Returns the current seed
     pub fn seed(&self) -> u64 {
         self.raw.get_seed()
     }
 
+    /// Sort randomly a slice
     pub fn shuffle<T>(&mut self, slice: &mut [T]) {
         self.raw.shuffle(slice)
     }
 
+    /// Pick a value randomly
     pub fn pick<I>(&mut self, iter: I) -> Option<I::Item>
     where
         I: IntoIterator,
@@ -97,30 +106,32 @@ mod test {
         assert_eq!(rng1.gen::<bool>(), rng2.gen::<bool>());
     }
 
+    macro_rules! test_range {
+        ($($rng:expr, $t:ty, $range:expr),*) => {
+            $(
+               let range: Range<$t> = $range;
+                let number = $rng.range(range.clone());
+                assert!(range.contains(&number), "Fail testing rng.range with type {}", std::any::type_name::<$t>());
+            )*
+        };
+    }
+
     #[test]
     fn test_gen_range() {
         let mut rng = Rng::new();
-        let range: Range<i32> = 10..20;
-        let number = rng.range(range.clone());
-        assert!(range.contains(&number));
+        test_range!(rng, i8, 10..20);
+        test_range!(rng, i16, 10..20);
+        test_range!(rng, i32, 10..20);
+        test_range!(rng, i64, 10..20);
+        test_range!(rng, i128, 10..20);
+        test_range!(rng, isize, 10..20);
+        test_range!(rng, u8, 10..20);
+        test_range!(rng, u16, 10..20);
+        test_range!(rng, u32, 10..20);
+        test_range!(rng, u64, 10..20);
+        test_range!(rng, u128, 10..20);
+        test_range!(rng, usize, 10..20);
     }
-
-    // #[test]
-    // fn test_range_types() {
-    //     let mut rng = Rng::new();
-    //
-    //     for _ in 0..100 {
-    //         assert!(rng.range(0i8..=127).is_i8());
-    //         assert!(rng.range(0i16..=32767).is_i16());
-    //         assert!(rng.range(0i32..=2_147_483_647).is_i32());
-    //         assert!(rng.range(0i64..=9_223_372_036_854_775_807).is_i64());
-    //         assert!(rng.range(0u8..=255).is_u8());
-    //         assert!(rng.range(0u16..=65_535).is_u16());
-    //         assert!(rng.range(0u32..=4_294_967_295).is_u32());
-    //         assert!(rng.range(0u64..=18_446_744_073_709_551_615).is_u64());
-    //         assert!(rng.range('a'..'z').is_ascii_lowercase());
-    //     }
-    // }
 
     #[test]
     fn test_shuffle() {
