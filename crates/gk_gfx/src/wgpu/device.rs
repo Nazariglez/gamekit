@@ -15,10 +15,7 @@ use crate::wgpu::utils::{
     wgpu_shader_visibility, wgpu_step_mode, wgpu_texture_filter, wgpu_texture_format,
     wgpu_texture_wrap, wgpu_vertex_format,
 };
-use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
-    TextureData, MAX_BINDING_ENTRIES,
-};
+use crate::{BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor, TextureData, MAX_BINDING_ENTRIES, TextureFormat};
 use arrayvec::ArrayVec;
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
@@ -31,7 +28,10 @@ pub struct Device {
     attrs: GfxAttributes,
     ctx: Context,
     surfaces: HashMap<GKWindowId, Surface>,
+    depth_texture: Option<Texture>,
 }
+
+// TODO update depth_texture size on resize?
 
 impl Plugin for Device {}
 
@@ -42,6 +42,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             attrs,
             ctx: context,
             surfaces: HashMap::default(),
+            depth_texture: None,
         })
     }
 
@@ -154,7 +155,13 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     cull_mode: desc.cull_mode.map(wgpu_cull_mode),
                     ..Default::default()
                 },
-                depth_stencil: None,
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: wgpu::TextureFormat::Depth24Plus,
+                    depth_write_enabled: true,
+                    depth_compare: wgpu::CompareFunction::Less,
+                    stencil: Default::default(),
+                    bias: Default::default(),
+                }),
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
             });
@@ -364,7 +371,18 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
+        // TODO check if depth is necessary
+        // https://github.com/sotrh/learn-wgpu/blob/master/code/beginner/tutorial8-depth/src/lib.rs
+        if self.depth_texture.is_none() {
+            self.create_texture(TextureDescriptor {
+                label: None,
+                format: TextureFormat::,
+            })
+        }
+
         renderer.passes.iter().for_each(|rp| {
+            debug_assert!(rp.pipeline.is_some(), "A pipeline must be set on the RenderPass");
+
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {

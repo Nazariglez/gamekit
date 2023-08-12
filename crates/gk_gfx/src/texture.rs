@@ -10,6 +10,7 @@ pub struct TextureDescriptor<'a> {
 pub enum TextureFormat {
     #[default]
     Rgba8UnormSrgb,
+    Depth,
 }
 
 #[derive(Debug, Default, Copy, Clone)]
