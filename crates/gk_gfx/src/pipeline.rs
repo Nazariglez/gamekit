@@ -1,5 +1,5 @@
 use crate::buffer::{IndexFormat, VertexLayout};
-use crate::consts::MAX_BIND_GROUPS_PER_PIPELINE;
+use crate::consts::{MAX_BIND_GROUPS_PER_PIPELINE, MAX_VERTEX_BUFFERS};
 use crate::{BindGroup, BindGroupEntry, BlendMode};
 use arrayvec::ArrayVec;
 
@@ -12,7 +12,7 @@ pub struct RenderPipelineDescriptor<'a> {
     pub label: Option<&'a str>,
     pub shader: &'a str,
     pub depth_stencil: Option<DepthStencil>,
-    pub vertex_layout: Option<VertexLayout>,
+    pub vertex_layout: ArrayVec<VertexLayout, MAX_VERTEX_BUFFERS>,
     pub primitive: Primitive,
     pub index_format: IndexFormat,
     pub bind_group_layout: ArrayVec<&'a BindGroup, MAX_BIND_GROUPS_PER_PIPELINE>,

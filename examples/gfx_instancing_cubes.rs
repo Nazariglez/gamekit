@@ -1,12 +1,14 @@
 use gamekit::app::event;
 use gamekit::gfx::{
     BindGroup, Buffer, Color, Gfx, RenderPipeline, Renderer, UniformBinding, VertexFormat,
-    VertexLayout,
+    VertexLayout, VertexStepMode,
 };
+use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gamekit::random;
 use gamekit::time::Time;
-use gk_gfx::VertexStepMode;
+use gk_gfx::IndexFormat;
 
 // Number of triangles to draw
 const INSTANCES: usize = 1000;
@@ -59,17 +61,20 @@ fn vs_main(
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return vec4<f32>(in.color, 1.0);
+    return in.color;
 }
 "#;
 
 #[derive(AppState)]
 struct State {
     pip: RenderPipeline,
-    vbo: Buffer,
+    pos_vbo: Buffer,
+    color_vbo: Buffer,
+    ebo: Buffer,
     ubo: Buffer,
     bind_group: BindGroup,
-    count: f32,
+    mvp: Mat4,
+    angle: f32,
 }
 
 impl State {
@@ -108,7 +113,7 @@ impl State {
         ];
 
         #[rustfmt::skip]
-        let indices = [
+        let indices = &[
             0, 1, 2,  0, 2, 3,
             6, 5, 4,  7, 6, 4,
             8, 9, 10,  8, 10, 11,
@@ -117,12 +122,18 @@ impl State {
             22, 21, 20,  23, 22, 20
         ];
 
-        let pos_vbo = gfx.create_vertex_buffer(positions).build()?;
-        let color_vbo = gfx.create_vertex_buffer(positions).build()?;
+        let colors = &(0..INSTANCES)
+            .flat_map(|_| [random::gen(), random::gen(), random::gen(), 1.0])
+            .collect::<Vec<f32>>();
 
-        let count: f32 = 0.0;
+        let pos_vbo = gfx.create_vertex_buffer(positions).build()?;
+        let color_vbo = gfx.create_vertex_buffer(colors).build()?;
+
+        let ebo = gfx.create_index_buffer(indices).build()?;
+
+        let mvp = create_mvp();
         let ubo = gfx
-            .create_uniform_buffer(&[count])
+            .create_uniform_buffer(mvp.as_ref())
             .with_write_flag(true)
             .build()?;
 
@@ -140,15 +151,23 @@ impl State {
                     .with_attr(1, VertexFormat::Float32x4),
             )
             .with_bind_group(&bind_group)
+            .with_index_format(IndexFormat::UInt16)
             .build()?;
 
         Ok(State {
             pip,
-            vbo: pos_vbo,
+            pos_vbo,
+            color_vbo,
+            ebo,
             ubo,
             bind_group,
-            count,
+            mvp,
+            angle: 0.0,
         })
+    }
+
+    fn rotated_mvp(&self) -> Mat4 {
+        self.mvp * Mat4::from_rotation_x(self.angle) * Mat4::from_rotation_y(self.angle)
     }
 }
 
@@ -163,21 +182,31 @@ fn main() -> Result<(), String> {
 }
 
 fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
-    state.count += 0.15 * time.delta_f32();
+    state.angle += 0.6 * time.delta_f32();
 }
 
 fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+    // update mvp
+    gfx.write_buffer(&state.ubo)
+        .with_data(state.rotated_mvp().as_ref())
+        .build()
+        .unwrap();
+
     let mut renderer = Renderer::new();
     renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo]);
+    renderer.apply_buffers(&[&state.pos_vbo, &state.color_vbo, &state.ebo]);
     renderer.apply_bindings(&[&state.bind_group]);
-    renderer.draw_instanced(0..3, INSTANCES as _);
+    renderer.draw_instanced(0..36, INSTANCES as _);
     gfx.render(evt.window_id, &renderer).unwrap();
+}
 
-    // update the uniform to animate the triangles
-    gfx.write_buffer(&state.ubo)
-        .with_data(&[state.count])
-        .build()
-        .unwrap();
+fn create_mvp() -> Mat4 {
+    let projection = Mat4::perspective_rh_gl(45.0, 4.0 / 3.0, 0.1, 100.0);
+    let view = Mat4::look_at_rh(
+        Vec3::new(4.0, 3.0, 3.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    );
+    Mat4::IDENTITY * projection * view
 }

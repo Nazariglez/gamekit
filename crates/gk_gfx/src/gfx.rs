@@ -97,7 +97,7 @@ impl<'a> RenderPipelineBuilder<'a> {
     }
 
     pub fn with_vertex_layout(mut self, layout: VertexLayout) -> Self {
-        self.desc.vertex_layout = Some(layout);
+        self.desc.vertex_layout.push(layout);
         self
     }
 

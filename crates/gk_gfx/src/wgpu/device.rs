@@ -91,8 +91,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 surface.capabilities.formats[0]
             });
 
-        let (attrs, mut buffers) = match &desc.vertex_layout {
-            Some(vl) => {
+        let (attrs, mut buffers): (Vec<_>, Vec<_>) = desc
+            .vertex_layout
+            .iter()
+            .map(|vl| {
                 let mut offset = 0;
                 let attrs = vl
                     .attributes
@@ -114,10 +116,9 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     attributes: &[],
                 };
 
-                (vec![attrs], vec![layout]) // todo multple layout?
-            }
-            _ => (vec![], vec![]),
-        };
+                (attrs, layout)
+            })
+            .unzip();
 
         buffers
             .iter_mut()
