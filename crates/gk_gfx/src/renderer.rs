@@ -2,8 +2,9 @@ use crate::color::Color;
 use crate::consts::{
     MAX_BIND_GROUPS_PER_PIPELINE, MAX_UNIFORM_BUFFERS_PER_SHADER_STAGE, MAX_VERTEX_BUFFERS,
 };
-use crate::{BindGroup, Buffer, RenderPipeline};
+use crate::{BindGroup, Buffer, ClearOptions, RenderPipeline};
 use arrayvec::ArrayVec;
+use std::io::sink;
 use std::ops::Range;
 
 // TODO gfx works with RenderPass, then we have Render2D, and Render3D
@@ -13,9 +14,10 @@ const MAX_BUFFERS: usize = MAX_VERTEX_BUFFERS + MAX_UNIFORM_BUFFERS_PER_SHADER_S
 
 #[derive(Default)]
 pub struct RenderPass<'a> {
+    pub(crate) size: (u32, u32),
     pub(crate) pipeline: Option<&'a RenderPipeline>,
     pub(crate) buffers: ArrayVec<&'a Buffer, MAX_BUFFERS>,
-    pub(crate) color: Color,
+    pub(crate) clear_options: Option<ClearOptions>,
     pub(crate) vertices: Range<u32>,
     pub(crate) instances: Option<u32>,
     pub(crate) bind_groups: ArrayVec<&'a BindGroup, MAX_BIND_GROUPS_PER_PIPELINE>,
@@ -31,11 +33,21 @@ impl<'a> Renderer<'a> {
         Default::default()
     }
 
-    pub fn begin(&mut self, color: Color, width: u32, height: u32) {
+    pub fn begin(&mut self, width: u32, height: u32) {
         self.passes.push(RenderPass {
-            color,
+            size: (width, height),
             ..Default::default()
         });
+    }
+
+    pub fn clear(&mut self, color: Option<Color>, depth: Option<f32>, stencil: Option<u32>) {
+        if let Some(rp) = self.passes.last_mut() {
+            rp.clear_options = Some(ClearOptions {
+                color,
+                depth,
+                stencil,
+            });
+        }
     }
 
     pub fn apply_pipeline(&mut self, pip: &'a RenderPipeline) {

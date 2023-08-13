@@ -54,8 +54,8 @@ impl State {
 
         #[rustfmt::skip]
         let vertices: &[f32] = &[
-            0.4, 1.2, 0.1,   1.0, 0.0, 0.0,
-            0.5, 1.2, 0.1,  1.0, 0.0, 0.0,
+            0.4, 1.2, 0.5,   1.0, 0.0, 0.0,
+            0.5, 1.2, 0.5,  1.0, 0.0, 0.0,
             0.0, -0.2, 0.9,  1.0, 0.0, 0.0,
 
             -0.2, 0.1, 0.5,   0.0, 1.0, 0.0,
@@ -83,7 +83,8 @@ fn main() -> Result<(), String> {
 
 fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
-    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
+    renderer.begin(1600, 1200);
+    renderer.clear(Some(Color::WHITE), Some(1.0), None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
     renderer.draw(0..9);

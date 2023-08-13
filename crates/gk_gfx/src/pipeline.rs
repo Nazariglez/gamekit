@@ -1,6 +1,6 @@
 use crate::buffer::{IndexFormat, VertexLayout};
 use crate::consts::{MAX_BIND_GROUPS_PER_PIPELINE, MAX_VERTEX_BUFFERS};
-use crate::{BindGroup, BindGroupEntry, BlendMode};
+use crate::{BindGroup, BindGroupEntry, BlendMode, Color};
 use arrayvec::ArrayVec;
 
 pub trait GKRenderPipeline {}
@@ -39,4 +39,12 @@ pub enum Primitive {
 pub enum CullMode {
     Front,
     Back,
+}
+
+/// Clear options to use at the beginning of the frame
+#[derive(Default, Debug, Clone, Copy)]
+pub struct ClearOptions {
+    pub color: Option<Color>,
+    pub depth: Option<f32>,
+    pub stencil: Option<u32>,
 }

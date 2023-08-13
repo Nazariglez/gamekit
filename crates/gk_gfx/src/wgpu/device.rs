@@ -158,13 +158,13 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     cull_mode: desc.cull_mode.map(wgpu_cull_mode),
                     ..Default::default()
                 },
-                depth_stencil: Some(wgpu::DepthStencilState {
-                    format: wgpu::TextureFormat::Depth24Plus,
-                    depth_write_enabled: true,
-                    depth_compare: wgpu::CompareFunction::Less,
-                    stencil: Default::default(),
-                    bias: Default::default(),
-                }),
+                depth_stencil: None, /*Some(wgpu::DepthStencilState {
+                                         format: wgpu::TextureFormat::Depth24Plus,
+                                         depth_write_enabled: true,
+                                         depth_compare: wgpu::CompareFunction::Less,
+                                         stencil: Default::default(),
+                                         bias: Default::default(),
+                                     }),*/
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
             });
@@ -401,31 +401,52 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
         }
 
         renderer.passes.iter().for_each(|rp| {
-            debug_assert!(
-                rp.pipeline.is_some(),
-                "A pipeline must be set on the RenderPass"
-            );
+            // debug_assert!(
+            //     rp.pipeline.is_some(),
+            //     "A pipeline must be set on the RenderPass"
+            // );
+
+            // TODO stencil
+            let (color, depth, stencil) = rp
+                .clear_options
+                .map(|clear| {
+                    let color = clear.color.map(|color| wgpu::RenderPassColorAttachment {
+                        view: &view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu_color(color)),
+                            store: true,
+                        },
+                    });
+
+                    let depth = clear.depth.map(|depth| wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: false,
+                    });
+
+                    let stencil = clear.stencil.map(|stencil| wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(stencil),
+                        store: false,
+                    });
+
+                    (color, depth, stencil)
+                })
+                .unwrap_or_default();
 
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu_color(rp.color)),
-                        store: true,
-                    },
-                })],
-                depth_stencil_attachment: self.depth_texture.as_ref().map(|dt| {
-                    wgpu::RenderPassDepthStencilAttachment {
-                        view: &dt.view,
-                        depth_ops: Some(wgpu::Operations {
-                            load: wgpu::LoadOp::Clear(1.0),
-                            store: false,
-                        }),
-                        stencil_ops: None,
-                    }
-                }),
+                color_attachments: &[color],
+                depth_stencil_attachment: if depth.is_some() || stencil.is_some() {
+                    self.depth_texture
+                        .as_ref()
+                        .map(|dt| wgpu::RenderPassDepthStencilAttachment {
+                            view: &dt.view,
+                            depth_ops: depth,
+                            stencil_ops: stencil,
+                        })
+                } else {
+                    None
+                },
             });
 
             if let Some(pip) = rp.pipeline {
