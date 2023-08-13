@@ -1,14 +1,13 @@
 use gamekit::app::event;
 use gamekit::gfx::{
     BindGroup, Buffer, Color, CullMode, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
-    VertexFormat, VertexLayout,
+    VertexFormat, VertexLayout, VertexStepMode,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
 use gamekit::random;
 use gamekit::time::Time;
-use gk_gfx::VertexStepMode;
 
 const INSTANCES: u32 = 120;
 
