@@ -1,5 +1,7 @@
 // pub mod m2d;
 pub mod prelude;
+
+#[cfg(feature = "random")]
 pub mod random;
 pub mod time;
 pub mod utils;

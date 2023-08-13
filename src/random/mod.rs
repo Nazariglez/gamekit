@@ -1,3 +1,5 @@
+#![cfg(feature = "random")]
+
 mod global;
 mod rng;
 
