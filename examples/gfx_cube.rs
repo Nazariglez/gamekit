@@ -20,6 +20,7 @@ var<uniform> transform: Transform;
 struct VertexInput {
     @location(0) position: vec4<f32>,
     @location(1) color: vec4<f32>,
+    @builtin(instance_index) instance_index: u32,
 };
 
 struct VertexOutput {
@@ -33,7 +34,12 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.color = model.color;
-    out.position = transform.mvp * model.position;
+    let i = f32(model.instance_index);
+    let n = select(i, 0.0, i % 2.0 == 0.0);
+    let j = select(i, 0.0, i % 3.0 == 0.0);
+    let pos = vec4<f32>(model.position.x - n * 2.0, model.position.y - i * 2.0, model.position.z - j * 2.0, 1.0);
+
+    out.position = transform.mvp * pos;
     return out;
 }
 
@@ -166,7 +172,7 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
     renderer.apply_bindings(&[&state.bind_group]);
-    renderer.draw(0..36);
+    renderer.draw_instanced(0..36, 100);
     gfx.render(evt.window_id, &renderer).unwrap();
 }
 

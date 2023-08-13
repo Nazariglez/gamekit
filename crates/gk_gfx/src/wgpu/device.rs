@@ -15,7 +15,10 @@ use crate::wgpu::utils::{
     wgpu_shader_visibility, wgpu_step_mode, wgpu_texture_filter, wgpu_texture_format,
     wgpu_texture_wrap, wgpu_vertex_format,
 };
-use crate::{BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor, TextureData, MAX_BINDING_ENTRIES, TextureFormat};
+use crate::{
+    BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
+    TextureData, TextureFormat, MAX_BINDING_ENTRIES,
+};
 use arrayvec::ArrayVec;
 use gk_app::window::{GKWindow, GKWindowId};
 use gk_app::Plugin;
@@ -207,6 +210,13 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             height: d.height,
             depth_or_array_layers: 1,
         });
+
+        let is_depth_texture = matches!(desc.format, TextureFormat::Depth);
+        let mut usage = wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST;
+        if is_depth_texture {
+            usage |= wgpu::TextureUsages::RENDER_ATTACHMENT;
+        }
+
         let raw = self.ctx.device.create_texture(&wgpu::TextureDescriptor {
             label: desc.label,
             size,
@@ -214,26 +224,28 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             sample_count: 1,
             dimension: TextureDimension::D2,
             format: wgpu_texture_format(desc.format),
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            usage,
             view_formats: &[],
         });
 
-        if let Some(d) = data {
-            self.ctx.queue.write_texture(
-                wgpu::ImageCopyTexture {
-                    texture: &raw,
-                    mip_level: 0,
-                    origin: wgpu::Origin3d::ZERO,
-                    aspect: wgpu::TextureAspect::All,
-                },
-                d.bytes,
-                wgpu::ImageDataLayout {
-                    offset: 0,
-                    bytes_per_row: Some(d.width * 4),
-                    rows_per_image: Some(d.height),
-                },
-                size,
-            );
+        if !is_depth_texture {
+            if let Some(d) = data {
+                self.ctx.queue.write_texture(
+                    wgpu::ImageCopyTexture {
+                        texture: &raw,
+                        mip_level: 0,
+                        origin: wgpu::Origin3d::ZERO,
+                        aspect: wgpu::TextureAspect::All,
+                    },
+                    d.bytes,
+                    wgpu::ImageDataLayout {
+                        offset: 0,
+                        bytes_per_row: Some(d.width * 4),
+                        rows_per_image: Some(d.height),
+                    },
+                    size,
+                );
+            }
         }
 
         let view = raw.create_view(&wgpu::TextureViewDescriptor::default());
@@ -354,6 +366,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
     fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
         if let Some(surface) = self.surfaces.get_mut(&id) {
             surface.resize(&self.ctx.device, width, height);
+            // TODO depth?
         }
     }
 
@@ -374,14 +387,24 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
         // TODO check if depth is necessary
         // https://github.com/sotrh/learn-wgpu/blob/master/code/beginner/tutorial8-depth/src/lib.rs
         if self.depth_texture.is_none() {
-            self.create_texture(TextureDescriptor {
-                label: None,
-                format: TextureFormat::,
-            })
+            self.depth_texture = Some(self.create_texture(
+                TextureDescriptor {
+                    label: None,
+                    format: TextureFormat::Depth,
+                },
+                Some(TextureData {
+                    bytes: &[],
+                    width: 1600, // TODO
+                    height: 1200,
+                }),
+            )?);
         }
 
         renderer.passes.iter().for_each(|rp| {
-            debug_assert!(rp.pipeline.is_some(), "A pipeline must be set on the RenderPass");
+            debug_assert!(
+                rp.pipeline.is_some(),
+                "A pipeline must be set on the RenderPass"
+            );
 
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
@@ -393,14 +416,16 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         store: true,
                     },
                 })],
-                depth_stencil_attachment: None, /*Some(wgpu::RenderPassDepthStencilAttachment {
-                                                    view: &depth_view,
-                                                    depth_ops: Some(wgpu::Operations {
-                                                        load: wgpu::LoadOp::Clear(1.0),
-                                                        store: false,
-                                                    }),
-                                                    stencil_ops: None,
-                                                }),*/
+                depth_stencil_attachment: self.depth_texture.as_ref().map(|dt| {
+                    wgpu::RenderPassDepthStencilAttachment {
+                        view: &dt.view,
+                        depth_ops: Some(wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(1.0),
+                            store: false,
+                        }),
+                        stencil_ops: None,
+                    }
+                }),
             });
 
             if let Some(pip) = rp.pipeline {

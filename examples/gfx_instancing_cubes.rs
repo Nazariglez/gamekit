@@ -1,29 +1,28 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, Gfx, RenderPipeline, Renderer, UniformBinding, VertexFormat,
-    VertexLayout, VertexStepMode,
+    BindGroup, Buffer, Color, CullMode, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
+    VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
 use gamekit::random;
 use gamekit::time::Time;
-use gk_gfx::IndexFormat;
+use gk_gfx::VertexStepMode;
 
-// Number of triangles to draw
-const INSTANCES: usize = 1000;
+const INSTANCES: u32 = 120;
 
 // language=wgsl
 const SHADER: &str = r#"
-struct Locals {
+struct Transform {
     mvp: mat4x4<f32>,
 };
 
 @group(0) @binding(0)
-var<uniform> locals: Locals;
+var<uniform> transform: Transform;
 
 struct VertexInput {
-    @location(0) position: vec3<f32>,
+    @location(0) position: vec4<f32>,
     @location(1) color: vec4<f32>,
     @builtin(instance_index) instance_index: u32,
 };
@@ -33,15 +32,6 @@ struct VertexOutput {
     @location(0) color: vec4<f32>,
 };
 
-fn transate(x: f32, y: f32) -> mat4x4<f32> {
-    return mat4x4<f32>(
-        vec4<f32>(1.0, 0.0, 0.0, 1.0),
-        vec4<f32>(0.0, 1.0, 0.0, 1.0),
-        vec4<f32>(0.0, 0.0, 1.0, 1.0),
-        vec4<f32>(x, y, 1.0, 1.0)
-    );
-}
-
 @vertex
 fn vs_main(
     model: VertexInput,
@@ -49,15 +39,13 @@ fn vs_main(
     let i = f32(model.instance_index);
     let n = select(i, 0.0, i % 2.0 == 0.0);
     let j = select(i, 0.0, i % 3.0 == 0.0);
-    let pos = vec4<f32>(model.position.x - n * 2.0, model.position.y - i * 2.0, model.position.z - j * 2.0, 1.0);
+    let pos = vec4<f32>(model.position.x - i * 2.0, model.position.y - n * 2.0, model.position.z - j * 2.0, 1.0);
 
-    var output: VertexOutput;
-    output.color = model.color;
-    output.position = locals.mvp * pos;
-
-    return output;
+    var out: VertexOutput;
+    out.color = model.color;
+    out.position = transform.mvp * pos;
+    return out;
 }
-
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
@@ -73,14 +61,14 @@ struct State {
     ebo: Buffer,
     ubo: Buffer,
     bind_group: BindGroup,
-    mvp: Mat4,
     angle: f32,
+    mvp: Mat4,
 }
 
 impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
         #[rustfmt::skip]
-        let positions: &[f32] = &[
+            let vertices: &[f32] = &[
             -1.0, -1.0, -1.0,
             1.0, -1.0, -1.0,
             1.0,  1.0, -1.0,
@@ -111,9 +99,16 @@ impl State {
             1.0,  1.0,  1.0,
             1.0,  1.0, -1.0,
         ];
+        let pos_vbo = gfx.create_vertex_buffer(vertices).build()?;
+
+        let colors = (0..INSTANCES)
+            .map(|_| Color::rgb(random::gen(), random::gen(), random::gen()).to_rgba())
+            .collect::<Vec<_>>();
+
+        let color_vbo = gfx.create_vertex_buffer(&colors).build()?;
 
         #[rustfmt::skip]
-        let indices = &[
+            let indices: &[u16] = &[
             0, 1, 2,  0, 2, 3,
             6, 5, 4,  7, 6, 4,
             8, 9, 10,  8, 10, 11,
@@ -121,14 +116,6 @@ impl State {
             16, 17, 18,  16, 18, 19,
             22, 21, 20,  23, 22, 20
         ];
-
-        let colors = &(0..INSTANCES)
-            .flat_map(|_| [random::gen(), random::gen(), random::gen(), 1.0])
-            .collect::<Vec<f32>>();
-
-        let pos_vbo = gfx.create_vertex_buffer(positions).build()?;
-        let color_vbo = gfx.create_vertex_buffer(colors).build()?;
-
         let ebo = gfx.create_index_buffer(indices).build()?;
 
         let mvp = create_mvp();
@@ -152,6 +139,7 @@ impl State {
             )
             .with_bind_group(&bind_group)
             .with_index_format(IndexFormat::UInt16)
+            .with_cull_mode(CullMode::Front)
             .build()?;
 
         Ok(State {
@@ -161,8 +149,8 @@ impl State {
             ebo,
             ubo,
             bind_group,
-            mvp,
             angle: 0.0,
+            mvp,
         })
     }
 
@@ -197,7 +185,7 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.pos_vbo, &state.color_vbo, &state.ebo]);
     renderer.apply_bindings(&[&state.bind_group]);
-    renderer.draw_instanced(0..36, INSTANCES as _);
+    renderer.draw_instanced(0..36, INSTANCES);
     gfx.render(evt.window_id, &renderer).unwrap();
 }
 
