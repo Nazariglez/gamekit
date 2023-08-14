@@ -1,8 +1,8 @@
 use gamekit::app::event;
 use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
+use gamekit::platform::Platform;
 use gamekit::prelude::*;
-use gk_backend::Platform;
-use gk_gfx::CullMode;
+use gk_gfx::CompareMode;
 
 // TODO https://paroj.github.io/gltut/Positioning/Tut05%20Overlap%20and%20Depth%20Buffering.html
 
@@ -24,7 +24,7 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.color = model.color;
-    out.position = vec4<f32>(model.position - 0.5, 1.0);
+    out.position = vec4<f32>(model.position.xy - 0.5, model.position.z, 1.0);
     return out;
 }
 
@@ -49,22 +49,22 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x3)
                     .with_attr(1, VertexFormat::Float32x3),
             )
-            // .with_cull_mode(CullMode::Front)
+            .with_depth_stencil(CompareMode::Less, true)
             .build()?;
 
         #[rustfmt::skip]
         let vertices: &[f32] = &[
-            0.4, 1.2, 0.5,   1.0, 0.0, 0.0,
-            0.5, 1.2, 0.5,  1.0, 0.0, 0.0,
-            0.0, -0.2, 0.9,  1.0, 0.0, 0.0,
+            0.4, 1.2, 0.0,   1.0, 0.1, 0.2,
+            0.5, 1.2, 0.0,  1.0, 0.1, 0.2,
+            0.0, -0.2, 1.0,  1.0, 0.1, 0.2,
 
-            -0.2, 0.1, 0.5,   0.0, 1.0, 0.0,
-            -0.2, 0.0, 0.5,  0.0, 1.0, 0.0,
-            1.2, 0.0, 0.9,  0.0, 1.0, 0.0,
+            -0.2, 0.1, 0.0,   0.1, 1.0, 0.2,
+            -0.2, 0.0, 0.0,  0.1, 1.0, 0.2,
+            1.2, 0.0, 1.0,  0.1, 1.0, 0.2,
 
-            1.0, -0.2, 0.5,  0.0, 0.0, 1.0,
-            0.9, -0.2, 0.5,  0.0, 0.0, 1.0,
-            0.2, 1.2, 0.9,   0.0, 0.0, 1.0,
+            1.0, -0.2, 0.0,  0.1, 0.2, 1.0,
+            0.9, -0.2, 0.0,  0.1, 0.2, 1.0,
+            0.2, 1.2, 1.0,   0.1, 0.2, 1.0,
         ];
 
         let vbo = gfx.create_vertex_buffer(vertices).build()?;

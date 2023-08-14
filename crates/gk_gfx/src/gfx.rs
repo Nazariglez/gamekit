@@ -1,9 +1,10 @@
 use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
-    BufferUsage, CullMode, Device, GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive,
-    RenderPipeline, Sampler, SamplerDescriptor, Texture, TextureBinding, TextureData,
-    TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, UniformBinding, VertexLayout,
+    BufferUsage, CompareMode, CullMode, DepthStencil, Device, GKBuffer, GfxAttributes, GfxConfig,
+    IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor, Texture, TextureBinding,
+    TextureData, TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, UniformBinding,
+    VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -133,6 +134,14 @@ impl<'a> RenderPipelineBuilder<'a> {
 
     pub fn with_fragment_entry(mut self, entry: &'a str) -> Self {
         self.desc.fs_entry = Some(entry);
+        self
+    }
+
+    pub fn with_depth_stencil(mut self, mode: CompareMode, write: bool) -> Self {
+        self.desc.depth_stencil = Some(DepthStencil {
+            write,
+            compare: mode,
+        });
         self
     }
 

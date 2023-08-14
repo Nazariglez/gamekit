@@ -22,8 +22,11 @@ pub struct RenderPipelineDescriptor<'a> {
     pub fs_entry: Option<&'a str>,
 }
 
-#[derive(Default, Debug, Copy, Clone)]
-pub struct DepthStencil;
+#[derive(Debug, Copy, Clone)]
+pub struct DepthStencil {
+    pub write: bool,
+    pub compare: CompareMode,
+}
 
 #[derive(Default, Debug, Copy, Clone)]
 pub enum Primitive {
@@ -47,4 +50,16 @@ pub struct ClearOptions {
     pub color: Option<Color>,
     pub depth: Option<f32>,
     pub stencil: Option<u32>,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum CompareMode {
+    Never,
+    Less,
+    Equal,
+    LEqual,
+    Greater,
+    NotEqual,
+    GEqual,
+    Always,
 }

@@ -1,7 +1,9 @@
 use crate::color::Color;
+use crate::consts::SURFACE_DEFAULT_DEPTH_FORMAT;
 use crate::{
-    BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, CullMode, IndexFormat,
-    Primitive, Texture, TextureFilter, TextureFormat, TextureWrap, VertexFormat, VertexStepMode,
+    BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, CompareMode, CullMode,
+    DepthStencil, IndexFormat, Primitive, Texture, TextureFilter, TextureFormat, TextureWrap,
+    VertexFormat, VertexStepMode,
 };
 use wgpu::BufferUsages;
 
@@ -77,7 +79,8 @@ pub fn wgpu_primitive(primitive: Primitive) -> wgpu::PrimitiveTopology {
 pub fn wgpu_texture_format(format: TextureFormat) -> wgpu::TextureFormat {
     match format {
         TextureFormat::Rgba8UnormSrgb => wgpu::TextureFormat::Rgba8UnormSrgb,
-        TextureFormat::Depth => wgpu::TextureFormat::Depth24Plus,
+        // TextureFormat::Depth16 => wgpu::TextureFormat::Depth16Unorm,
+        TextureFormat::Depth32Float => wgpu::TextureFormat::Depth32Float,
     }
 }
 
@@ -165,4 +168,27 @@ pub fn wgpu_cull_mode(mode: CullMode) -> wgpu::Face {
         CullMode::Front => wgpu::Face::Front,
         CullMode::Back => wgpu::Face::Back,
     }
+}
+
+pub fn wgpu_compare_mode(mode: CompareMode) -> wgpu::CompareFunction {
+    match mode {
+        CompareMode::Never => wgpu::CompareFunction::Never,
+        CompareMode::Less => wgpu::CompareFunction::Less,
+        CompareMode::Equal => wgpu::CompareFunction::Equal,
+        CompareMode::LEqual => wgpu::CompareFunction::LessEqual,
+        CompareMode::Greater => wgpu::CompareFunction::Greater,
+        CompareMode::NotEqual => wgpu::CompareFunction::NotEqual,
+        CompareMode::GEqual => wgpu::CompareFunction::GreaterEqual,
+        CompareMode::Always => wgpu::CompareFunction::Always,
+    }
+}
+
+pub fn wgpu_depth_stencil(depth: Option<DepthStencil>) -> Option<wgpu::DepthStencilState> {
+    depth.map(|depth| wgpu::DepthStencilState {
+        format: wgpu_texture_format(SURFACE_DEFAULT_DEPTH_FORMAT),
+        depth_write_enabled: depth.write,
+        depth_compare: wgpu_compare_mode(depth.compare),
+        stencil: Default::default(),
+        bias: Default::default(),
+    })
 }

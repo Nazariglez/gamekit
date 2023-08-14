@@ -6,14 +6,15 @@ use super::texture::Texture;
 use super::utils::wgpu_color;
 use crate::attrs::GfxAttributes;
 use crate::buffer::{BufferDescriptor, BufferUsage};
+use crate::consts::SURFACE_DEFAULT_DEPTH_FORMAT;
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
-    wgpu_blend_mode, wgpu_buffer_usages, wgpu_cull_mode, wgpu_index_format, wgpu_primitive,
-    wgpu_shader_visibility, wgpu_step_mode, wgpu_texture_filter, wgpu_texture_format,
-    wgpu_texture_wrap, wgpu_vertex_format,
+    wgpu_blend_mode, wgpu_buffer_usages, wgpu_cull_mode, wgpu_depth_stencil, wgpu_index_format,
+    wgpu_primitive, wgpu_shader_visibility, wgpu_step_mode, wgpu_texture_filter,
+    wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format,
 };
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
@@ -158,13 +159,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     cull_mode: desc.cull_mode.map(wgpu_cull_mode),
                     ..Default::default()
                 },
-                depth_stencil: None, /*Some(wgpu::DepthStencilState {
-                                         format: wgpu::TextureFormat::Depth24Plus,
-                                         depth_write_enabled: true,
-                                         depth_compare: wgpu::CompareFunction::Less,
-                                         stencil: Default::default(),
-                                         bias: Default::default(),
-                                     }),*/
+                depth_stencil: wgpu_depth_stencil(desc.depth_stencil),
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
             });
@@ -211,7 +206,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             depth_or_array_layers: 1,
         });
 
-        let is_depth_texture = matches!(desc.format, TextureFormat::Depth);
+        let is_depth_texture = matches!(desc.format, TextureFormat::Depth32Float);
         let mut usage = wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST;
         if is_depth_texture {
             usage |= wgpu::TextureUsages::RENDER_ATTACHMENT;
@@ -390,7 +385,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             self.depth_texture = Some(self.create_texture(
                 TextureDescriptor {
                     label: None,
-                    format: TextureFormat::Depth,
+                    format: SURFACE_DEFAULT_DEPTH_FORMAT, // TODO allow to configure the format somehow?
                 },
                 Some(TextureData {
                     bytes: &[],
@@ -405,6 +400,8 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             //     rp.pipeline.is_some(),
             //     "A pipeline must be set on the RenderPass"
             // );
+
+            // TODO check pipeline color attachment and depth and do Load instead of clear if needed.
 
             // TODO stencil
             let (color, depth, stencil) = rp
