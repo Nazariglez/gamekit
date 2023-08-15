@@ -37,7 +37,7 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
                 } => {
                     let w = (width as f64 * scale_factor) as u32;
                     let h = (height as f64 * scale_factor) as u32;
-                    gfx.resize(evt.id, w, h);
+                    gfx.resize(evt.id, w, h).unwrap();
                 }
                 WindowEventId::Minimized => {}
                 WindowEventId::Maximized => {}

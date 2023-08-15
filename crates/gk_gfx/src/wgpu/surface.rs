@@ -1,5 +1,6 @@
 use super::context::Context;
 use crate::attrs::GfxAttributes;
+use crate::Texture;
 use gk_app::window::GKWindow;
 use wgpu::{
     Device, Surface as RawSurface, SurfaceCapabilities, SurfaceConfiguration, SurfaceTexture,
@@ -9,6 +10,7 @@ pub(crate) struct Surface {
     pub surface: RawSurface,
     pub config: SurfaceConfiguration,
     pub capabilities: SurfaceCapabilities,
+    pub depth_texture: Option<Texture>,
 }
 
 impl Surface {
@@ -50,6 +52,7 @@ impl Surface {
             surface,
             config,
             capabilities,
+            depth_texture: None,
         })
     }
 
@@ -63,5 +66,9 @@ impl Surface {
         self.surface
             .get_current_texture()
             .map_err(|e| e.to_string())
+    }
+
+    pub fn add_depth_texture(&mut self, tex: Texture) {
+        self.depth_texture = Some(tex);
     }
 }

@@ -69,8 +69,8 @@ impl Gfx {
         BindGroupBuilder::new(self)
     }
 
-    pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
-        self.raw.resize(id, width, height);
+    pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) -> Result<(), String> {
+        self.raw.resize(id, width, height)
     }
 
     pub fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
