@@ -370,7 +370,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         &self.ctx.queue,
                         surface,
                         self.depth_format,
-                        Some("Resize surface's depth texture"),
+                        Some("Initialize surface's depth texture"),
                     )?;
                 }
 
@@ -380,28 +380,57 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 let (color, depth, stencil) = rp
                     .clear_options
                     .map(|clear| {
-                        let color = clear.color.map(|color| wgpu::RenderPassColorAttachment {
+                        let color = Some(wgpu::RenderPassColorAttachment {
                             view: &view,
                             resolve_target: None,
                             ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Clear(wgpu_color(color)),
+                                load: clear.color.map_or(wgpu::LoadOp::Load, |color| {
+                                    wgpu::LoadOp::Clear(wgpu_color(color))
+                                }),
                                 store: true,
                             },
                         });
 
-                        let depth = clear.depth.map(|depth| wgpu::Operations {
-                            load: wgpu::LoadOp::Clear(1.0),
-                            store: false,
-                        });
+                        let depth = if pip.uses_depth {
+                            Some(wgpu::Operations {
+                                load: clear
+                                    .depth
+                                    .map_or(wgpu::LoadOp::Load, |depth| wgpu::LoadOp::Clear(depth)),
+                                store: false,
+                            })
+                        } else {
+                            None
+                        };
 
-                        let stencil = clear.stencil.map(|stencil| wgpu::Operations {
-                            load: wgpu::LoadOp::Clear(stencil),
-                            store: false,
-                        });
+                        let stencil = None; // TODO
+                                            /*clear.stencil.map(|stencil| wgpu::Operations {
+                                                load: wgpu::LoadOp::Clear(stencil),
+                                                store: false,
+                                            });*/
 
                         (color, depth, stencil)
                     })
-                    .unwrap_or_default();
+                    .unwrap_or_else(|| {
+                        let default_color_attachment = wgpu::RenderPassColorAttachment {
+                            view: &view,
+                            resolve_target: None,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Load,
+                                store: true,
+                            },
+                        };
+
+                        let default_depth = if pip.uses_depth {
+                            Some(wgpu::Operations {
+                                load: wgpu::LoadOp::Load,
+                                store: false,
+                            })
+                        } else {
+                            None
+                        };
+
+                        (Some(default_color_attachment), default_depth, None)
+                    });
 
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: None,
