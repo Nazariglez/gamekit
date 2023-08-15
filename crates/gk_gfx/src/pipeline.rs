@@ -63,3 +63,28 @@ pub enum CompareMode {
     GEqual,
     Always,
 }
+
+/// Represent's the stencil action
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum StencilAction {
+    Keep,
+    Zero,
+    Replace,
+    Increment,
+    IncrementWrap,
+    Decrement,
+    DecrementWrap,
+    Invert,
+}
+
+/// Represents the stencil's option
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct StencilOptions {
+    pub stencil_fail: StencilAction,
+    pub depth_fail: StencilAction,
+    pub pass: StencilAction,
+    pub compare: CompareMode,
+    pub read_mask: u32,
+    pub write_mask: u32,
+    pub reference: u32,
+}

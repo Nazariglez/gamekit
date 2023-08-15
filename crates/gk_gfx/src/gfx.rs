@@ -2,9 +2,9 @@ use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
     BufferUsage, CompareMode, CullMode, DepthStencil, Device, GKBuffer, GfxAttributes, GfxConfig,
-    IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor, Texture, TextureBinding,
-    TextureData, TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, UniformBinding,
-    VertexLayout,
+    IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor, StencilOptions, Texture,
+    TextureBinding, TextureData, TextureDescriptor, TextureFilter, TextureFormat, TextureWrap,
+    UniformBinding, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_app::window::{GKWindow, GKWindowId};
@@ -142,6 +142,11 @@ impl<'a> RenderPipelineBuilder<'a> {
             write,
             compare: mode,
         });
+        self
+    }
+
+    pub fn with_stencil(mut self, opts: StencilOptions) -> Self {
+        self.desc.stencil = Some(opts);
         self
     }
 
