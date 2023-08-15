@@ -8,6 +8,7 @@ use gk_gfx::CompareMode;
 // https://github.com/Nazariglez/notan/blob/0815528fd42e96fd1d2299871c3e49251cf684bf/crates/notan_draw/src/manager.rs#L202
 // https://maxammann.org/posts/2022/01/wgpu-stencil-testing/
 // https://stackoverflow.com/questions/76240723/why-webgpu-stencil-buffer-2d-clipping-result-invisible-when-antialias-enabled
+// https://learnopengl.com/Advanced-OpenGL/Stencil-testing
 
 // language=wgsl
 const SHADER: &str = r#"
