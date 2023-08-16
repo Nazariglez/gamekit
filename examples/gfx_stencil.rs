@@ -2,13 +2,14 @@ use gamekit::app::event;
 use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
-use gk_gfx::CompareMode;
+use gk_gfx::{CompareMode, Stencil, StencilAction};
 
 // TODO https://webglfundamentals.org/webgl/lessons/webgl-qna-how-to-use-the-stencil-buffer.html
 // https://github.com/Nazariglez/notan/blob/0815528fd42e96fd1d2299871c3e49251cf684bf/crates/notan_draw/src/manager.rs#L202
 // https://maxammann.org/posts/2022/01/wgpu-stencil-testing/
 // https://stackoverflow.com/questions/76240723/why-webgpu-stencil-buffer-2d-clipping-result-invisible-when-antialias-enabled
 // https://learnopengl.com/Advanced-OpenGL/Stencil-testing
+// https://carmencincotti.com/2022-06-13/webgpu-the-depth-texture/
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -53,7 +54,15 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x2)
                     .with_attr(1, VertexFormat::Float32x3),
             )
-            .with_stencil()
+            .with_stencil(Stencil {
+                stencil_fail: StencilAction::Keep,
+                depth_fail: StencilAction::Keep,
+                pass: StencilAction::Keep,
+                compare: CompareMode::Never,
+                read_mask: 0,
+                write_mask: 0,
+                reference: 0,
+            })
             .build()?;
 
         #[rustfmt::skip]

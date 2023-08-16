@@ -12,6 +12,7 @@ pub struct RenderPipelineDescriptor<'a> {
     pub label: Option<&'a str>,
     pub shader: &'a str,
     pub depth_stencil: Option<DepthStencil>,
+    pub stencil: Option<Stencil>,
     pub vertex_layout: ArrayVec<VertexLayout, MAX_VERTEX_BUFFERS>,
     pub primitive: Primitive,
     pub index_format: IndexFormat,
@@ -79,7 +80,7 @@ pub enum StencilAction {
 
 /// Represents the stencil's option
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct StencilOptions {
+pub struct Stencil {
     pub stencil_fail: StencilAction,
     pub depth_fail: StencilAction,
     pub pass: StencilAction,

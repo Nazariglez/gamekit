@@ -2,7 +2,7 @@ use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
     BufferUsage, CompareMode, CullMode, DepthStencil, Device, GKBuffer, GfxAttributes, GfxConfig,
-    IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor, StencilOptions, Texture,
+    IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor, Stencil, Texture,
     TextureBinding, TextureData, TextureDescriptor, TextureFilter, TextureFormat, TextureWrap,
     UniformBinding, VertexLayout,
 };
@@ -145,7 +145,7 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
-    pub fn with_stencil(mut self, opts: StencilOptions) -> Self {
+    pub fn with_stencil(mut self, opts: Stencil) -> Self {
         self.desc.stencil = Some(opts);
         self
     }

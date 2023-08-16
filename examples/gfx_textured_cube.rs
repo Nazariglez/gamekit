@@ -175,7 +175,8 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
         .unwrap();
 
     let mut renderer = Renderer::new();
-    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
+    renderer.begin(1600, 1200);
+    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
     renderer.apply_bindings(&[&state.bind_group]);

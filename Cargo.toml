@@ -13,7 +13,14 @@ description = "A set of helpers for making games with notan"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
+# optimize for speed and size
 opt-level = 2
+# link time optimization
+lto = true
+# remove debug symbols
+strip = true
+# do not parallelize optimizations
+codegen-units = 1
 
 [profile.dev.package."*"]
 opt-level = 2
@@ -74,3 +81,5 @@ serde = ["gk_app/serde", "gk_backend/serde"]
 puffin = ["dep:puffin", "gk_app/puffin", "gk_gfx/puffin"]
 # re-export fastrand
 random = ["fastrand"]
+# force the use of webgl
+webgl = ["gk_gfx/webgl"]
