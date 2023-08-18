@@ -87,5 +87,5 @@ pub struct Stencil {
     pub compare: CompareMode,
     pub read_mask: u32,
     pub write_mask: u32,
-    pub reference: u32,
+    pub reference: u8,
 }

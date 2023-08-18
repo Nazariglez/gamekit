@@ -43,6 +43,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 struct State {
     pip: RenderPipeline,
     vbo: Buffer,
+    mask_pip: RenderPipeline,
+    mask_vbo: Buffer,
 }
 
 impl State {
@@ -57,11 +59,11 @@ impl State {
             .with_stencil(Stencil {
                 stencil_fail: StencilAction::Keep,
                 depth_fail: StencilAction::Keep,
-                pass: StencilAction::Keep,
-                compare: CompareMode::Never,
-                read_mask: 0,
-                write_mask: 0,
-                reference: 0,
+                pass: StencilAction::Replace,
+                compare: CompareMode::Always,
+                read_mask: 0xff,
+                write_mask: 0xff,
+                reference: 1,
             })
             .build()?;
 
@@ -70,15 +72,44 @@ impl State {
             0.5, 1.0,   1.0, 0.0, 0.0,
             0.0, 0.0,   0.0, 1.0, 0.0,
             1.0, 0.0,   0.0, 0.0, 1.0,
+        ];
 
+        let vbo = gfx.create_vertex_buffer(vertices).build()?;
+
+        let mask_pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_attr(0, VertexFormat::Float32x2)
+                    .with_attr(1, VertexFormat::Float32x3),
+            )
+            .with_depth_stencil(CompareMode::Never, true)
+            .with_stencil(Stencil {
+                stencil_fail: StencilAction::Keep,
+                depth_fail: StencilAction::Keep,
+                pass: StencilAction::Replace,
+                compare: CompareMode::Equal,
+                read_mask: 0xff,
+                write_mask: 0x00,
+                reference: 1,
+            })
+            .build()?;
+
+        #[rustfmt::skip]
+        let vertices: &[f32] = &[
             0.5, 0.1,   0.0, 0.0, 0.0,
             0.65, 0.5,   0.0, 0.0, 0.0,
             0.35, 0.5,   0.0, 0.0, 0.0,
         ];
 
-        let vbo = gfx.create_vertex_buffer(vertices).build()?;
+        let mask_vbo = gfx.create_vertex_buffer(vertices).build()?;
 
-        Ok(State { pip, vbo })
+        Ok(State {
+            pip,
+            vbo,
+            mask_pip,
+            mask_vbo,
+        })
     }
 }
 
@@ -93,9 +124,18 @@ fn main() -> Result<(), String> {
 fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(1600, 1200);
-    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
-    renderer.draw(0..6);
+    renderer.draw(0..3);
+    // gfx.render(evt.window_id, &renderer).unwrap();
+
+    // let mut renderer = Renderer::new();
+    renderer.begin(1600, 1200);
+    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+    renderer.apply_pipeline(&state.mask_pip);
+    renderer.apply_buffers(&[&state.mask_vbo]);
+    renderer.draw(0..3);
+
     gfx.render(evt.window_id, &renderer).unwrap();
 }

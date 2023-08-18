@@ -2,10 +2,10 @@ use crate::color::Color;
 use crate::consts::SURFACE_DEFAULT_DEPTH_FORMAT;
 use crate::{
     BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, CompareMode, CullMode,
-    DepthStencil, IndexFormat, Primitive, Texture, TextureFilter, TextureFormat, TextureWrap,
-    VertexFormat, VertexStepMode,
+    DepthStencil, IndexFormat, Primitive, Stencil, StencilAction, Texture, TextureFilter,
+    TextureFormat, TextureWrap, VertexFormat, VertexStepMode,
 };
-use wgpu::BufferUsages;
+use wgpu::{BufferUsages, CompareFunction};
 
 pub fn wgpu_color(color: Color) -> wgpu::Color {
     wgpu::Color {
@@ -80,7 +80,7 @@ pub fn wgpu_texture_format(format: TextureFormat) -> wgpu::TextureFormat {
     match format {
         TextureFormat::Rgba8UnormSrgb => wgpu::TextureFormat::Rgba8UnormSrgb,
         // TextureFormat::Depth16 => wgpu::TextureFormat::Depth16Unorm,
-        TextureFormat::Depth32Float => wgpu::TextureFormat::Depth32Float,
+        TextureFormat::Depth32Float => wgpu::TextureFormat::Depth24PlusStencil8,
     }
 }
 
@@ -183,12 +183,51 @@ pub fn wgpu_compare_mode(mode: CompareMode) -> wgpu::CompareFunction {
     }
 }
 
-pub fn wgpu_depth_stencil(depth: Option<DepthStencil>) -> Option<wgpu::DepthStencilState> {
-    depth.map(|depth| wgpu::DepthStencilState {
+pub fn wgpu_depth_stencil(
+    depth: Option<DepthStencil>,
+    stencil: Option<Stencil>,
+) -> Option<wgpu::DepthStencilState> {
+    if depth.is_none() && stencil.is_none() {
+        return None;
+    }
+
+    let (depth_write_enabled, depth_compare) = match depth {
+        None => (false, CompareFunction::Never),
+        Some(depth) => (depth.write, wgpu_compare_mode(depth.compare)),
+    };
+
+    Some(wgpu::DepthStencilState {
         format: wgpu_texture_format(SURFACE_DEFAULT_DEPTH_FORMAT),
-        depth_write_enabled: depth.write,
-        depth_compare: wgpu_compare_mode(depth.compare),
-        stencil: Default::default(),
+        depth_write_enabled,
+        depth_compare,
+        stencil: stencil.map_or(Default::default(), |stencil| {
+            let stencil_face = wgpu::StencilFaceState {
+                compare: wgpu_compare_mode(stencil.compare),
+                fail_op: wgpu_stencil_operation(stencil.stencil_fail),
+                depth_fail_op: wgpu_stencil_operation(stencil.depth_fail),
+                pass_op: wgpu_stencil_operation(stencil.pass),
+            };
+
+            wgpu::StencilState {
+                front: stencil_face,
+                back: stencil_face,
+                read_mask: stencil.read_mask,
+                write_mask: stencil.write_mask,
+            }
+        }),
         bias: Default::default(),
     })
+}
+
+fn wgpu_stencil_operation(action: StencilAction) -> wgpu::StencilOperation {
+    match action {
+        StencilAction::Keep => wgpu::StencilOperation::Keep,
+        StencilAction::Zero => wgpu::StencilOperation::Zero,
+        StencilAction::Replace => wgpu::StencilOperation::Replace,
+        StencilAction::Increment => wgpu::StencilOperation::IncrementClamp,
+        StencilAction::IncrementWrap => wgpu::StencilOperation::IncrementWrap,
+        StencilAction::Decrement => wgpu::StencilOperation::DecrementClamp,
+        StencilAction::DecrementWrap => wgpu::StencilOperation::DecrementWrap,
+        StencilAction::Invert => wgpu::StencilOperation::Invert,
+    }
 }

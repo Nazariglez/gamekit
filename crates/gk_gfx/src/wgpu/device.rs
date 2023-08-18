@@ -138,6 +138,11 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
         // https://github.com/jack1232/wgpu07/blob/89863fd1cbfd74d8993cb854bd03573b9041e3d7/src/main.rs
 
+        println!(
+            "\n\n -------> {:?}",
+            wgpu_depth_stencil(desc.depth_stencil, desc.stencil)
+        );
+
         let raw = self
             .ctx
             .device
@@ -159,7 +164,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     cull_mode: desc.cull_mode.map(wgpu_cull_mode),
                     ..Default::default()
                 },
-                depth_stencil: wgpu_depth_stencil(desc.depth_stencil),
+                depth_stencil: wgpu_depth_stencil(desc.depth_stencil, desc.stencil),
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
             });
@@ -169,6 +174,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             raw,
             index_format,
             uses_depth: desc.depth_stencil.is_some(),
+            uses_stencil: desc.stencil.is_some(),
         })
     }
 
@@ -350,9 +356,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
-        // TODO check if depth is necessary
-        // https://github.com/sotrh/learn-wgpu/blob/master/code/beginner/tutorial8-depth/src/lib.rs
-
         renderer
             .passes
             .iter()
@@ -363,8 +366,9 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 );
 
                 let pip = rp.pipeline.unwrap();
+                let uses_depth_tex = pip.uses_depth || pip.uses_stencil;
                 // initialize depth texture on the surface if needed
-                if pip.uses_depth && surface.depth_texture.is_none() {
+                if uses_depth_tex && surface.depth_texture.is_none() {
                     add_depth_texture_to(
                         &self.ctx.device,
                         &self.ctx.queue,
@@ -374,9 +378,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     )?;
                 }
 
-                // TODO check pipeline color attachment and depth and do Load instead of clear if needed.
-
-                // TODO stencil
                 let (color, depth, stencil) = rp
                     .clear_options
                     .map(|clear| {
@@ -402,11 +403,16 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                             None
                         };
 
-                        let stencil = None; // TODO
-                                            /*clear.stencil.map(|stencil| wgpu::Operations {
-                                                load: wgpu::LoadOp::Clear(stencil),
-                                                store: false,
-                                            });*/
+                        let stencil = if pip.uses_stencil {
+                            Some(wgpu::Operations {
+                                load: clear.stencil.map_or(wgpu::LoadOp::Load, |stencil| {
+                                    wgpu::LoadOp::Clear(stencil)
+                                }),
+                                store: false,
+                            })
+                        } else {
+                            None
+                        };
 
                         (color, depth, stencil)
                     })
@@ -429,8 +435,26 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                             None
                         };
 
-                        (Some(default_color_attachment), default_depth, None)
+                        let default_stencil = if pip.uses_stencil {
+                            Some(wgpu::Operations {
+                                load: wgpu::LoadOp::Load,
+                                store: false,
+                            })
+                        } else {
+                            None
+                        };
+
+                        (
+                            Some(default_color_attachment),
+                            default_depth,
+                            default_stencil,
+                        )
                     });
+
+                println!(
+                    "\n ---> CLEAR DEPTH STENCIL depth:{:?} stencil:{:?} \n",
+                    depth, stencil
+                );
 
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: None,
@@ -471,6 +495,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     });
 
                     if !rp.vertices.is_empty() {
+                        // rpass.set_stencil_reference(1);
                         let instances = 0..rp.instances.unwrap_or(1);
                         if indexed {
                             rpass.draw_indexed(rp.vertices.clone(), 0, instances);
