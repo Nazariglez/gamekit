@@ -1,11 +1,12 @@
 use crate::color::Color;
 use crate::consts::SURFACE_DEFAULT_DEPTH_FORMAT;
 use crate::{
-    BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, CompareMode, CullMode,
-    DepthStencil, IndexFormat, Primitive, Stencil, StencilAction, Texture, TextureFilter,
+    BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, ColorMask, CompareMode,
+    CullMode, DepthStencil, IndexFormat, Primitive, Stencil, StencilAction, Texture, TextureFilter,
     TextureFormat, TextureWrap, VertexFormat, VertexStepMode,
 };
-use wgpu::{BufferUsages, CompareFunction};
+use bitflags::Flags;
+use wgpu::{BufferUsages, ColorWrites, CompareFunction};
 
 pub fn wgpu_color(color: Color) -> wgpu::Color {
     wgpu::Color {
@@ -230,4 +231,25 @@ fn wgpu_stencil_operation(action: StencilAction) -> wgpu::StencilOperation {
         StencilAction::DecrementWrap => wgpu::StencilOperation::DecrementWrap,
         StencilAction::Invert => wgpu::StencilOperation::Invert,
     }
+}
+
+pub fn wgpu_write_mask(mask: ColorMask) -> wgpu::ColorWrites {
+    let mut raw_mask = ColorWrites::empty();
+    if mask.r {
+        raw_mask |= ColorWrites::RED;
+    }
+
+    if mask.g {
+        raw_mask |= ColorWrites::GREEN;
+    }
+
+    if mask.b {
+        raw_mask |= ColorWrites::BLUE;
+    }
+
+    if mask.a {
+        raw_mask |= ColorWrites::ALPHA;
+    }
+
+    raw_mask
 }

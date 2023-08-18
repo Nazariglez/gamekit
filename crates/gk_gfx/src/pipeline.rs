@@ -21,6 +21,7 @@ pub struct RenderPipelineDescriptor<'a> {
     pub cull_mode: Option<CullMode>,
     pub vs_entry: Option<&'a str>,
     pub fs_entry: Option<&'a str>,
+    pub color_mask: ColorMask,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -88,4 +89,40 @@ pub struct Stencil {
     pub read_mask: u32,
     pub write_mask: u32,
     pub reference: u8,
+}
+
+/// Represents the color mask
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct ColorMask {
+    pub r: bool,
+    pub g: bool,
+    pub b: bool,
+    pub a: bool,
+}
+
+impl Default for ColorMask {
+    fn default() -> Self {
+        Self {
+            r: true,
+            g: true,
+            b: true,
+            a: true,
+        }
+    }
+}
+
+impl ColorMask {
+    pub const ALL: ColorMask = ColorMask {
+        r: true,
+        g: true,
+        b: true,
+        a: true,
+    };
+
+    pub const NONE: ColorMask = ColorMask {
+        r: false,
+        g: false,
+        b: false,
+        a: false,
+    };
 }

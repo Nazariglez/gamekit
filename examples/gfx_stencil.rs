@@ -2,7 +2,7 @@ use gamekit::app::event;
 use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
-use gk_gfx::{CompareMode, Stencil, StencilAction};
+use gk_gfx::{ColorMask, CompareMode, Stencil, StencilAction};
 
 // TODO https://webglfundamentals.org/webgl/lessons/webgl-qna-how-to-use-the-stencil-buffer.html
 // https://github.com/Nazariglez/notan/blob/0815528fd42e96fd1d2299871c3e49251cf684bf/crates/notan_draw/src/manager.rs#L202
@@ -65,6 +65,7 @@ impl State {
                 write_mask: 0xff,
                 reference: 1,
             })
+            .with_color_mask(ColorMask::NONE)
             .build()?;
 
         #[rustfmt::skip]
@@ -93,6 +94,7 @@ impl State {
                 write_mask: 0x00,
                 reference: 1,
             })
+            .with_color_mask(ColorMask::ALL)
             .build()?;
 
         #[rustfmt::skip]

@@ -14,7 +14,7 @@ use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
     wgpu_blend_mode, wgpu_buffer_usages, wgpu_cull_mode, wgpu_depth_stencil, wgpu_index_format,
     wgpu_primitive, wgpu_shader_visibility, wgpu_step_mode, wgpu_texture_filter,
-    wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format,
+    wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format, wgpu_write_mask,
 };
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
@@ -133,6 +133,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
         let swapchain_color_target: wgpu::ColorTargetState = swapchain_format.into();
         let color_target = wgpu::ColorTargetState {
             blend: desc.blend_mode.map_or(None, |bm| Some(wgpu_blend_mode(bm))),
+            write_mask: wgpu_write_mask(desc.color_mask),
             ..swapchain_color_target
         };
 
