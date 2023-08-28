@@ -41,15 +41,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
 #[derive(AppState)]
 struct State {
-    pip: RenderPipeline,
-    vbo: Buffer,
     mask_pip: RenderPipeline,
     mask_vbo: Buffer,
+    pip: RenderPipeline,
+    vbo: Buffer,
 }
 
 impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
-        let pip = gfx
+        let mask_pip = gfx
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
                 VertexLayout::new()
@@ -65,19 +65,9 @@ impl State {
                 write_mask: 0xff,
                 reference: 1,
             })
-            .with_color_mask(ColorMask::NONE)
             .build()?;
 
-        #[rustfmt::skip]
-        let vertices: &[f32] = &[
-            0.5, 1.0,   1.0, 0.0, 0.0,
-            0.0, 0.0,   0.0, 1.0, 0.0,
-            1.0, 0.0,   0.0, 0.0, 1.0,
-        ];
-
-        let vbo = gfx.create_vertex_buffer(vertices).build()?;
-
-        let mask_pip = gfx
+        let pip = gfx
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
                 VertexLayout::new()
@@ -88,23 +78,51 @@ impl State {
             .with_stencil(Stencil {
                 stencil_fail: StencilAction::Keep,
                 depth_fail: StencilAction::Keep,
-                pass: StencilAction::Replace,
+                pass: StencilAction::Keep,
                 compare: CompareMode::Equal,
                 read_mask: 0xff,
                 write_mask: 0x00,
                 reference: 1,
             })
-            .with_color_mask(ColorMask::ALL)
             .build()?;
 
         #[rustfmt::skip]
-        let vertices: &[f32] = &[
-            0.5, 0.1,   0.0, 0.0, 0.0,
-            0.65, 0.5,   0.0, 0.0, 0.0,
-            0.35, 0.5,   0.0, 0.0, 0.0,
+        let mask_vertices: &[f32] = &[
+            0.5, 1.35, 1.0, 1.0, 1.0,
+            0.25, 0.85, 1.0, 1.0, 1.0,
+            0.75, 0.85, 1.0, 1.0, 1.0,
+
+            0.75, 0.85, 1.0, 1.0, 1.0,
+            0.5, 0.35, 1.0, 1.0, 1.0,
+            1.0, 0.35, 1.0, 1.0, 1.0,
+
+            0.25, 0.85, 1.0, 1.0, 1.0,
+            0.0, 0.35, 1.0, 1.0, 1.0,
+            0.5, 0.35, 1.0, 1.0, 1.0,
+
+            0.5, 0.35, 1.0, 1.0, 1.0,
+            0.25, -0.15, 1.0, 1.0, 1.0,
+            0.75, -0.15, 1.0, 1.0, 1.0,
+
+            1.0, 0.35, 1.0, 1.0, 1.0,
+            0.75, -0.15, 1.0, 1.0, 1.0,
+            1.25, -0.15, 1.0, 1.0, 1.0,
+
+            0.0, 0.35, 1.0, 1.0, 1.0,
+            -0.25, -0.15, 1.0, 1.0, 1.0,
+            0.25, -0.15, 1.0, 1.0, 1.0,
         ];
 
-        let mask_vbo = gfx.create_vertex_buffer(vertices).build()?;
+        let mask_vbo = gfx.create_vertex_buffer(mask_vertices).build()?;
+
+        #[rustfmt::skip]
+        let vertices: &[f32] = &[
+            0.5, 1.0, 1.0, 0.2, 0.3,
+            0.0, 0.0, 0.1, 1.0, 0.3,
+            1.0, 0.0, 0.1, 0.2, 1.0,
+        ];
+
+        let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
         Ok(State {
             pip,
@@ -127,16 +145,15 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(1600, 1200);
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo]);
-    renderer.draw(0..3);
-    // gfx.render(evt.window_id, &renderer).unwrap();
-
-    // let mut renderer = Renderer::new();
-    renderer.begin(1600, 1200);
-    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.mask_pip);
     renderer.apply_buffers(&[&state.mask_vbo]);
+    // renderer.stencil_reference(1);
+    renderer.draw(0..18);
+
+    renderer.begin(1600, 1200);
+    renderer.apply_pipeline(&state.pip);
+    renderer.apply_buffers(&[&state.vbo]);
+    // renderer.stencil_reference(1);
     renderer.draw(0..3);
 
     gfx.render(evt.window_id, &renderer).unwrap();
