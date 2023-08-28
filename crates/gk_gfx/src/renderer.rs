@@ -21,6 +21,7 @@ pub struct RenderPass<'a> {
     pub(crate) vertices: Range<u32>,
     pub(crate) instances: Option<u32>,
     pub(crate) bind_groups: ArrayVec<&'a BindGroup, MAX_BIND_GROUPS_PER_PIPELINE>,
+    pub(crate) stencil_ref: Option<u8>,
 }
 
 #[derive(Default)]
@@ -67,6 +68,12 @@ impl<'a> Renderer<'a> {
         if let Some(rp) = self.passes.last_mut() {
             rp.bind_groups = ArrayVec::new();
             rp.bind_groups.try_extend_from_slice(groups).unwrap();
+        }
+    }
+
+    pub fn stencil_reference(&mut self, stencil: u8) {
+        if let Some(rp) = self.passes.last_mut() {
+            rp.stencil_ref = Some(stencil);
         }
     }
 

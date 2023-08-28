@@ -495,6 +495,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         rpass.set_bind_group(i as _, &bg.raw, &[]);
                     });
 
+                    if let Some(sr) = rp.stencil_ref {
+                        rpass.set_stencil_reference(sr as _);
+                    }
+
                     if !rp.vertices.is_empty() {
                         // rpass.set_stencil_reference(1);
                         let instances = 0..rp.instances.unwrap_or(1);
