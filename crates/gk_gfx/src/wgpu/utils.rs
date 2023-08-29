@@ -193,7 +193,7 @@ pub fn wgpu_depth_stencil(
     }
 
     let (depth_write_enabled, depth_compare) = match depth {
-        None => (false, CompareFunction::Never),
+        None => (false, CompareFunction::Always),
         Some(depth) => (depth.write, wgpu_compare_mode(depth.compare)),
     };
 

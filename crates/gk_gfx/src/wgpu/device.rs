@@ -361,6 +361,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             .passes
             .iter()
             .try_for_each(|rp| -> Result<(), String> {
+                println!("# render pass start");
                 debug_assert!(
                     rp.pipeline.is_some(),
                     "A pipeline must be set on the RenderPass"
@@ -368,6 +369,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
                 let pip = rp.pipeline.unwrap();
                 let uses_depth_tex = pip.uses_depth || pip.uses_stencil;
+                println!("PIP uses depth tex {:?}", uses_depth_tex);
                 // initialize depth texture on the surface if needed
                 if uses_depth_tex && surface.depth_texture.is_none() {
                     add_depth_texture_to(
@@ -398,7 +400,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                                 load: clear
                                     .depth
                                     .map_or(wgpu::LoadOp::Load, |depth| wgpu::LoadOp::Clear(depth)),
-                                store: false,
+                                store: true,
                             })
                         } else {
                             None
@@ -409,7 +411,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                                 load: clear.stencil.map_or(wgpu::LoadOp::Load, |stencil| {
                                     wgpu::LoadOp::Clear(stencil)
                                 }),
-                                store: false,
+                                store: true,
                             })
                         } else {
                             None
@@ -430,7 +432,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         let default_depth = if pip.uses_depth {
                             Some(wgpu::Operations {
                                 load: wgpu::LoadOp::Load,
-                                store: false,
+                                store: true,
                             })
                         } else {
                             None
@@ -439,7 +441,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         let default_stencil = if pip.uses_stencil {
                             Some(wgpu::Operations {
                                 load: wgpu::LoadOp::Load,
-                                store: false,
+                                store: true,
                             })
                         } else {
                             None
@@ -473,6 +475,21 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                     },
                 });
 
+                println!(
+                    "<<<<--->>>>> {:?}",
+                    if depth.is_some() || stencil.is_some() {
+                        surface.depth_texture.as_ref().map(|dt| {
+                            wgpu::RenderPassDepthStencilAttachment {
+                                view: &dt.view,
+                                depth_ops: depth,
+                                stencil_ops: stencil,
+                            }
+                        })
+                    } else {
+                        None
+                    }
+                );
+
                 if let Some(pip) = rp.pipeline {
                     rpass.set_pipeline(&pip.raw);
 
@@ -497,19 +514,23 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
                     if let Some(sr) = rp.stencil_ref {
                         rpass.set_stencil_reference(sr as _);
+                        println!("stencil set as {}", sr);
                     }
 
                     if !rp.vertices.is_empty() {
                         // rpass.set_stencil_reference(1);
                         let instances = 0..rp.instances.unwrap_or(1);
                         if indexed {
+                            println!("draw indexed");
                             rpass.draw_indexed(rp.vertices.clone(), 0, instances);
                         } else {
+                            println!("draw (not indexed)");
                             rpass.draw(rp.vertices.clone(), instances);
                         }
                     }
                 }
 
+                println!("# render pass end");
                 Ok(())
             })?;
 
@@ -581,6 +602,7 @@ fn add_depth_texture_to(
     format: TextureFormat,
     label: Option<&str>,
 ) -> Result<(), String> {
+    println!("Add Depth Texture to {:?}", label);
     let tex = create_texture(
         device,
         queue,

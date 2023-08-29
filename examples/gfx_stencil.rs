@@ -74,7 +74,6 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x2)
                     .with_attr(1, VertexFormat::Float32x3),
             )
-            .with_depth_stencil(CompareMode::Never, true)
             .with_stencil(Stencil {
                 stencil_fail: StencilAction::Keep,
                 depth_fail: StencilAction::Keep,
@@ -141,20 +140,25 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut Gfx, state: &mut State) {
+    println!("--------- START");
     let mut renderer = Renderer::new();
     renderer.begin(1600, 1200);
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));
     renderer.apply_pipeline(&state.mask_pip);
     renderer.apply_buffers(&[&state.mask_vbo]);
-    // renderer.stencil_reference(1);
+    renderer.stencil_reference(1);
     renderer.draw(0..18);
 
     renderer.begin(1600, 1200);
+    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
-    // renderer.stencil_reference(1);
+    renderer.stencil_reference(1);
     renderer.draw(0..3);
 
+    println!("-------------- PreDraw!");
     gfx.render(evt.window_id, &renderer).unwrap();
+    println!("-------------- THIS ENDED");
+    // platform.exit();
 }
