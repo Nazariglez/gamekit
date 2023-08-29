@@ -24,3 +24,4 @@ Then run your application with feature `puffin` and use `puffin_viewer --url 127
 - use fluent-rs for translations?
 - use pollster to block futures
 - allow to bind multiple binding groups
+- gk_al crate: gamekit abstaction layer? only the API traits
