@@ -141,7 +141,6 @@ fn main() -> Result<(), String> {
 }
 
 fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut Gfx, state: &mut State) {
-    println!("--------- START");
     let mut renderer = Renderer::new();
     renderer.begin(1600, 1200);
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));
@@ -151,14 +150,10 @@ fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut Gfx, state: &mu
     renderer.draw(0..18);
 
     renderer.begin(1600, 1200);
-    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
     renderer.stencil_reference(1);
     renderer.draw(0..3);
 
-    println!("-------------- PreDraw!");
     gfx.render(evt.window_id, &renderer).unwrap();
-    println!("-------------- THIS ENDED");
-    // platform.exit();
 }

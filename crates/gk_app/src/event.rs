@@ -47,7 +47,7 @@ impl<S: GKState + 'static> EventQueue<S> {
     }
 
     /// Add a new event to the queue
-    pub fn queue<E: 'static>(&mut self, event: E) {
+    pub fn queue<E: Send + Sync + std::fmt::Debug + 'static>(&mut self, event: E) {
         self.events.push_back(Box::new(move |app| app.event(event)));
     }
 
