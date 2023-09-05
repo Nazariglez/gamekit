@@ -361,15 +361,16 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             .passes
             .iter()
             .try_for_each(|rp| -> Result<(), String> {
-                println!("# render pass start");
                 debug_assert!(
                     rp.pipeline.is_some(),
                     "A pipeline must be set on the RenderPass"
                 );
 
+                // TODO pip can be null for only clear render pass like gfx_clear
+
                 let pip = rp.pipeline.unwrap();
                 let uses_depth_tex = pip.uses_depth || pip.uses_stencil;
-                println!("PIP uses depth tex {:?}", uses_depth_tex);
+
                 // initialize depth texture on the surface if needed
                 if uses_depth_tex && surface.depth_texture.is_none() {
                     add_depth_texture_to(

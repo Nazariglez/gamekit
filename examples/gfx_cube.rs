@@ -34,12 +34,7 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.color = model.color;
-    let i = f32(model.instance_index);
-    let n = select(i, 0.0, i % 2.0 == 0.0);
-    let j = select(i, 0.0, i % 3.0 == 0.0);
-    let pos = vec4<f32>(model.position.x - n * 2.0, model.position.y - i * 2.0, model.position.z - j * 2.0, 1.0);
-
-    out.position = transform.mvp * pos;
+    out.position = transform.mvp * model.position;
     return out;
 }
 
@@ -168,7 +163,8 @@ fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
         .unwrap();
 
     let mut renderer = Renderer::new();
-    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
+    renderer.begin(1600, 1200);
+    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
     renderer.apply_bindings(&[&state.bind_group]);
