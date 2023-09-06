@@ -137,13 +137,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             ..swapchain_color_target
         };
 
-        // https://github.com/jack1232/wgpu07/blob/89863fd1cbfd74d8993cb854bd03573b9041e3d7/src/main.rs
-
-        println!(
-            "\n\n -------> {:?}",
-            wgpu_depth_stencil(desc.depth_stencil, desc.stencil)
-        );
-
         let raw = self
             .ctx
             .device
@@ -361,17 +354,12 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             .passes
             .iter()
             .try_for_each(|rp| -> Result<(), String> {
-                debug_assert!(
-                    rp.pipeline.is_some(),
-                    "A pipeline must be set on the RenderPass"
-                );
-
-                // TODO pip can be null for only clear render pass like gfx_clear
-
-                let pip = rp.pipeline.unwrap();
-                let uses_depth_tex = pip.uses_depth || pip.uses_stencil;
+                let (uses_depth, uses_stencil) = rp
+                    .pipeline
+                    .map_or((false, false), |pip| (pip.uses_depth, pip.uses_stencil));
 
                 // initialize depth texture on the surface if needed
+                let uses_depth_tex = uses_depth || uses_stencil;
                 if uses_depth_tex && surface.depth_texture.is_none() {
                     add_depth_texture_to(
                         &self.ctx.device,
@@ -396,7 +384,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                             },
                         });
 
-                        let depth = if pip.uses_depth {
+                        let depth = if uses_depth {
                             Some(wgpu::Operations {
                                 load: clear
                                     .depth
@@ -407,7 +395,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                             None
                         };
 
-                        let stencil = if pip.uses_stencil {
+                        let stencil = if uses_stencil {
                             Some(wgpu::Operations {
                                 load: clear.stencil.map_or(wgpu::LoadOp::Load, |stencil| {
                                     wgpu::LoadOp::Clear(stencil)
@@ -430,7 +418,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                             },
                         };
 
-                        let default_depth = if pip.uses_depth {
+                        let default_depth = if uses_depth {
                             Some(wgpu::Operations {
                                 load: wgpu::LoadOp::Load,
                                 store: true,
@@ -439,7 +427,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                             None
                         };
 
-                        let default_stencil = if pip.uses_stencil {
+                        let default_stencil = if uses_stencil {
                             Some(wgpu::Operations {
                                 load: wgpu::LoadOp::Load,
                                 store: true,

@@ -1,4 +1,4 @@
-use gamekit::gfx::{Color, Gfx, DrawFrame};
+use gamekit::gfx::{Color, DrawFrame, Gfx};
 use gamekit::platform::Platform;
 use gamekit::time::Time;
 
