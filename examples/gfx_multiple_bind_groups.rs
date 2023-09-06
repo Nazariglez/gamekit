@@ -174,7 +174,7 @@ fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
     state.angle += 0.6 * time.delta_f32();
 }
 
-fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
     // update mvp
     gfx.write_buffer(&state.ubo)
         .with_data(state.rotated_mvp().as_ref())

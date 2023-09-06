@@ -113,7 +113,7 @@ fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
     state.count += 0.15 * time.delta_f32();
 }
 
-fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
     renderer.apply_pipeline(&state.pip);

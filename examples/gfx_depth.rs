@@ -81,7 +81,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(1600, 1200);
     renderer.clear(Some(Color::WHITE), Some(1.0), None);

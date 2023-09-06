@@ -32,7 +32,7 @@ pub struct Device {
     attrs: GfxAttributes,
     ctx: Context,
     depth_format: TextureFormat,
-    surfaces: HashMap<GKWindowId, Surface>,
+    pub(crate) surfaces: HashMap<GKWindowId, Surface>,
     depth_texture: Option<Texture>,
 }
 

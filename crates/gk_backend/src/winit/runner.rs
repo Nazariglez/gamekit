@@ -59,7 +59,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
             Event::RedrawRequested(id) => {
                 let id = win_id(id);
 
-                // Sometimes this event comes before any any WindowEvent
+                // Sometimes this event comes before any WindowEvent
                 // Initializing windows here too we avoid a first blank frame
                 init_window(id, &mut app);
 

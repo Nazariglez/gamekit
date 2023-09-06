@@ -140,7 +140,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &event::Draw, platform: &mut Platform, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &event::DrawRequest, platform: &mut Platform, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(1600, 1200);
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));

@@ -162,7 +162,7 @@ impl<S: GKState> App<S> {
             return;
         }
 
-        self.event(event::Draw { window_id });
+        self.event(event::DrawRequest { window_id });
     }
 
     /// It's called when the backend/app is about to close

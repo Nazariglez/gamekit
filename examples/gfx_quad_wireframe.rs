@@ -63,7 +63,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &event::Draw, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = Renderer::new();
     renderer.begin(Color::BLACK, 0, 0);
     renderer.apply_pipeline(&state.pip);

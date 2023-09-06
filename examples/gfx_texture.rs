@@ -115,7 +115,7 @@ fn main() -> Result<(), String> {
 }
 
 fn on_draw(
-    evt: &event::Draw,
+    evt: &event::DrawRequest,
     platform: &mut Platform,
     gfx: &mut Gfx,
     state: &mut State,

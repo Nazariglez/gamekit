@@ -67,7 +67,7 @@ pub struct FrameStart;
 pub struct Update;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Draw {
+pub struct DrawRequest {
     pub window_id: GKWindowId,
 }
 
