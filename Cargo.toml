@@ -11,7 +11,6 @@ repository = "https://github.com/Nazariglez/gamekit"
 license = "MIT OR Apache-2.0"
 description = "A set of helpers for making games with notan"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
 # optimize for speed and size
 opt-level = 2
@@ -23,7 +22,10 @@ strip = true
 codegen-units = 1
 
 [profile.dev.package."*"]
-opt-level = 2
+opt-level = 3
+
+[package.metadata.docs.rs]
+all-features = true
 
 [workspace]
 members = ["crates/*"]
@@ -31,6 +33,7 @@ members = ["crates/*"]
 [workspace.dependencies]
 gk_app = { path = "./crates/gk_app", version = "0.1.0" }
 gk_macro = { path = "./crates/gk_macro", version = "0.1.0" }
+gk_assets = { path = "./crates/gk_assets", version = "0.1.0" }
 gk_backend = { path = "./crates/gk_backend", version = "0.1.0" }
 gk_gfx = { path = "./crates/gk_gfx", version = "0.1.0" }
 gk_math = { path = "./crates/gk_math", version = "0.1.0" }
@@ -45,9 +48,11 @@ arrayvec = "0.7.4"
 raw-window-handle = "0.5.2"
 bitflags = "2.3.3"
 puffin = "0.16.0"
+parking_lot = "0.12.1"
 
 [dependencies]
 gk_app.workspace = true
+gk_assets.workspace = true
 gk_backend.workspace = true
 gk_macro.workspace = true
 gk_gfx.workspace = true

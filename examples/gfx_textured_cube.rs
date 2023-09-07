@@ -1,13 +1,12 @@
 use gamekit::app::event;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, CullMode, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
-    VertexFormat, VertexLayout, DrawFrame
+    BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline, Renderer,
+    TextureBinding, UniformBinding, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
 use gamekit::time::Time;
-use gk_gfx::TextureBinding;
 
 // language=wgsl
 const SHADER: &str = r#"
