@@ -443,11 +443,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         )
                     });
 
-                println!(
-                    "\n ---> CLEAR DEPTH STENCIL depth:{:?} stencil:{:?} \n",
-                    depth, stencil
-                );
-
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: None,
                     color_attachments: &[color],
@@ -463,21 +458,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                         None
                     },
                 });
-
-                println!(
-                    "<<<<--->>>>> {:?}",
-                    if depth.is_some() || stencil.is_some() {
-                        surface.depth_texture.as_ref().map(|dt| {
-                            wgpu::RenderPassDepthStencilAttachment {
-                                view: &dt.view,
-                                depth_ops: depth,
-                                stencil_ops: stencil,
-                            }
-                        })
-                    } else {
-                        None
-                    }
-                );
 
                 if let Some(pip) = rp.pipeline {
                     rpass.set_pipeline(&pip.raw);
@@ -503,23 +483,18 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
                     if let Some(sr) = rp.stencil_ref {
                         rpass.set_stencil_reference(sr as _);
-                        println!("stencil set as {}", sr);
                     }
 
                     if !rp.vertices.is_empty() {
-                        // rpass.set_stencil_reference(1);
                         let instances = 0..rp.instances.unwrap_or(1);
                         if indexed {
-                            println!("draw indexed");
                             rpass.draw_indexed(rp.vertices.clone(), 0, instances);
                         } else {
-                            println!("draw (not indexed)");
                             rpass.draw(rp.vertices.clone(), instances);
                         }
                     }
                 }
 
-                println!("# render pass end");
                 Ok(())
             })?;
 
@@ -591,7 +566,6 @@ fn add_depth_texture_to(
     format: TextureFormat,
     label: Option<&str>,
 ) -> Result<(), String> {
-    println!("Add Depth Texture to {:?}", label);
     let tex = create_texture(
         device,
         queue,

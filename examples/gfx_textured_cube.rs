@@ -1,7 +1,7 @@
 use gamekit::app::event;
 use gamekit::gfx::{
     BindGroup, Buffer, Color, CullMode, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
-    VertexFormat, VertexLayout,
+    VertexFormat, VertexLayout, DrawFrame
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::platform::Platform;
@@ -167,7 +167,7 @@ fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
     state.angle += 0.6 * time.delta_f32();
 }
 
-fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
     // update mvp
     gfx.write_buffer(&state.ubo)
         .with_data(state.rotated_mvp().as_ref())
@@ -181,7 +181,7 @@ fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_buffers(&[&state.vbo]);
     renderer.apply_bindings(&[&state.bind_group]);
     renderer.draw(0..36);
-    gfx.render(evt.window_id, &renderer).unwrap();
+    gfx.render(&renderer).unwrap();
 }
 
 fn create_mvp() -> Mat4 {
