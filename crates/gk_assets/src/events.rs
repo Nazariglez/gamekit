@@ -1,5 +1,26 @@
 #[derive(Clone, Debug)]
-pub struct AssetLoaded {
-    pub name: String,
-    pub data: Vec<u8>,
+pub struct AssetLoad {
+    pub(crate) id: String,
+    pub(crate) state: AssetState,
+}
+
+impl AssetLoad {
+    /// Id used to load the asset
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Blob buffer
+    pub fn data(&self) -> Result<&[u8], String> {
+        match &self.state {
+            AssetState::Loaded(buff) => Ok(buff.as_slice()),
+            AssetState::Err(err) => Err(err.clone()),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum AssetState {
+    Loaded(Vec<u8>),
+    Err(String),
 }

@@ -1,11 +1,6 @@
-mod asset;
-mod assets;
 mod events;
-mod list;
-mod manager;
-mod storage;
-mod utils;
+mod loader;
 mod waker;
 
-pub use assets::Assets;
-pub use events::AssetLoaded;
+pub use events::AssetLoad;
+pub use loader::{AssetLoader, AssetLoaderConfig};

@@ -1,21 +1,27 @@
 use gamekit::app::event;
-use gamekit::assets::{AssetLoaded, Assets};
-use gamekit::platform::Platform;
+use gamekit::assets::{AssetLoad, AssetLoader};
 
 fn main() -> Result<(), String> {
     gamekit::init()
-        .add_config(Platform::config())?
-        .add_config(Assets::config())?
-        .on(|evt: &AssetLoaded| {
-            println!("Asset loaded {:?}", evt);
-        })
-        .once(|evt: &event::Init, assets: &mut Assets| {
-            assets.load(&asset_path("rust-logo-512x512.png"))
-        })
-        .on(|evt: &event::Update, assets: &mut Assets| {
-            assets.update();
-        })
+        .add_config(AssetLoader::config())?
+        .once(on_init)
+        .on(on_asset_load)
         .build()
+}
+
+fn on_init(_: &event::Init, loader: &mut AssetLoader) {
+    loader
+        .load(&asset_path("cube.png"))
+        .load(&asset_path("bunny.png"));
+}
+
+fn on_asset_load(evt: &AssetLoad) {
+    let id = evt.id();
+    let loaded = match evt.data() {
+        Ok(buff) => format!("Loaded! ({} bytes)", buff.len()),
+        Err(err) => err,
+    };
+    log::info!("Asset load event {}: {}", evt.id(), loaded);
 }
 
 fn asset_path(path: &str) -> String {
