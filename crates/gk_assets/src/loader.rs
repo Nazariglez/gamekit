@@ -1,8 +1,8 @@
 use super::waker::*;
 use crate::events::{AssetLoad, AssetState};
+use crate::load_file::FileLoader;
 use futures::future::LocalBoxFuture;
 use futures::task::{Context, Poll};
-use futures::TryFutureExt;
 use gk_app::{event, AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
 
 // TODO url loader
@@ -10,6 +10,7 @@ use gk_app::{event, AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
 
 pub struct AssetLoader {
     loading: Vec<LoadWrapper>,
+    file_loader: FileLoader,
 }
 
 impl AssetLoader {
@@ -35,15 +36,10 @@ impl AssetLoader {
     pub fn load(&mut self, file_path: &str) -> &mut Self {
         log::info!("Loading file '{}'", file_path);
         let id = file_path.to_string(); // todo avoid to_string allocations
-        let fut = Box::pin(platter2::load_file(file_path.to_string()).map_err(|e| e.to_string()));
+        let fut = Box::pin(self.file_loader.load_file(file_path));
         self.loading.push(LoadWrapper::new(file_path, fut));
+        log::info!("LOG!");
         self
-    }
-}
-
-impl Default for AssetLoader {
-    fn default() -> AssetLoader {
-        AssetLoader { loading: vec![] }
     }
 }
 
@@ -59,7 +55,11 @@ impl<S: GKState + 'static> BuildConfig<S> for AssetLoaderConfig {
                 loader.update(events)
             },
         );
-        Ok(builder.add_plugin(AssetLoader::default()))
+        let asset_loader = AssetLoader {
+            loading: vec![],
+            file_loader: FileLoader::new()?,
+        };
+        Ok(builder.add_plugin(asset_loader))
     }
 }
 

@@ -12,4 +12,5 @@ hashbrown.workspace = true
 
 futures = "0.3.28"
 futures-util = { version = "0.3.28", default-features = false }
-platter2 = "0.1.6"
+rayon = "1.7.0"
+num_cpus = "1.16.0"

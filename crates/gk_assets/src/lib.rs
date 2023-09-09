@@ -1,7 +1,7 @@
 mod events;
+mod load_file;
 mod loader;
 mod waker;
-mod load_file;
 
 pub use events::AssetLoad;
 pub use loader::{AssetLoader, AssetLoaderConfig};
