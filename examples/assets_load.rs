@@ -1,12 +1,12 @@
-use log::warn;
 use gamekit::app::event;
 use gamekit::assets::{AssetLoad, AssetLoader};
 use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use log::warn;
 
 #[derive(AppState, Default)]
 struct State {
-    loaded: usize
+    loaded: usize,
 }
 
 fn main() -> Result<(), String> {
