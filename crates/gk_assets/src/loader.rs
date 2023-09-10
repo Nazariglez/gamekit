@@ -6,7 +6,6 @@ use futures::task::{Context, Poll};
 use gk_app::{event, AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
 
 // TODO url loader
-// TODO move platter2 logic here...
 
 pub struct AssetLoader {
     loading: Vec<LoadWrapper>,

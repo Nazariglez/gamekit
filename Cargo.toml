@@ -31,6 +31,7 @@ all-features = true
 members = ["crates/*"]
 
 [workspace.dependencies]
+# gamekit packages
 gk_app = { path = "./crates/gk_app", version = "0.1.0" }
 gk_macro = { path = "./crates/gk_macro", version = "0.1.0" }
 gk_assets = { path = "./crates/gk_assets", version = "0.1.0" }
@@ -39,8 +40,10 @@ gk_gfx = { path = "./crates/gk_gfx", version = "0.1.0" }
 gk_math = { path = "./crates/gk_math", version = "0.1.0" }
 gk_profile = { path = "./crates/gk_profile", version = "0.1.0" }
 
+# deserialization/serialization
 serde = { version = "1.0", features = ["serde_derive"] }
 
+# common used deps
 log = "0.4.19"
 hashbrown = "0.14.0"
 anymap = "0.12.1"
@@ -49,6 +52,11 @@ raw-window-handle = "0.5.2"
 bitflags = "2.3.3"
 puffin = "0.16.0"
 parking_lot = "0.12.1"
+
+# wasm deps
+web-sys = "0.3.64"
+js-sys = "0.3.64"
+wasm-bindgen = "0.2.87"
 
 [dependencies]
 gk_app.workspace = true
