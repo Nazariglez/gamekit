@@ -15,8 +15,6 @@ fn main() -> Result<(), String> {
         .add_config(Platform::config())?
         .once(on_init)
         .on(on_asset_load)
-        .on(|_: &event::Update| println!("not blocking no"))
-        .on(|_: &event::FrameEnd| println!("----"))
         .build()
 }
 
@@ -24,20 +22,15 @@ fn on_init(_: &event::Init, loader: &mut AssetLoader) {
     loader
         .load(&asset_path("cube.png"))
         .load(&asset_path("bunny.png"));
-    println!("is not blocking?");
 }
 
 fn on_asset_load(evt: &AssetLoad, app: &mut Platform, state: &mut State) {
     let id = evt.id();
     let loaded = match evt.data() {
-        Ok(buff) => format!("Loaded! ({} bytes)", buff.len()),
+        Ok(buff) => format!("Loaded -> '{}' ({} bytes)", id, buff.len()),
         Err(err) => err,
     };
     log::info!("Asset load event {}: {}", evt.id(), loaded);
-    state.loaded += 1;
-    if state.loaded == 2 {
-        app.exit();
-    }
 }
 
 fn asset_path(path: &str) -> String {

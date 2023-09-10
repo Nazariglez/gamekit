@@ -34,10 +34,8 @@ impl AssetLoader {
 
     pub fn load(&mut self, file_path: &str) -> &mut Self {
         log::info!("Loading file '{}'", file_path);
-        let id = file_path.to_string(); // todo avoid to_string allocations
         let fut = Box::pin(self.file_loader.load_file(file_path));
         self.loading.push(LoadWrapper::new(file_path, fut));
-        log::info!("LOG!");
         self
     }
 }
