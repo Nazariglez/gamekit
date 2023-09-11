@@ -1,5 +1,5 @@
 use super::utils::{cursor_id, win_id};
-use gk_sys::window::{CursorIcon, GKWindow, GKWindowAttributes, WindowId};
+use gk_sys::window::{CursorIcon, GKWindow, WindowAttributes, WindowId};
 use raw_window_handle::{
     HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
 };
@@ -20,9 +20,9 @@ pub struct Window {
 impl Window {
     pub(crate) fn new(
         event_loop: &EventLoopWindowTarget<()>,
-        attrs: GKWindowAttributes,
+        attrs: WindowAttributes,
     ) -> Result<Self, String> {
-        let GKWindowAttributes {
+        let WindowAttributes {
             size,
             min_size,
             max_size,

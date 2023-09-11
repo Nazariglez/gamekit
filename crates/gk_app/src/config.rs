@@ -1,10 +1,10 @@
 use crate::{runner, App};
 use gk_sys::event;
-use gk_sys::window::{GKWindow, GKWindowAttributes, WindowEvent, WindowEventId};
+use gk_sys::window::{GKWindow, WindowAttributes, WindowEvent, WindowEventId};
 use gk_sys::{AppBuilder, BuildConfig, GKState};
 
 pub struct PlatformConfig {
-    main_window: Option<GKWindowAttributes>,
+    main_window: Option<WindowAttributes>,
     auto_redraw: bool,
 }
 
@@ -23,7 +23,7 @@ impl PlatformConfig {
         self
     }
 
-    pub fn with_window(mut self, attrs: GKWindowAttributes) -> Self {
+    pub fn with_window(mut self, attrs: WindowAttributes) -> Self {
         self.main_window = Some(attrs);
         self
     }

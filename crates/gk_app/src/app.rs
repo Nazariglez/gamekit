@@ -1,5 +1,5 @@
 use crate::{Manager, PlatformConfig, Window};
-use gk_sys::window::{GKWindowAttributes, GKWindowManager, WindowId};
+use gk_sys::window::{GKApp, WindowAttributes, WindowId};
 use gk_sys::Plugin;
 use hashbrown::hash_map::{Values, ValuesMut};
 
@@ -22,7 +22,7 @@ impl App {
         PlatformConfig::default()
     }
 
-    pub fn create_window(&mut self, attrs: GKWindowAttributes) -> Result<WindowId, String> {
+    pub fn create_window(&mut self, attrs: WindowAttributes) -> Result<WindowId, String> {
         let id = self.manager.create(attrs)?;
         self.window_ids.push(id);
         Ok(id)

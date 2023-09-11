@@ -1,6 +1,6 @@
 use super::event_loop::EventLoopPtr;
 use super::window::Window;
-use gk_sys::window::{GKWindow, GKWindowAttributes, GKWindowManager, WindowId};
+use gk_sys::window::{GKApp, GKWindow, WindowAttributes, WindowId};
 use gk_sys::Plugin;
 use hashbrown::HashMap;
 pub use winit::event_loop::EventLoopWindowTarget;
@@ -23,12 +23,12 @@ impl Default for Manager {
     }
 }
 
-impl GKWindowManager<Window> for Manager {
+impl GKApp<Window> for Manager {
     fn new() -> Self {
         Default::default()
     }
 
-    fn create(&mut self, attrs: GKWindowAttributes) -> Result<WindowId, String> {
+    fn create(&mut self, attrs: WindowAttributes) -> Result<WindowId, String> {
         // SAFETY: if it's `Some` means that we're inside the event's loop and this is available
         let event_loop = self.event_loop.inner();
         match event_loop {

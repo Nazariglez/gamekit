@@ -16,7 +16,7 @@ impl From<WindowId> for u64 {
 }
 
 #[derive(Debug, Clone)]
-pub struct GKWindowAttributes {
+pub struct WindowAttributes {
     pub size: Option<(u32, u32)>,
     pub min_size: Option<(u32, u32)>,
     pub max_size: Option<(u32, u32)>,
@@ -29,7 +29,7 @@ pub struct GKWindowAttributes {
     pub transparent: bool,
 }
 
-impl GKWindowAttributes {
+impl WindowAttributes {
     pub fn with_size(mut self, width: u32, height: u32) -> Self {
         self.size = Some((width, height));
         self
@@ -81,7 +81,7 @@ impl GKWindowAttributes {
     }
 }
 
-impl Default for GKWindowAttributes {
+impl Default for WindowAttributes {
     fn default() -> Self {
         Self {
             size: Some((800, 600)),
@@ -98,9 +98,9 @@ impl Default for GKWindowAttributes {
     }
 }
 
-pub trait GKWindowManager<W: GKWindow> {
+pub trait GKApp<W: GKWindow> {
     fn new() -> Self;
-    fn create(&mut self, attrs: GKWindowAttributes) -> Result<WindowId, String>;
+    fn create(&mut self, attrs: WindowAttributes) -> Result<WindowId, String>;
     fn window(&mut self, id: WindowId) -> Option<&mut W>;
     fn close(&mut self, id: WindowId) -> bool;
     fn exit(&mut self);

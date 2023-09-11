@@ -1,4 +1,4 @@
-use gk_sys::window::{CursorIcon, GKWindow, GKWindowManager, WindowId};
+use gk_sys::window::{CursorIcon, GKApp, GKWindow, WindowId};
 use raw_window_handle::{
     HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
 };
