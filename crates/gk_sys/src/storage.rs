@@ -1,5 +1,5 @@
 use crate::event::EventQueue;
-use crate::{App, GKState, Plugin};
+use crate::{GKState, Plugin, System};
 use anymap::AnyMap;
 
 pub struct Storage<S: GKState + 'static> {
@@ -9,7 +9,7 @@ pub struct Storage<S: GKState + 'static> {
 }
 
 impl<S: GKState + 'static> Storage<S> {
-    pub fn take_event(&mut self) -> Option<Box<dyn FnOnce(&mut App<S>)>> {
+    pub fn take_event(&mut self) -> Option<Box<dyn FnOnce(&mut System<S>)>> {
         self.events.take_event()
     }
 }

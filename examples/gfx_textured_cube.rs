@@ -1,11 +1,11 @@
-use gamekit::app::event;
+use gamekit::app::App;
 use gamekit::gfx::{
     BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline, Renderer,
     TextureBinding, UniformBinding, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
-use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gamekit::sys::event;
 use gamekit::time::Time;
 
 // language=wgsl
@@ -154,7 +154,7 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .add_config(Time::config())?
         .on(on_draw)

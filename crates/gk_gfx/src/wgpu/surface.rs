@@ -1,7 +1,7 @@
 use super::context::Context;
 use crate::attrs::GfxAttributes;
 use crate::Texture;
-use gk_app::window::GKWindow;
+use gk_sys::window::GKWindow;
 use wgpu::{
     Device, Surface as RawSurface, SurfaceCapabilities, SurfaceConfiguration, SurfaceTexture,
 };

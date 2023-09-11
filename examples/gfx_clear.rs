@@ -1,10 +1,10 @@
+use gamekit::app::App;
 use gamekit::gfx::{Color, DrawFrame, Gfx};
-use gamekit::platform::Platform;
 use gamekit::time::Time;
 
 fn main() -> Result<(), String> {
     gamekit::init()
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .add_config(Time::config())?
         .on(on_draw)

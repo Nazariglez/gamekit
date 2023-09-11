@@ -1,8 +1,8 @@
 use crate::gfx::Gfx;
 use crate::{DrawFrame, GfxAttributes};
-use gk_app::window::{GKWindow, WindowEvent, WindowEventId};
-use gk_app::{AppBuilder, BuildConfig, EventQueue, GKState};
-use gk_backend::Platform;
+use gk_app::App;
+use gk_sys::window::{GKWindow, WindowEvent, WindowEventId};
+use gk_sys::{AppBuilder, BuildConfig, EventQueue, GKState};
 use std::thread::current;
 
 #[derive(Default)]
@@ -27,7 +27,7 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
         let builder = builder.on(on_window_event).on(on_draw).on(on_frame_end);
 
         let attrs = self.attrs;
-        Ok(builder.add_plugin_with(move |platform: &mut Platform| {
+        Ok(builder.add_plugin_with(move |platform: &mut App| {
             let mut gfx = Gfx::new(attrs)?;
             if let Some(win) = platform.main_window() {
                 let _ = gfx.init_surface(win)?;
@@ -38,7 +38,7 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
     }
 }
 
-fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, platform: &mut Platform) {
+fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, platform: &mut App) {
     match evt.event {
         // when a new window is created let's initialize the surface for it
         WindowEventId::Init => {
@@ -63,7 +63,7 @@ fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, platform: &mut Platform) {
 }
 
 fn on_draw<S: GKState + 'static>(
-    evt: &gk_app::event::DrawRequest,
+    evt: &gk_sys::event::DrawRequest,
     gfx: &mut Gfx,
     events: &mut EventQueue<S>,
 ) {
@@ -90,7 +90,7 @@ fn on_draw<S: GKState + 'static>(
     }
 }
 
-fn on_frame_end(_: &gk_app::event::FrameEnd, gfx: &mut Gfx) {
+fn on_frame_end(_: &gk_sys::event::FrameEnd, gfx: &mut Gfx) {
     // Clean current frame info
     gfx.current_frame = None;
 }

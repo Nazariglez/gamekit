@@ -21,8 +21,8 @@ use crate::{
     TextureData, TextureFormat, MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
-use gk_app::window::{GKWindow, GKWindowId};
-use gk_app::Plugin;
+use gk_sys::window::{GKWindow, GKWindowId};
+use gk_sys::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};

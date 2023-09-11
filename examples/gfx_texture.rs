@@ -1,10 +1,10 @@
-use gamekit::app::event;
+use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, BlendMode, Buffer, Color, Gfx, IndexFormat, RenderPipeline, Renderer,
+    BindGroup, BlendMode, Buffer, Color, DrawFrame, Gfx, IndexFormat, RenderPipeline, Renderer,
     TextureBinding, VertexFormat, VertexLayout,
 };
-use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gamekit::sys::event;
 use gamekit::time::Time;
 
 // language=wgsl
@@ -107,29 +107,19 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .add_config(Time::config())?
         .on(on_draw)
         .build()
 }
 
-fn on_draw(
-    evt: &event::DrawRequest,
-    platform: &mut Platform,
-    gfx: &mut Gfx,
-    state: &mut State,
-    time: &mut Time,
-) {
-    let mut renderer = Renderer::new();
-    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
+fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+    let mut renderer = evt.create_renderer();
+    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
-    renderer.apply_bindings(&state.bind_group);
+    renderer.apply_bindings(&[&state.bind_group]);
     renderer.draw(0..6);
-    gfx.render(evt.window_id, &renderer).unwrap();
-    // println!("{}, {:.5}", time.fps(), time.delta_f32());
-    if time.elapsed_f32() > 1.0 {
-        platform.exit();
-    }
+    gfx.render(&renderer).unwrap();
 }

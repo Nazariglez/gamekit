@@ -1,5 +1,5 @@
 use crate::utils::RingBuffer;
-use gk_app::{event, AppBuilder, BuildConfig, GKState, Plugin};
+use gk_sys::{event, AppBuilder, BuildConfig, GKState, Plugin};
 use std::time::{Duration, Instant};
 
 /// Measure Application times

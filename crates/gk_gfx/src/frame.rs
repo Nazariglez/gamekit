@@ -1,5 +1,5 @@
 use crate::Renderer;
-use gk_app::window::GKWindowId;
+use gk_sys::window::GKWindowId;
 
 #[derive(Copy, Clone, Debug)]
 pub struct DrawFrame {

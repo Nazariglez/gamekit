@@ -7,8 +7,8 @@ use crate::{
     TextureWrap, UniformBinding, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
-use gk_app::window::{GKWindow, GKWindowId};
-use gk_app::Plugin;
+use gk_sys::window::{GKWindow, GKWindowId};
+use gk_sys::Plugin;
 use image::EncodableLayout;
 
 pub struct Gfx {

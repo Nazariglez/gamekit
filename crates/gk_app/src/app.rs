@@ -1,192 +1,73 @@
-use crate::event::{EventListener, EventMap};
-use crate::handlers::{EventHandlerFn, EventHandlerFnOnce, UpdateHandlerFn};
-use crate::storage::Storage;
-use crate::window::GKWindowId;
-use crate::{event, GKState};
-use std::any::TypeId;
+use crate::{Manager, PlatformConfig, Window};
+use gk_sys::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_sys::Plugin;
+use hashbrown::hash_map::{Values, ValuesMut};
 
-/// The core of the application, all the systems and backend interacts with it somehow
-pub struct App<S: GKState + 'static> {
-    pub(crate) storage: Storage<S>,
-    pub(crate) event_handler: EventMap,
-    pub(crate) initialized: bool,
-    pub(crate) in_frame: bool,
-    pub(crate) closed: bool,
+pub struct App {
+    pub manager: Manager,
+    main_window: Option<GKWindowId>,
+    window_ids: Vec<GKWindowId>,
 }
 
-impl<S: GKState> App<S> {
-    /// Allows mutable access to a plugin stored
-    pub fn get_mut_plugin<T: 'static>(&mut self) -> Option<&mut T> {
-        self.storage.plugins.get_mut()
+impl App {
+    pub fn new() -> Self {
+        Self {
+            manager: Manager::new(),
+            main_window: None,
+            window_ids: vec![],
+        }
     }
 
-    /// It's called when the backend is ready
-    /// it dispatched the event `Init`
-    pub fn init(&mut self) {
-        gk_profile::function!();
-        if self.initialized {
-            return;
-        }
-
-        self.initialized = true;
-        self.event(event::Init);
+    pub fn config() -> PlatformConfig {
+        PlatformConfig::default()
     }
 
-    pub fn frame_start(&mut self) {
-        gk_profile::tick!();
-        gk_profile::function!();
-
-        if self.in_frame {
-            return;
-        }
-
-        self.in_frame = true;
-        self.event(event::FrameStart);
+    pub fn create_window(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
+        let id = self.manager.create(attrs)?;
+        self.window_ids.push(id);
+        Ok(id)
     }
 
-    pub fn frame_end(&mut self) {
-        gk_profile::function!();
-
-        if !self.in_frame {
-            return;
-        }
-
-        self.event(event::FrameEnd);
-        self.in_frame = false;
+    pub fn window(&mut self, id: GKWindowId) -> Option<&mut Window> {
+        self.manager.window(id)
     }
 
-    fn exec_event_callback<E: Send + Sync + std::fmt::Debug + 'static>(
-        &mut self,
-        evt: &E,
-        idx: usize,
-    ) -> Result<bool, String> {
-        let listener = self
-            .event_handler
-            .get_mut(&TypeId::of::<E>())
-            .and_then(|list| list.get_mut(idx))
-            .ok_or_else(|| {
-                format!(
-                    "Callback {} for event {:?} cannot be found",
-                    idx,
-                    TypeId::of::<E>()
-                )
-            })?;
-
-        let mut needs_clean = false;
-        match listener {
-            EventListener::Once(_, cb_opt) => {
-                if let Some(cb) = cb_opt.take() {
-                    let cb = cb.downcast::<Box<EventHandlerFnOnce<E, S>>>();
-                    if let Ok(cb) = cb {
-                        cb(&mut self.storage, &evt);
-                        needs_clean = true;
-                    }
-                }
-            }
-            EventListener::Mut(_, cb) => {
-                let cb = cb.downcast_mut::<Box<EventHandlerFn<E, S>>>();
-                if let Some(cb) = cb {
-                    cb(&mut self.storage, &evt);
-                }
-            }
-        }
-        execute_queued_events(self);
-        Ok(needs_clean)
+    pub fn main_window(&mut self) -> Option<&mut Window> {
+        self.main_window.and_then(|id| self.window(id))
     }
 
-    /// Execute any listener set for the event passed in
-    pub fn event<E: Send + Sync + std::fmt::Debug + 'static>(&mut self, evt: E) {
-        gk_profile::function!();
+    pub fn set_main_window(&mut self, win_id: GKWindowId) {
+        self.main_window = Some(win_id);
+    }
 
-        if !self.initialized {
-            return;
-        }
+    pub fn window_ids(&self) -> &[GKWindowId] {
+        &self.window_ids
+    }
 
-        let len = self
-            .event_handler
-            .get(&TypeId::of::<E>())
-            .map_or(0, |list| list.len());
+    pub fn windows(&self) -> Values<'_, GKWindowId, Window> {
+        self.manager.windows.values()
+    }
 
-        // There is a bad thing about this event system. There is a double indirection
-        // because we need to fetch the list of events and then call id per callback
-        // this is because we cannot get the list and execute the callbacks with a forloop
-        // due borrow checker issues when pushing events inside event callbacks
+    pub fn windows_mut(&mut self) -> ValuesMut<'_, GKWindowId, Window> {
+        self.manager.windows.values_mut()
+    }
 
-        if len != 0 {
-            // clean once events once all callback has been executed
-            let mut needs_clean = false;
-
-            for idx in 0..len {
-                let once = match self.exec_event_callback(&evt, idx) {
-                    Ok(needs_clean) => needs_clean,
-                    Err(err) => {
-                        log::error!("Error with event '{:?}': {}", evt, err);
-                        false
-                    }
-                };
-
-                if once {
-                    needs_clean = true;
-                }
-            }
-
-            if needs_clean {
-                if let Some(list) = self.event_handler.get_mut(&TypeId::of::<E>()) {
-                    list.retain(|listener| !listener.is_once());
-                }
+    pub fn close(&mut self, id: GKWindowId) {
+        let closed = self.manager.close(id);
+        if closed {
+            let pos = self
+                .window_ids
+                .iter()
+                .position(|stored_id| *stored_id == id);
+            if let Some(pos) = pos {
+                self.window_ids.remove(pos);
             }
         }
     }
 
-    /// It's called each frame by the backend and it dispatches
-    /// the event `Update`.
-    pub fn update(&mut self) {
-        gk_profile::function!();
-
-        let frame_running = self.initialized && self.in_frame;
-        if !frame_running {
-            return;
-        }
-
-        if self.closed {
-            return;
-        }
-
-        self.event(event::Update);
-    }
-
-    pub fn draw(&mut self, window_id: GKWindowId) {
-        gk_profile::function!();
-
-        if !(self.initialized && self.in_frame) {
-            return;
-        }
-
-        self.event(event::DrawRequest { window_id });
-    }
-
-    /// It's called when the backend/app is about to close
-    /// it dispatched the events `RequestedClose` and `Close`
-    pub fn close(&mut self) {
-        gk_profile::function!();
-
-        if !self.initialized {
-            return;
-        }
-
-        if self.closed {
-            return;
-        }
-
-        self.event(event::RequestedClose);
-        self.closed = true;
-        self.event(event::Close);
+    pub fn exit(&mut self) {
+        self.manager.exit();
     }
 }
 
-#[inline]
-fn execute_queued_events<S: GKState + 'static>(app: &mut App<S>) {
-    while let Some(cb) = app.storage.take_event() {
-        cb(app);
-    }
-}
+impl Plugin for App {}

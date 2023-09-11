@@ -1,13 +1,13 @@
 use super::utils::win_id;
-use crate::Platform;
-use gk_app::window::{GKWindow, GKWindowId, WindowEvent, WindowEventId};
-use gk_app::{App, GKState};
+use crate::App;
+use gk_sys::window::{GKWindow, GKWindowId, WindowEvent, WindowEventId};
+use gk_sys::{GKState, System};
 use hashbrown::HashSet;
 use winit::event::{Event, WindowEvent as WWindowEvent};
 
-pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
+pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
     let event_loop = app
-        .get_mut_plugin::<Platform>()
+        .get_mut_plugin::<App>()
         .ok_or_else(|| "Cannot find Windows plugin.")?
         .manager
         .event_loop
@@ -18,7 +18,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
 
     // Send initialize event if this is a new window
     let mut initialized_windows = HashSet::new();
-    let mut init_window = move |id: GKWindowId, app: &mut App<S>| {
+    let mut init_window = move |id: GKWindowId, app: &mut System<S>| {
         if !initialized_windows.contains(&id) {
             initialized_windows.insert(id);
             app.event(WindowEvent {
@@ -29,7 +29,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
     };
 
     event_loop.run(move |evt, event_loop, control_flow| {
-        app.get_mut_plugin::<Platform>()
+        app.get_mut_plugin::<App>()
             .unwrap()
             .manager
             .event_loop
@@ -71,7 +71,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
 
             // -- Windowing events
             Event::WindowEvent { window_id, event } => {
-                let windows = app.get_mut_plugin::<Platform>().unwrap();
+                let windows = app.get_mut_plugin::<App>().unwrap();
                 let id = win_id(window_id);
                 if let Some(win) = windows.window(id) {
                     let scale_factor = win.scale();
@@ -97,7 +97,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
                             });
                         }
                         WWindowEvent::CloseRequested => {
-                            let windows = app.get_mut_plugin::<Platform>().unwrap();
+                            let windows = app.get_mut_plugin::<App>().unwrap();
                             windows.close(id);
                             app.event(WindowEvent {
                                 id,
@@ -155,7 +155,7 @@ pub fn runner<S: GKState + 'static>(mut app: App<S>) -> Result<(), String> {
             _ => (),
         }
 
-        let manager = &mut app.get_mut_plugin::<Platform>().unwrap().manager;
+        let manager = &mut app.get_mut_plugin::<App>().unwrap().manager;
         manager.event_loop.unset();
         if manager.request_exit {
             control_flow.set_exit();

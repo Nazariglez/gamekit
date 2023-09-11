@@ -1,8 +1,8 @@
-use gamekit::platform::Platform;
-use gk_app::window::GKWindowAttributes;
+use gamekit::app::App;
+use gk_sys::window::GKWindowAttributes;
 
 fn main() -> Result<(), String> {
-    let config = Platform::config().with_window(
+    let config = App::config().with_window(
         GKWindowAttributes::default()
             .with_title("Custom Title - GameKit")
             .with_size(400, 300)

@@ -1,4 +1,3 @@
-use crate::app::App;
 use crate::config::BuildConfig;
 use crate::event::{EventListener, EventMap, EventQueue};
 use crate::handlers::{
@@ -7,6 +6,7 @@ use crate::handlers::{
 };
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};
+use crate::sys::System;
 use crate::{GKState, Plugin};
 use indexmap::IndexMap;
 use std::any::TypeId;
@@ -106,7 +106,7 @@ impl<S: GKState> AppBuilder<S> {
         self
     }
 
-    pub fn with_runner<F: FnMut(App<S>) -> Result<(), String> + 'static>(
+    pub fn with_runner<F: FnMut(System<S>) -> Result<(), String> + 'static>(
         mut self,
         runner: F,
     ) -> Self {
@@ -151,7 +151,7 @@ impl<S: GKState> AppBuilder<S> {
             events: EventQueue::new(),
         };
 
-        let app = App {
+        let app = System {
             storage,
             event_handler,
             initialized: false,

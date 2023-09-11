@@ -1,10 +1,10 @@
-use gamekit::app::event;
+use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, Gfx, RenderPipeline, Renderer, UniformBinding, VertexFormat,
-    VertexLayout,
+    BindGroup, Buffer, Color, DrawFrame, Gfx, RenderPipeline, Renderer, UniformBinding,
+    VertexFormat, VertexLayout,
 };
-use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gamekit::sys::event;
 use gamekit::time::Time;
 
 // Number of triangles to draw
@@ -101,7 +101,7 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .add_config(Time::config())?
         .on(on_draw)
@@ -113,14 +113,14 @@ fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
     state.count += 0.15 * time.delta_f32();
 }
 
-fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
-    let mut renderer = Renderer::new();
-    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
+fn on_draw(frame: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+    let mut renderer = frame.create_renderer();
+    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
     renderer.apply_bindings(&[&state.bind_group]);
     renderer.draw_instanced(0..3, INSTANCES as _);
-    gfx.render(evt.window_id, &renderer).unwrap();
+    gfx.render(&renderer).unwrap();
 
     // update the uniform to animate the triangles
     gfx.write_buffer(&state.ubo)

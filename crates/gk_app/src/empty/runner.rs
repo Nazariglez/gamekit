@@ -1,7 +1,7 @@
-use crate::platform::Platform;
-use gk_app::{App, GKState};
+use crate::app::App;
+use gk_sys::{GKState, System};
 
-pub fn runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
+pub fn runner<S: GKState>(mut app: System<S>) -> Result<(), String> {
     app.init();
 
     loop {
@@ -9,7 +9,7 @@ pub fn runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
         app.update();
 
         let request_exit = app
-            .get_mut_plugin::<Platform>()
+            .get_mut_plugin::<App>()
             .ok_or_else(|| "Cannot find Platform plugin.")?
             .manager
             .request_exit;

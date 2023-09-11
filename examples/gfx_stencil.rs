@@ -1,8 +1,10 @@
-use gamekit::app::event;
-use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
-use gamekit::platform::Platform;
+use gamekit::app::App;
+use gamekit::gfx::{
+    Buffer, Color, CompareMode, DrawFrame, Gfx, RenderPipeline, Renderer, Stencil, StencilAction,
+    VertexFormat, VertexLayout,
+};
 use gamekit::prelude::*;
-use gk_gfx::{ColorMask, CompareMode, Stencil, StencilAction};
+use gamekit::sys::event;
 
 // TODO https://webglfundamentals.org/webgl/lessons/webgl-qna-how-to-use-the-stencil-buffer.html
 // https://github.com/Nazariglez/notan/blob/0815528fd42e96fd1d2299871c3e49251cf684bf/crates/notan_draw/src/manager.rs#L202
@@ -134,15 +136,14 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .on(on_draw)
         .build()
 }
 
-fn on_draw(evt: &event::DrawRequest, platform: &mut Platform, gfx: &mut Gfx, state: &mut State) {
-    let mut renderer = Renderer::new();
-    renderer.begin(1600, 1200);
+fn on_draw(evt: &DrawFrame, app: &mut App, gfx: &mut Gfx, state: &mut State) {
+    let mut renderer = evt.create_renderer();
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));
     renderer.apply_pipeline(&state.mask_pip);
     renderer.apply_buffers(&[&state.mask_vbo]);
@@ -155,5 +156,5 @@ fn on_draw(evt: &event::DrawRequest, platform: &mut Platform, gfx: &mut Gfx, sta
     renderer.stencil_reference(1);
     renderer.draw(0..3);
 
-    gfx.render(evt.window_id, &renderer).unwrap();
+    gfx.render(&renderer).unwrap();
 }

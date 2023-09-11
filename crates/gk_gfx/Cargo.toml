@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+gk_sys.workspace = true
 gk_app.workspace = true
-gk_backend.workspace = true
 gk_profile.workspace = true
 
 raw-window-handle.workspace = true

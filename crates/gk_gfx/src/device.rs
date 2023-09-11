@@ -4,7 +4,7 @@ use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
 use crate::renderer::Renderer;
 use crate::texture::{GKSampler, GKTexture, SamplerDescriptor, TextureData, TextureDescriptor};
 use crate::{BindGroupDescriptor, GKBindGroup};
-use gk_app::window::{GKWindow, GKWindowId};
+use gk_sys::window::{GKWindow, GKWindowId};
 
 pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture, S: GKSampler, BG: GKBindGroup> {
     fn new(attrs: GfxAttributes) -> Result<Self, String>

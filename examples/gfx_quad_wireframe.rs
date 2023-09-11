@@ -1,10 +1,10 @@
-use gamekit::app::event;
+use gamekit::app::App;
 use gamekit::gfx::{
-    Buffer, Color, Gfx, IndexFormat, Primitive, RenderPipeline, Renderer, VertexFormat,
+    Buffer, Color, DrawFrame, Gfx, IndexFormat, Primitive, RenderPipeline, Renderer, VertexFormat,
     VertexLayout,
 };
-use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gamekit::sys::event;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -57,17 +57,17 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .on(on_draw)
         .build()
 }
 
-fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
-    let mut renderer = Renderer::new();
-    renderer.begin(Color::BLACK, 0, 0);
+fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+    let mut renderer = evt.create_renderer();
+    renderer.clear(Some(Color::BLACK), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
     renderer.draw(0..12);
-    gfx.render(evt.window_id, &renderer).unwrap();
+    gfx.render(&renderer).unwrap();
 }

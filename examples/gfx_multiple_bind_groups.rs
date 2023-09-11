@@ -1,13 +1,12 @@
-use gamekit::app::event;
+use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, CullMode, Gfx, IndexFormat, RenderPipeline, Renderer, UniformBinding,
-    VertexFormat, VertexLayout,
+    BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline,
+    TextureBinding, UniformBinding, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
-use gamekit::platform::Platform;
 use gamekit::prelude::*;
+use gamekit::sys::event;
 use gamekit::time::Time;
-use gk_gfx::TextureBinding;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -162,7 +161,7 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .add_config(Time::config())?
         .on(on_draw)
@@ -174,20 +173,20 @@ fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
     state.angle += 0.6 * time.delta_f32();
 }
 
-fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
     // update mvp
     gfx.write_buffer(&state.ubo)
         .with_data(state.rotated_mvp().as_ref())
         .build()
         .unwrap();
 
-    let mut renderer = Renderer::new();
-    renderer.begin(Color::rgb(0.1, 0.2, 0.3), 0, 0);
+    let mut renderer = evt.create_renderer();
+    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
     renderer.apply_bindings(&[&state.bind_group_1, &state.bind_group_2]);
     renderer.draw(0..36);
-    gfx.render(evt.window_id, &renderer).unwrap();
+    gfx.render(&renderer).unwrap();
 }
 
 fn create_mvp() -> Mat4 {

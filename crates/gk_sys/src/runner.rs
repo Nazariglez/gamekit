@@ -1,7 +1,7 @@
-use crate::app::App;
+use crate::sys::System;
 use crate::GKState;
 
-pub(crate) fn default_runner<S: GKState>(mut app: App<S>) -> Result<(), String> {
+pub(crate) fn default_runner<S: GKState>(mut app: System<S>) -> Result<(), String> {
     // Execute initialize callback
     app.init();
 

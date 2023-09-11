@@ -1,5 +1,5 @@
 use crate::window::GKWindowId;
-use crate::{option_usize_env, App, GKState};
+use crate::{option_usize_env, GKState, System};
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, VecDeque};
 
@@ -28,7 +28,7 @@ impl EventListener {
 }
 
 enum EventCommand<S: GKState + 'static> {
-    Queue(Box<dyn FnOnce(&mut App<S>)>),
+    Queue(Box<dyn FnOnce(&mut System<S>)>),
     Add(TypeId, EventListener),
     Off(TypeId, u64),
 }
@@ -36,7 +36,7 @@ enum EventCommand<S: GKState + 'static> {
 /// A list of events pushed by plugins to be processed
 #[derive(Default)]
 pub struct EventQueue<S: GKState + 'static> {
-    pub(crate) events: VecDeque<Box<dyn FnOnce(&mut App<S>)>>,
+    pub(crate) events: VecDeque<Box<dyn FnOnce(&mut System<S>)>>,
 }
 
 impl<S: GKState + 'static> EventQueue<S> {
@@ -52,7 +52,7 @@ impl<S: GKState + 'static> EventQueue<S> {
     }
 
     /// Take the first event of the queue
-    pub(crate) fn take_event(&mut self) -> Option<Box<dyn FnOnce(&mut App<S>)>> {
+    pub(crate) fn take_event(&mut self) -> Option<Box<dyn FnOnce(&mut System<S>)>> {
         self.events.pop_front()
     }
 }

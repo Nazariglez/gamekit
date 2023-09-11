@@ -1,4 +1,4 @@
-use gk_app::window::{CursorIcon, GKWindowId};
+use gk_sys::window::{CursorIcon, GKWindowId};
 use winit::window::{CursorIcon as WCursorIcon, WindowId};
 
 pub(crate) fn win_id(window_id: WindowId) -> GKWindowId {

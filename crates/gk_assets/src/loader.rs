@@ -3,7 +3,7 @@ use crate::events::{AssetLoad, AssetState};
 use crate::load_file::FileLoader;
 use futures::future::LocalBoxFuture;
 use futures::task::{Context, Poll};
-use gk_app::{event, AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
+use gk_sys::{event, AppBuilder, BuildConfig, EventQueue, GKState, Plugin};
 
 // TODO url loader
 

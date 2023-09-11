@@ -1,8 +1,9 @@
-use gamekit::app::event;
-use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
-use gamekit::platform::Platform;
+use gamekit::app::App;
+use gamekit::gfx::{
+    Buffer, Color, CompareMode, DrawFrame, Gfx, RenderPipeline, Renderer, VertexFormat,
+    VertexLayout,
+};
 use gamekit::prelude::*;
-use gk_gfx::CompareMode;
 
 // TODO https://paroj.github.io/gltut/Positioning/Tut05%20Overlap%20and%20Depth%20Buffering.html
 
@@ -75,18 +76,17 @@ impl State {
 
 fn main() -> Result<(), String> {
     gamekit::init_with(State::new)
-        .add_config(Platform::config())?
+        .add_config(App::config())?
         .add_config(Gfx::config())?
         .on(on_draw)
         .build()
 }
 
-fn on_draw(evt: &event::DrawRequest, gfx: &mut Gfx, state: &mut State) {
-    let mut renderer = Renderer::new();
-    renderer.begin(1600, 1200);
+fn on_draw(frame: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+    let mut renderer = frame.create_renderer();
     renderer.clear(Some(Color::WHITE), Some(1.0), None);
     renderer.apply_pipeline(&state.pip);
     renderer.apply_buffers(&[&state.vbo]);
     renderer.draw(0..9);
-    gfx.render(evt.window_id, &renderer).unwrap();
+    gfx.render(&renderer).unwrap();
 }

@@ -1,5 +1,5 @@
 use super::utils::{cursor_id, win_id};
-use gk_app::window::{CursorIcon, GKWindow, GKWindowAttributes, GKWindowId};
+use gk_sys::window::{CursorIcon, GKWindow, GKWindowAttributes, GKWindowId};
 use raw_window_handle::{
     HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
 };

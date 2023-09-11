@@ -1,7 +1,7 @@
 use super::pipeline::Pipeline;
 use crate::renderer::Renderer;
 use crate::{GKDevice, RenderPipelineDescriptor};
-use gk_app::window::{GKWindow, GKWindowId};
+use gk_sys::window::{GKWindow, GKWindowId};
 
 pub struct Device;
 

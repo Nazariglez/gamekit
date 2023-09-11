@@ -1,5 +1,5 @@
 use super::window::Window;
-use gk_app::window::{CursorIcon, GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_sys::window::{CursorIcon, GKWindowAttributes, GKWindowId, GKWindowManager};
 use hashbrown::HashMap;
 
 #[derive(Default)]

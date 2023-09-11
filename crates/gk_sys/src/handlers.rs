@@ -1,8 +1,8 @@
 #![allow(unused)]
 use crate::storage::{FromPlugins, FromStorage, Plugins, Storage};
-use crate::{App, GKState, Plugin};
+use crate::{GKState, Plugin, System};
 
-pub(crate) type RunnerHandlerFn<S> = dyn FnMut(App<S>) -> Result<(), String>;
+pub(crate) type RunnerHandlerFn<S> = dyn FnMut(System<S>) -> Result<(), String>;
 pub(crate) type SetupHandlerFn<S> = dyn FnOnce(&mut Plugins) -> Result<S, String>;
 pub(crate) type PluginHandlerFn<P> = dyn FnOnce(&mut Plugins) -> Result<P, String>;
 pub(crate) type UpdateHandlerFn<S> = dyn FnMut(&mut Storage<S>);

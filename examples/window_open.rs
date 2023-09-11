@@ -1,5 +1,5 @@
-use gamekit::platform::Platform;
+use gamekit::app::App;
 
 fn main() -> Result<(), String> {
-    gamekit::init().add_config(Platform::config())?.build()
+    gamekit::init().add_config(App::config())?.build()
 }
