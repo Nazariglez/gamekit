@@ -1,7 +1,6 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    Buffer, Color, CompareMode, DrawFrame, Gfx, RenderPipeline, Renderer, VertexFormat,
-    VertexLayout,
+    Buffer, Color, CompareMode, DrawFrame, Gfx, RenderPipeline, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
 

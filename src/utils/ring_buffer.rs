@@ -162,7 +162,7 @@ mod test {
     #[test]
     fn clone() {
         let buffer = RingBuffer::new([1, 2, 3]);
-        let clone = buffer.clone(); // Clone the buffer
+        let clone = buffer; // Clone the buffer
         assert_eq!(clone.get(0), Some(&1)); // Clone has the same contents
         assert_eq!(clone.get(1), Some(&2));
         assert_eq!(clone.get(2), Some(&3));

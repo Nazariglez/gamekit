@@ -1,10 +1,10 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, BlendMode, Buffer, Color, DrawFrame, Gfx, IndexFormat, RenderPipeline, Renderer,
+    BindGroup, BlendMode, Buffer, Color, DrawFrame, Gfx, IndexFormat, RenderPipeline,
     TextureBinding, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
-use gamekit::sys::event;
+
 use gamekit::time::Time;
 
 // language=wgsl

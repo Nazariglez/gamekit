@@ -1,9 +1,6 @@
 use gamekit::app::App;
-use gamekit::gfx::{
-    Buffer, Color, DrawFrame, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout,
-};
+use gamekit::gfx::{Buffer, Color, DrawFrame, Gfx, RenderPipeline, VertexFormat, VertexLayout};
 use gamekit::prelude::*;
-use gamekit::sys::event;
 
 // language=wgsl
 const SHADER: &str = r#"

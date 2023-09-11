@@ -1,7 +1,7 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, DrawFrame, Gfx, RenderPipeline, Renderer, UniformBinding,
-    VertexFormat, VertexLayout,
+    BindGroup, Buffer, Color, DrawFrame, Gfx, RenderPipeline, UniformBinding, VertexFormat,
+    VertexLayout,
 };
 use gamekit::prelude::*;
 use gamekit::sys::event;

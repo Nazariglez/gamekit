@@ -32,7 +32,7 @@ impl Default for Time {
 
 impl Time {
     pub fn config() -> TimeConfig {
-        TimeConfig::default()
+        TimeConfig
     }
 
     #[inline]

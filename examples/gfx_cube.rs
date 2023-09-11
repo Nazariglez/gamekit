@@ -1,6 +1,6 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline, Renderer,
+    BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline,
     UniformBinding, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};

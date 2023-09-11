@@ -2,15 +2,9 @@ use gamekit::app::App;
 use gamekit::assets::{AssetLoad, AssetLoader};
 use gamekit::prelude::*;
 use gamekit::sys::event;
-use log::warn;
-
-#[derive(AppState, Default)]
-struct State {
-    loaded: usize,
-}
 
 fn main() -> Result<(), String> {
-    gamekit::init_with(|| Ok(State::default()))
+    gamekit::init()
         .add_config(AssetLoader::config())?
         .add_config(App::config())?
         .once(on_init)
@@ -24,7 +18,7 @@ fn on_init(_: &event::Init, loader: &mut AssetLoader) {
         .load(&asset_path("bunny.png"));
 }
 
-fn on_asset_load(evt: &AssetLoad, app: &mut App, state: &mut State) {
+fn on_asset_load(evt: &AssetLoad) {
     let id = evt.id();
     let loaded = match evt.data() {
         Ok(buff) => format!("Loaded -> '{}' ({} bytes)", id, buff.len()),
