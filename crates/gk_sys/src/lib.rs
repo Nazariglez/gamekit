@@ -6,6 +6,8 @@ mod utils;
 
 pub mod event;
 pub mod handlers;
+pub mod keyboard;
+pub mod mouse;
 pub mod prelude;
 pub mod storage;
 pub mod window;
