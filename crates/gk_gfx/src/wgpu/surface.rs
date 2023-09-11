@@ -67,8 +67,4 @@ impl Surface {
             .get_current_texture()
             .map_err(|e| e.to_string())
     }
-
-    pub fn add_depth_texture(&mut self, tex: Texture) {
-        self.depth_texture = Some(tex);
-    }
 }

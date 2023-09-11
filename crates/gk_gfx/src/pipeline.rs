@@ -1,6 +1,6 @@
 use crate::buffer::{IndexFormat, VertexLayout};
 use crate::consts::{MAX_BIND_GROUPS_PER_PIPELINE, MAX_VERTEX_BUFFERS};
-use crate::{BindGroup, BindGroupEntry, BlendMode, Color};
+use crate::{BindGroup, BlendMode, Color};
 use arrayvec::ArrayVec;
 
 pub trait GKRenderPipeline {}

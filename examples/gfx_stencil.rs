@@ -141,7 +141,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &DrawFrame, _app: &mut App, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = evt.create_renderer();
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));
     renderer.apply_pipeline(&state.mask_pip);

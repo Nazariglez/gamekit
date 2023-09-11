@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! option_usize_env {
     ($s:expr, $d:expr) => {
-        crate::utils::parse_string_as_usize(option_env!($s), $d)
+        $crate::utils::parse_string_as_usize(option_env!($s), $d)
     };
 }
 

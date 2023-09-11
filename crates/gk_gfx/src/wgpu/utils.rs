@@ -2,10 +2,9 @@ use crate::color::Color;
 use crate::consts::SURFACE_DEFAULT_DEPTH_FORMAT;
 use crate::{
     BlendComponent, BlendFactor, BlendMode, BlendOperation, BufferUsage, ColorMask, CompareMode,
-    CullMode, DepthStencil, IndexFormat, Primitive, Stencil, StencilAction, Texture, TextureFilter,
+    CullMode, DepthStencil, IndexFormat, Primitive, Stencil, StencilAction, TextureFilter,
     TextureFormat, TextureWrap, VertexFormat, VertexStepMode,
 };
-use bitflags::Flags;
 use wgpu::{BufferUsages, ColorWrites, CompareFunction};
 
 pub fn wgpu_color(color: Color) -> wgpu::Color {

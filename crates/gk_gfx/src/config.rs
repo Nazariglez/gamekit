@@ -1,9 +1,8 @@
 use crate::gfx::Gfx;
 use crate::{DrawFrame, GfxAttributes};
 use gk_app::App;
-use gk_sys::window::{GKWindow, WindowEvent, WindowEventId};
+use gk_sys::window::{WindowEvent, WindowEventId};
 use gk_sys::{AppBuilder, BuildConfig, EventQueue, GKState};
-use std::thread::current;
 
 #[derive(Default)]
 pub struct GfxConfig {
@@ -27,14 +26,14 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
         let builder = builder.on(on_window_event).on(on_draw).on(on_frame_end);
 
         let attrs = self.attrs;
-        Ok(builder.add_plugin_with(move |platform: &mut App| {
+        builder.add_plugin_with(move |platform: &mut App| {
             let mut gfx = Gfx::new(attrs)?;
             if let Some(win) = platform.main_window() {
-                let _ = gfx.init_surface(win)?;
+                gfx.init_surface(win)?;
             }
 
             Ok(gfx)
-        })?)
+        })
     }
 }
 

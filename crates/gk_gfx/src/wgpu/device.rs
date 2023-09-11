@@ -6,7 +6,6 @@ use super::texture::Texture;
 use super::utils::wgpu_color;
 use crate::attrs::GfxAttributes;
 use crate::buffer::{BufferDescriptor, BufferUsage};
-use crate::consts::SURFACE_DEFAULT_DEPTH_FORMAT;
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
 use crate::renderer::Renderer;
@@ -17,8 +16,8 @@ use crate::wgpu::utils::{
     wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format, wgpu_write_mask,
 };
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
-    TextureData, TextureFormat, MAX_BINDING_ENTRIES,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, Sampler, SamplerDescriptor, TextureData,
+    TextureFormat, MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
 use gk_sys::window::{GKWindow, GKWindowId};
@@ -26,14 +25,13 @@ use gk_sys::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
-use wgpu::{BlendComponent, IndexFormat, Queue, TextureDimension};
+use wgpu::{Queue, TextureDimension};
 
 pub struct Device {
     attrs: GfxAttributes,
     ctx: Context,
     depth_format: TextureFormat,
     pub(crate) surfaces: HashMap<GKWindowId, Surface>,
-    depth_texture: Option<Texture>,
 }
 
 impl Plugin for Device {}
@@ -46,7 +44,6 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             ctx: context,
             depth_format: attrs.depth_format,
             surfaces: HashMap::default(),
-            depth_texture: None,
         })
     }
 
@@ -132,7 +129,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
         let swapchain_color_target: wgpu::ColorTargetState = swapchain_format.into();
         let color_target = wgpu::ColorTargetState {
-            blend: desc.blend_mode.map_or(None, |bm| Some(wgpu_blend_mode(bm))),
+            blend: desc.blend_mode.map(wgpu_blend_mode),
             write_mask: wgpu_write_mask(desc.color_mask),
             ..swapchain_color_target
         };
@@ -217,7 +214,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             min_filter: wgpu_texture_filter(desc.min_filter),
             mipmap_filter: desc
                 .mipmap_filter
-                .map_or(Default::default(), |f| wgpu_texture_filter(f)),
+                .map_or(Default::default(), wgpu_texture_filter),
             ..Default::default()
         });
         Ok(Sampler { raw })
@@ -386,9 +383,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
 
                         let depth = if uses_depth {
                             Some(wgpu::Operations {
-                                load: clear
-                                    .depth
-                                    .map_or(wgpu::LoadOp::Load, |depth| wgpu::LoadOp::Clear(depth)),
+                                load: clear.depth.map_or(wgpu::LoadOp::Load, wgpu::LoadOp::Clear),
                                 store: true,
                             })
                         } else {

@@ -1,8 +1,5 @@
 use crate::GfxAttributes;
-use wgpu::{
-    Adapter, Device, Instance, PowerPreference, Queue, Surface as RawSurface, SurfaceCapabilities,
-    SurfaceConfiguration, SurfaceTexture,
-};
+use wgpu::{Adapter, Device, Instance, PowerPreference, Queue, Surface as RawSurface};
 
 pub(crate) struct Context {
     // - wgpu inner types
@@ -13,7 +10,8 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    pub fn new(attrs: GfxAttributes) -> Result<Self, String> {
+    pub fn new(_attrs: GfxAttributes) -> Result<Self, String> {
+        // TODO why attrs is required here?
         let instance = Instance::default();
         let (adapter, device, queue) = pollster::block_on(generate_inner(&instance, None))?;
 
@@ -41,7 +39,7 @@ impl Context {
 
 async fn generate_inner(
     instance: &Instance,
-    surface: Option<&RawSurface>,
+    _surface: Option<&RawSurface>, // TODO why this is here?
 ) -> Result<(Adapter, Device, Queue), String> {
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {

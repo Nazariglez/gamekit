@@ -4,7 +4,6 @@ use crate::consts::{
 };
 use crate::{BindGroup, Buffer, ClearOptions, RenderPipeline};
 use arrayvec::ArrayVec;
-use std::io::sink;
 use std::ops::Range;
 
 // TODO gfx works with RenderPass, then we have Render2D, and Render3D

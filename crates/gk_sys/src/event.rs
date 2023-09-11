@@ -23,14 +23,8 @@ impl EventListener {
             return true;
         }
 
-        return false;
+        false
     }
-}
-
-enum EventCommand<S: GKState + 'static> {
-    Queue(Box<dyn FnOnce(&mut System<S>)>),
-    Add(TypeId, EventListener),
-    Off(TypeId, u64),
 }
 
 /// A list of events pushed by plugins to be processed

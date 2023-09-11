@@ -55,6 +55,11 @@ impl<T, const N: usize> RingBuffer<T, N> {
     pub fn len(&self) -> usize {
         N
     }
+
+    /// Returns if the buffer is empty
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl<T, const N: usize> Default for RingBuffer<T, N>

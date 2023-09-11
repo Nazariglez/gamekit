@@ -43,7 +43,7 @@ impl AssetLoader {
 impl Plugin for AssetLoader {}
 
 #[derive(Debug, Default, Copy, Clone)]
-pub struct AssetLoaderConfig;
+pub struct AssetLoaderConfig {}
 
 impl<S: GKState + 'static> BuildConfig<S> for AssetLoaderConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {

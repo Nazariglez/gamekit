@@ -78,7 +78,7 @@ impl Gfx {
     }
 
     pub fn render(&mut self, renderer: &Renderer) -> Result<(), String> {
-        let frame = self.current_frame.ok_or_else(|| "There is no frame surface information to render to. You can use 'gfx.render_to' instead.")?;
+        let frame = self.current_frame.ok_or("There is no frame surface information to render to. You can use 'gfx.render_to' instead.")?;
         self.render_to(frame.window_id, renderer)
     }
 
@@ -372,7 +372,7 @@ impl<'a> BufferWriteBuilder<'a> {
         self
     }
 
-    pub fn build(mut self) -> Result<(), String> {
+    pub fn build(self) -> Result<(), String> {
         let Self {
             gfx,
             buffer,

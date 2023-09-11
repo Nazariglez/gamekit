@@ -1,8 +1,8 @@
 use crate::config::BuildConfig;
 use crate::event::{EventListener, EventMap, EventQueue};
 use crate::handlers::{
-    EventHandler, EventHandlerFn, EventHandlerFnOnce, EventHandlerOnce, Handler, PluginHandler,
-    RunnerHandlerFn, SetupHandler, SetupHandlerFn, UpdateHandlerFn,
+    EventHandler, EventHandlerFn, EventHandlerFnOnce, EventHandlerOnce, PluginHandler,
+    RunnerHandlerFn, SetupHandler, SetupHandlerFn,
 };
 use crate::runner::default_runner;
 use crate::storage::{Plugins, Storage};

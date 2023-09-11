@@ -1,5 +1,5 @@
 use crate::event::{EventListener, EventMap};
-use crate::handlers::{EventHandlerFn, EventHandlerFnOnce, UpdateHandlerFn};
+use crate::handlers::{EventHandlerFn, EventHandlerFnOnce};
 use crate::storage::Storage;
 use crate::window::GKWindowId;
 use crate::{event, GKState};
@@ -78,7 +78,7 @@ impl<S: GKState> System<S> {
                 if let Some(cb) = cb_opt.take() {
                     let cb = cb.downcast::<Box<EventHandlerFnOnce<E, S>>>();
                     if let Ok(cb) = cb {
-                        cb(&mut self.storage, &evt);
+                        cb(&mut self.storage, evt);
                         needs_clean = true;
                     }
                 }
@@ -86,7 +86,7 @@ impl<S: GKState> System<S> {
             EventListener::Mut(_, cb) => {
                 let cb = cb.downcast_mut::<Box<EventHandlerFn<E, S>>>();
                 if let Some(cb) = cb {
-                    cb(&mut self.storage, &evt);
+                    cb(&mut self.storage, evt);
                 }
             }
         }

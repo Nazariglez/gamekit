@@ -8,11 +8,11 @@ use winit::event::{Event, WindowEvent as WWindowEvent};
 pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
     let event_loop = app
         .get_mut_plugin::<App>()
-        .ok_or_else(|| "Cannot find Windows plugin.")?
+        .ok_or("Cannot find Windows plugin.")?
         .manager
         .event_loop
         .take()
-        .ok_or_else(|| "Something went wrong acquiring the Winit's EventLoop.".to_string())?;
+        .ok_or("Something went wrong acquiring the Winit's EventLoop.")?;
 
     let mut initialized_app = false;
 

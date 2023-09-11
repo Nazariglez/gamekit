@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::TextureFormat;
 
 pub const SURFACE_DEFAULT_DEPTH_FORMAT: TextureFormat = TextureFormat::Depth32Float;

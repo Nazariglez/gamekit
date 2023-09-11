@@ -53,7 +53,7 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
             // WindowEventId::Open => windows.set_main_window(evt.id),
             WindowEventId::FocusGained => platform.set_main_window(evt.id),
             WindowEventId::Close => {
-                if platform.window_ids().len() == 0 {
+                if platform.window_ids().is_empty() {
                     platform.exit();
                 }
             }
