@@ -1,16 +1,16 @@
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
 #[derive(Copy, Clone, Hash, Debug, Eq, PartialEq)]
-pub struct GKWindowId(u64);
+pub struct WindowId(u64);
 
-impl From<u64> for GKWindowId {
+impl From<u64> for WindowId {
     fn from(value: u64) -> Self {
         Self(value)
     }
 }
 
-impl From<GKWindowId> for u64 {
-    fn from(value: GKWindowId) -> Self {
+impl From<WindowId> for u64 {
+    fn from(value: WindowId) -> Self {
         value.0
     }
 }
@@ -100,14 +100,14 @@ impl Default for GKWindowAttributes {
 
 pub trait GKWindowManager<W: GKWindow> {
     fn new() -> Self;
-    fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String>;
-    fn window(&mut self, id: GKWindowId) -> Option<&mut W>;
-    fn close(&mut self, id: GKWindowId) -> bool;
+    fn create(&mut self, attrs: GKWindowAttributes) -> Result<WindowId, String>;
+    fn window(&mut self, id: WindowId) -> Option<&mut W>;
+    fn close(&mut self, id: WindowId) -> bool;
     fn exit(&mut self);
 }
 
 pub trait GKWindow: HasRawWindowHandle + HasRawDisplayHandle {
-    fn id(&self) -> GKWindowId;
+    fn id(&self) -> WindowId;
     fn physical_size(&self) -> (u32, u32);
     fn size(&self) -> (u32, u32);
     fn width(&self) -> u32;
@@ -145,7 +145,7 @@ pub trait GKWindow: HasRawWindowHandle + HasRawDisplayHandle {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WindowEvent {
-    pub id: GKWindowId,
+    pub id: WindowId,
     pub event: WindowEventId,
 }
 

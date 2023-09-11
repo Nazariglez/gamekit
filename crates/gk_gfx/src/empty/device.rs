@@ -1,7 +1,7 @@
 use super::pipeline::Pipeline;
 use crate::renderer::Renderer;
 use crate::{GKDevice, RenderPipelineDescriptor};
-use gk_sys::window::{GKWindow, GKWindowId};
+use gk_sys::window::{GKWindow, WindowId};
 
 pub struct Device;
 
@@ -21,10 +21,10 @@ impl GKDevice<Pipeline> for Device {
     ) -> Result<Pipeline, String> {
         Ok(Pipeline)
     }
-    fn resize(&mut self, id: GKWindowId, width: u32, height: u32) {
+    fn resize(&mut self, id: WindowId, width: u32, height: u32) {
         // no-op
     }
-    fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
+    fn render(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String> {
         Ok(())
     }
 }

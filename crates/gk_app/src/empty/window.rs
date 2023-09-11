@@ -1,10 +1,10 @@
-use gk_sys::window::{CursorIcon, GKWindow, GKWindowId, GKWindowManager};
+use gk_sys::window::{CursorIcon, GKWindow, GKWindowManager, WindowId};
 use raw_window_handle::{
     HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
 };
 
 pub struct Window {
-    pub(crate) id: GKWindowId,
+    pub(crate) id: WindowId,
     pub(crate) size: (u32, u32),
     pub(crate) position: (i32, i32),
     pub(crate) title: String,
@@ -42,7 +42,7 @@ unsafe impl HasRawDisplayHandle for Window {
 }
 
 impl GKWindow for Window {
-    fn id(&self) -> GKWindowId {
+    fn id(&self) -> WindowId {
         self.id
     }
 

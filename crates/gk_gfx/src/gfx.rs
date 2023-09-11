@@ -7,7 +7,7 @@ use crate::{
     TextureWrap, UniformBinding, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
-use gk_sys::window::{GKWindow, GKWindowId};
+use gk_sys::window::{GKWindow, WindowId};
 use gk_sys::Plugin;
 use image::EncodableLayout;
 
@@ -73,7 +73,7 @@ impl Gfx {
         BindGroupBuilder::new(self)
     }
 
-    pub fn resize(&mut self, id: GKWindowId, width: u32, height: u32) -> Result<(), String> {
+    pub fn resize(&mut self, id: WindowId, width: u32, height: u32) -> Result<(), String> {
         self.raw.resize(id, width, height)
     }
 
@@ -82,7 +82,7 @@ impl Gfx {
         self.render_to(frame.window_id, renderer)
     }
 
-    pub fn render_to(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
+    pub fn render_to(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String> {
         self.raw.render(window, renderer)
     }
 }

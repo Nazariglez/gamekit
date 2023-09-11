@@ -20,7 +20,7 @@ use crate::{
     TextureFormat, MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
-use gk_sys::window::{GKWindow, GKWindowId};
+use gk_sys::window::{GKWindow, WindowId};
 use gk_sys::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
@@ -31,7 +31,7 @@ pub struct Device {
     attrs: GfxAttributes,
     ctx: Context,
     depth_format: TextureFormat,
-    pub(crate) surfaces: HashMap<GKWindowId, Surface>,
+    pub(crate) surfaces: HashMap<WindowId, Surface>,
 }
 
 impl Plugin for Device {}
@@ -314,7 +314,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
         Ok(BindGroup { raw, layout })
     }
 
-    fn resize(&mut self, id: GKWindowId, width: u32, height: u32) -> Result<(), String> {
+    fn resize(&mut self, id: WindowId, width: u32, height: u32) -> Result<(), String> {
         if let Some(surface) = self.surfaces.get_mut(&id) {
             surface.resize(&self.ctx.device, width, height);
 
@@ -333,7 +333,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
         Ok(())
     }
 
-    fn render(&mut self, window: GKWindowId, renderer: &Renderer) -> Result<(), String> {
+    fn render(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String> {
         let surface = self
             .surfaces
             .get_mut(&window)

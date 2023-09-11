@@ -1,4 +1,4 @@
-use crate::window::GKWindowId;
+use crate::window::WindowId;
 use crate::{option_usize_env, GKState, System};
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, VecDeque};
@@ -62,7 +62,7 @@ pub struct Update;
 
 #[derive(Debug, Copy, Clone)]
 pub struct DrawRequest {
-    pub window_id: GKWindowId,
+    pub window_id: WindowId,
 }
 
 #[derive(Debug, Copy, Clone)]

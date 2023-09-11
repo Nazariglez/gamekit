@@ -1,7 +1,7 @@
-use gk_sys::window::{CursorIcon, GKWindowId};
-use winit::window::{CursorIcon as WCursorIcon, WindowId};
+use gk_sys::window::{CursorIcon, WindowId};
+use winit::window::{CursorIcon as WCursorIcon, WindowId as WWindowId};
 
-pub(crate) fn win_id(window_id: WindowId) -> GKWindowId {
+pub(crate) fn win_id(window_id: WWindowId) -> WindowId {
     let raw: u64 = window_id.into();
     raw.into()
 }

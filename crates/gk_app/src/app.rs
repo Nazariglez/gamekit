@@ -1,12 +1,12 @@
 use crate::{Manager, PlatformConfig, Window};
-use gk_sys::window::{GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_sys::window::{GKWindowAttributes, GKWindowManager, WindowId};
 use gk_sys::Plugin;
 use hashbrown::hash_map::{Values, ValuesMut};
 
 pub struct App {
     pub manager: Manager,
-    main_window: Option<GKWindowId>,
-    window_ids: Vec<GKWindowId>,
+    main_window: Option<WindowId>,
+    window_ids: Vec<WindowId>,
 }
 
 impl App {
@@ -22,13 +22,13 @@ impl App {
         PlatformConfig::default()
     }
 
-    pub fn create_window(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
+    pub fn create_window(&mut self, attrs: GKWindowAttributes) -> Result<WindowId, String> {
         let id = self.manager.create(attrs)?;
         self.window_ids.push(id);
         Ok(id)
     }
 
-    pub fn window(&mut self, id: GKWindowId) -> Option<&mut Window> {
+    pub fn window(&mut self, id: WindowId) -> Option<&mut Window> {
         self.manager.window(id)
     }
 
@@ -36,23 +36,23 @@ impl App {
         self.main_window.and_then(|id| self.window(id))
     }
 
-    pub fn set_main_window(&mut self, win_id: GKWindowId) {
+    pub fn set_main_window(&mut self, win_id: WindowId) {
         self.main_window = Some(win_id);
     }
 
-    pub fn window_ids(&self) -> &[GKWindowId] {
+    pub fn window_ids(&self) -> &[WindowId] {
         &self.window_ids
     }
 
-    pub fn windows(&self) -> Values<'_, GKWindowId, Window> {
+    pub fn windows(&self) -> Values<'_, WindowId, Window> {
         self.manager.windows.values()
     }
 
-    pub fn windows_mut(&mut self) -> ValuesMut<'_, GKWindowId, Window> {
+    pub fn windows_mut(&mut self) -> ValuesMut<'_, WindowId, Window> {
         self.manager.windows.values_mut()
     }
 
-    pub fn close(&mut self, id: GKWindowId) {
+    pub fn close(&mut self, id: WindowId) {
         let closed = self.manager.close(id);
         if closed {
             let pos = self

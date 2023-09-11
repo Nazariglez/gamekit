@@ -1,6 +1,6 @@
 use super::utils::win_id;
 use crate::App;
-use gk_sys::window::{GKWindow, GKWindowId, WindowEvent, WindowEventId};
+use gk_sys::window::{GKWindow, WindowEvent, WindowEventId, WindowId};
 use gk_sys::{GKState, System};
 use hashbrown::HashSet;
 use winit::event::{Event, WindowEvent as WWindowEvent};
@@ -18,7 +18,7 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
 
     // Send initialize event if this is a new window
     let mut initialized_windows = HashSet::new();
-    let mut init_window = move |id: GKWindowId, app: &mut System<S>| {
+    let mut init_window = move |id: WindowId, app: &mut System<S>| {
         if !initialized_windows.contains(&id) {
             initialized_windows.insert(id);
             app.event(WindowEvent {

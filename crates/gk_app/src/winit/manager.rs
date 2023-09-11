@@ -1,12 +1,12 @@
 use super::event_loop::EventLoopPtr;
 use super::window::Window;
-use gk_sys::window::{GKWindow, GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_sys::window::{GKWindow, GKWindowAttributes, GKWindowManager, WindowId};
 use gk_sys::Plugin;
 use hashbrown::HashMap;
 pub use winit::event_loop::EventLoopWindowTarget;
 
 pub struct Manager {
-    pub windows: HashMap<GKWindowId, Window>,
+    pub windows: HashMap<WindowId, Window>,
     pub(crate) event_loop: EventLoopPtr,
     pub(crate) request_exit: bool,
 }
@@ -28,7 +28,7 @@ impl GKWindowManager<Window> for Manager {
         Default::default()
     }
 
-    fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
+    fn create(&mut self, attrs: GKWindowAttributes) -> Result<WindowId, String> {
         // SAFETY: if it's `Some` means that we're inside the event's loop and this is available
         let event_loop = self.event_loop.inner();
         match event_loop {
@@ -42,11 +42,11 @@ impl GKWindowManager<Window> for Manager {
         }
     }
 
-    fn window(&mut self, id: GKWindowId) -> Option<&mut Window> {
+    fn window(&mut self, id: WindowId) -> Option<&mut Window> {
         self.windows.get_mut(&id)
     }
 
-    fn close(&mut self, id: GKWindowId) -> bool {
+    fn close(&mut self, id: WindowId) -> bool {
         self.windows.remove(&id).is_some()
     }
 

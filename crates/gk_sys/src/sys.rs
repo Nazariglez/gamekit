@@ -1,7 +1,7 @@
 use crate::event::{EventListener, EventMap};
 use crate::handlers::{EventHandlerFn, EventHandlerFnOnce};
 use crate::storage::Storage;
-use crate::window::GKWindowId;
+use crate::window::WindowId;
 use crate::{event, GKState};
 use std::any::TypeId;
 
@@ -155,7 +155,7 @@ impl<S: GKState> System<S> {
         self.event(event::Update);
     }
 
-    pub fn draw(&mut self, window_id: GKWindowId) {
+    pub fn draw(&mut self, window_id: WindowId) {
         gk_profile::function!();
 
         if !(self.initialized && self.in_frame) {

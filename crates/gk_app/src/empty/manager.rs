@@ -1,10 +1,10 @@
 use super::window::Window;
-use gk_sys::window::{CursorIcon, GKWindowAttributes, GKWindowId, GKWindowManager};
+use gk_sys::window::{CursorIcon, GKWindowAttributes, GKWindowManager, WindowId};
 use hashbrown::HashMap;
 
 #[derive(Default)]
 pub struct Manager {
-    pub(crate) windows: HashMap<GKWindowId, Window>,
+    pub(crate) windows: HashMap<WindowId, Window>,
     pub(crate) request_exit: bool,
 }
 
@@ -13,9 +13,9 @@ impl GKWindowManager<Window> for Manager {
         Default::default()
     }
 
-    fn create(&mut self, attrs: GKWindowAttributes) -> Result<GKWindowId, String> {
+    fn create(&mut self, attrs: GKWindowAttributes) -> Result<WindowId, String> {
         let count = self.windows.len();
-        let id: GKWindowId = (count as u64).into();
+        let id: WindowId = (count as u64).into();
         let win = Window {
             id,
             size: attrs.size.unwrap_or((800, 600)),
@@ -30,11 +30,11 @@ impl GKWindowManager<Window> for Manager {
         Ok(id)
     }
 
-    fn window(&mut self, id: GKWindowId) -> Option<&mut Window> {
+    fn window(&mut self, id: WindowId) -> Option<&mut Window> {
         self.windows.get_mut(&id)
     }
 
-    fn close(&mut self, id: GKWindowId) -> bool {
+    fn close(&mut self, id: WindowId) -> bool {
         self.windows.remove(&id).is_some()
     }
 

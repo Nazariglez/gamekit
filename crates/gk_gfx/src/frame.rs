@@ -1,15 +1,15 @@
 use crate::Renderer;
-use gk_sys::window::GKWindowId;
+use gk_sys::window::WindowId;
 
 #[derive(Copy, Clone, Debug)]
 pub struct DrawFrame {
-    pub(crate) window_id: GKWindowId,
+    pub(crate) window_id: WindowId,
     pub(crate) width: u32,
     pub(crate) height: u32,
 }
 
 impl DrawFrame {
-    pub fn window_id(&self) -> GKWindowId {
+    pub fn window_id(&self) -> WindowId {
         self.window_id
     }
     pub fn size(&self) -> (u32, u32) {

@@ -1,5 +1,5 @@
 use super::utils::{cursor_id, win_id};
-use gk_sys::window::{CursorIcon, GKWindow, GKWindowAttributes, GKWindowId};
+use gk_sys::window::{CursorIcon, GKWindow, GKWindowAttributes, WindowId};
 use raw_window_handle::{
     HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
 };
@@ -8,7 +8,7 @@ use winit::event_loop::EventLoopWindowTarget;
 use winit::window::{Fullscreen, Window as RawWindow, WindowBuilder};
 
 pub struct Window {
-    id: GKWindowId,
+    id: WindowId,
     raw: RawWindow,
     title: String,
     cursor: CursorIcon,
@@ -93,7 +93,7 @@ unsafe impl HasRawDisplayHandle for Window {
 }
 
 impl GKWindow for Window {
-    fn id(&self) -> GKWindowId {
+    fn id(&self) -> WindowId {
         self.id
     }
 
