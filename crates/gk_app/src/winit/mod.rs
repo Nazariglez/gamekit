@@ -1,7 +1,9 @@
 #![cfg(feature = "winit")]
 
 mod event_loop;
+mod keyboard;
 mod manager;
+mod mouse;
 mod runner;
 mod utils;
 mod window;

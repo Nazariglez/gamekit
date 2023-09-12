@@ -1,3 +1,5 @@
+use crate::window::WindowId;
+
 /// KeyCode represents the symbolic name of the keyboard keys pressed
 /// This enum code comes from `winit` just adding the Unknown key for non-compatible keys between platforms
 #[derive(Debug, Hash, Ord, PartialOrd, PartialEq, Eq, Clone, Copy)]
@@ -201,4 +203,10 @@ pub enum KeyCode {
     Cut,
 
     Unknown,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum KeyboardEvent {
+    Pressed { window_id: WindowId, key: KeyCode },
+    Released { window_id: WindowId, key: KeyCode },
 }

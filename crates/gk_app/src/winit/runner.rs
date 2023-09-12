@@ -1,4 +1,5 @@
 use super::utils::win_id;
+use crate::winit::keyboard;
 use crate::App;
 use gk_sys::window::{GKWindow, WindowEvent, WindowEventId, WindowId};
 use gk_sys::{GKState, System};
@@ -78,6 +79,17 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
                     init_window(id, &mut app);
 
                     match event {
+                        // input
+                        WWindowEvent::KeyboardInput { input, .. } => {
+                            let evt = keyboard::process(id, input);
+                            app.event(evt);
+                        }
+                        WWindowEvent::MouseInput { state, button, .. } => {
+                            let evt = mouse::process(id, state, button);
+                            app.event(evt);
+                        }
+
+                        // win
                         WWindowEvent::Resized(size) => {
                             let size = size.to_logical::<u32>(scale_factor);
                             app.event(WindowEvent {
