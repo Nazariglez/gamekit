@@ -1,13 +1,53 @@
 use super::utils::win_id;
-use crate::winit::keyboard;
+use crate::winit::{keyboard, mouse};
 use crate::App;
 use gk_sys::window::{GKWindow, WindowEvent, WindowEventId, WindowId};
 use gk_sys::{GKState, System};
-use hashbrown::HashSet;
+use hashbrown::{HashMap, HashSet};
 use winit::event::{Event, WindowEvent as WWindowEvent};
 
-pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
-    let event_loop = app
+#[derive(Default)]
+struct InnerWindowList(HashMap<WindowId, InnerWindowData>);
+
+impl InnerWindowList {
+    fn init_window<S: GKState + 'static>(&mut self, id: WindowId, sys: &mut System<S>) {
+        if !self.0.contains_key(&id) {
+            self.0.insert(
+                id,
+                InnerWindowData {
+                    id,
+                    mouse_pos: None,
+                },
+            );
+            sys.event(WindowEvent {
+                id,
+                event: WindowEventId::Init,
+            });
+        }
+    }
+
+    fn remove(&mut self, id: &WindowId) {
+        self.0.remove(id);
+    }
+
+    fn mouse_pos(&self, id: &WindowId) -> Option<(f32, f32)> {
+        self.0.get(id).and_then(|inner| inner.mouse_pos)
+    }
+
+    fn set_mouse_pos(&mut self, id: &WindowId, pos: Option<(f32, f32)>) {
+        if let Some(win) = self.0.get_mut(id) {
+            win.mouse_pos = pos;
+        }
+    }
+}
+
+struct InnerWindowData {
+    id: WindowId,
+    mouse_pos: Option<(f32, f32)>,
+}
+
+pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
+    let event_loop = sys
         .get_mut_plugin::<App>()
         .ok_or("Cannot find Windows plugin.")?
         .manager
@@ -17,20 +57,10 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
 
     let mut initialized_app = false;
 
-    // Send initialize event if this is a new window
-    let mut initialized_windows = HashSet::new();
-    let mut init_window = move |id: WindowId, app: &mut System<S>| {
-        if !initialized_windows.contains(&id) {
-            initialized_windows.insert(id);
-            app.event(WindowEvent {
-                id,
-                event: WindowEventId::Init,
-            });
-        }
-    };
-
+    // track some inner data
+    let mut inner_window_list = InnerWindowList::default();
     event_loop.run(move |evt, event_loop, control_flow| {
-        app.get_mut_plugin::<App>()
+        sys.get_mut_plugin::<App>()
             .unwrap()
             .manager
             .event_loop
@@ -45,54 +75,70 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
                 // init the app's logic on the first resumed event
                 if !initialized_app {
                     initialized_app = true;
-                    app.init();
+                    sys.init();
                 }
             }
             Event::NewEvents(_) => {
-                app.frame_start();
+                sys.frame_start();
             }
             Event::RedrawEventsCleared => {
-                app.frame_end();
+                sys.frame_end();
             }
             Event::MainEventsCleared => {
-                app.update();
+                sys.update();
             }
             Event::RedrawRequested(id) => {
                 let id = win_id(id);
 
                 // Sometimes this event comes before any WindowEvent
                 // Initializing windows here too we avoid a first blank frame
-                init_window(id, &mut app);
+                inner_window_list.init_window(id, &mut sys);
 
-                app.draw(id);
+                sys.draw(id);
             }
             Event::LoopDestroyed => {
-                app.close();
+                sys.close();
             }
 
             // -- Windowing events
             Event::WindowEvent { window_id, event } => {
-                let windows = app.get_mut_plugin::<App>().unwrap();
+                let windows = sys.get_mut_plugin::<App>().unwrap();
                 let id = win_id(window_id);
                 if let Some(win) = windows.window(id) {
                     let scale_factor = win.scale();
-                    init_window(id, &mut app);
+                    inner_window_list.init_window(id, &mut sys);
 
                     match event {
                         // input
                         WWindowEvent::KeyboardInput { input, .. } => {
                             let evt = keyboard::process(id, input);
-                            app.event(evt);
+                            sys.event(evt);
                         }
                         WWindowEvent::MouseInput { state, button, .. } => {
-                            let evt = mouse::process(id, state, button);
-                            app.event(evt);
+                            let evt = mouse::process_input(
+                                id,
+                                state,
+                                button,
+                                inner_window_list.mouse_pos(&id),
+                            );
+                            sys.event(evt);
                         }
+                        WWindowEvent::MouseWheel { delta, .. } => {
+                            // let evt = mouse::process_wheel(id);
+                            // app.event(evt);
+                        }
+                        WWindowEvent::CursorMoved {
+                            device_id,
+                            position,
+                            modifiers,
+                        } => {}
+                        WWindowEvent::CursorEntered { device_id } => {}
+                        WWindowEvent::CursorLeft { device_id } => {}
 
                         // win
                         WWindowEvent::Resized(size) => {
                             let size = size.to_logical::<u32>(scale_factor);
-                            app.event(WindowEvent {
+                            sys.event(WindowEvent {
                                 id,
                                 event: WindowEventId::Resized {
                                     width: size.width,
@@ -103,15 +149,15 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
                         }
                         WWindowEvent::Moved(pos) => {
                             let pos = pos.to_logical::<i32>(scale_factor);
-                            app.event(WindowEvent {
+                            sys.event(WindowEvent {
                                 id,
                                 event: WindowEventId::Moved { x: pos.x, y: pos.y },
                             });
                         }
                         WWindowEvent::CloseRequested => {
-                            let windows = app.get_mut_plugin::<App>().unwrap();
+                            let windows = sys.get_mut_plugin::<App>().unwrap();
                             windows.close(id);
-                            app.event(WindowEvent {
+                            sys.event(WindowEvent {
                                 id,
                                 event: WindowEventId::Close,
                             });
@@ -122,7 +168,7 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
                         WWindowEvent::HoveredFileCancelled => {}
                         WWindowEvent::ReceivedCharacter(_) => {}
                         WWindowEvent::Focused(focus) => {
-                            app.event(WindowEvent {
+                            sys.event(WindowEvent {
                                 id,
                                 event: if focus {
                                     WindowEventId::FocusGained
@@ -150,7 +196,7 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
                             new_inner_size,
                         } => {
                             let size = new_inner_size.to_logical::<u32>(scale_factor);
-                            app.event(WindowEvent {
+                            sys.event(WindowEvent {
                                 id,
                                 event: WindowEventId::Resized {
                                     width: size.width,
@@ -167,7 +213,7 @@ pub fn runner<S: GKState + 'static>(mut app: System<S>) -> Result<(), String> {
             _ => (),
         }
 
-        let manager = &mut app.get_mut_plugin::<App>().unwrap().manager;
+        let manager = &mut sys.get_mut_plugin::<App>().unwrap().manager;
         manager.event_loop.unset();
         if manager.request_exit {
             control_flow.set_exit();

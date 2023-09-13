@@ -1,12 +1,18 @@
-use gk_sys::keyboard::{KeyCode, KeyboardEvent};
+use gk_sys::keyboard::{KeyCode, KeyboardAction, KeyboardEvent};
 use gk_sys::window::WindowId;
-use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
+use winit::event::{ElementState, KeyboardInput as WKeyboardInput, VirtualKeyCode};
 
-pub(crate) fn process(window_id: WindowId, input: KeyboardInput) -> KeyboardEvent {
+pub(crate) fn process(window_id: WindowId, input: WKeyboardInput) -> KeyboardEvent {
     let key = key_id(input.virtual_keycode.as_ref());
     match input.state {
-        ElementState::Pressed => KeyboardEvent::Pressed { window_id, key },
-        ElementState::Released => KeyboardEvent::Released { window_id, key },
+        ElementState::Pressed => KeyboardEvent {
+            window_id,
+            action: KeyboardAction::Pressed { key },
+        },
+        ElementState::Released => KeyboardEvent {
+            window_id,
+            action: KeyboardAction::Released { key },
+        },
     }
 }
 
