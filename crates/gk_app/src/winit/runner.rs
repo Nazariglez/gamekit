@@ -1,6 +1,7 @@
 use super::utils::win_id;
 use crate::winit::{keyboard, mouse};
 use crate::App;
+use gk_sys::mouse::MouseEvent;
 use gk_sys::window::{GKWindow, WindowEvent, WindowEventId, WindowId};
 use gk_sys::{GKState, System};
 use hashbrown::{HashMap, HashSet};
@@ -109,11 +110,13 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                     inner_window_list.init_window(id, &mut sys);
 
                     match event {
-                        // input
+                        // keyboard events
                         WWindowEvent::KeyboardInput { input, .. } => {
                             let evt = keyboard::process(id, input);
                             sys.event(evt);
                         }
+
+                        // mouse events
                         WWindowEvent::MouseInput { state, button, .. } => {
                             let evt = mouse::process_input(
                                 id,
@@ -124,18 +127,34 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                             sys.event(evt);
                         }
                         WWindowEvent::MouseWheel { delta, .. } => {
-                            // let evt = mouse::process_wheel(id);
-                            // app.event(evt);
+                            let evt = mouse::process_wheel(
+                                id,
+                                delta,
+                                scale_factor,
+                                inner_window_list.mouse_pos(&id),
+                            );
+                            sys.event(evt);
                         }
-                        WWindowEvent::CursorMoved {
-                            device_id,
-                            position,
-                            modifiers,
-                        } => {}
-                        WWindowEvent::CursorEntered { device_id } => {}
-                        WWindowEvent::CursorLeft { device_id } => {}
+                        WWindowEvent::CursorMoved { position, .. } => {
+                            let pos = position.to_logical::<f64>(scale_factor);
+                            let evt = mouse::process_motion(
+                                id,
+                                pos.into(),
+                                inner_window_list.mouse_pos(&id),
+                            );
+                            inner_window_list.set_mouse_pos(&id, Some((pos.x as _, pos.y as _)));
+                            sys.event(evt);
+                        }
+                        WWindowEvent::CursorEntered { .. } => {
+                            let evt = mouse::process_enter(id, inner_window_list.mouse_pos(&id));
+                            sys.event(evt);
+                        }
+                        WWindowEvent::CursorLeft { .. } => {
+                            let evt = mouse::process_leave(id, inner_window_list.mouse_pos(&id));
+                            sys.event(evt);
+                        }
 
-                        // win
+                        // window events
                         WWindowEvent::Resized(size) => {
                             let size = size.to_logical::<u32>(scale_factor);
                             sys.event(WindowEvent {
