@@ -1,11 +1,11 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, BlendMode, Buffer, Color, DrawFrame, Gfx, IndexFormat, RenderPipeline,
+    BindGroup, BlendMode, Buffer, Color, CreateRenderer, Gfx, IndexFormat, RenderPipeline,
     TextureBinding, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
-
 use gamekit::time::Time;
+use gamekit::sys::event::DrawEvent;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -114,7 +114,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = evt.create_renderer();
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);

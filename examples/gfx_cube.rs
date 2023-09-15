@@ -1,11 +1,11 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline,
+    BindGroup, Buffer, Color, CullMode, CreateRenderer, Gfx, IndexFormat, RenderPipeline,
     UniformBinding, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::prelude::*;
-use gamekit::sys::event;
+use gamekit::sys::event::{DrawEvent, UpdateEvent};
 use gamekit::time::Time;
 
 // language=wgsl
@@ -151,11 +151,11 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_update(_: &event::UpdateEvent, time: &mut Time, state: &mut State) {
+fn on_update(_: &UpdateEvent, time: &mut Time, state: &mut State) {
     state.angle += 0.6 * time.delta_f32();
 }
 
-fn on_draw(frame: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(frame: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     // update mvp
     gfx.write_buffer(&state.ubo)
         .with_data(state.rotated_mvp().as_ref())

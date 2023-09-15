@@ -1,10 +1,9 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    Buffer, Color, CompareMode, DrawFrame, Gfx, RenderPipeline, VertexFormat, VertexLayout,
+    Buffer, Color, CompareMode, CreateRenderer, Gfx, RenderPipeline, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
-
-// TODO https://paroj.github.io/gltut/Positioning/Tut05%20Overlap%20and%20Depth%20Buffering.html
+use gamekit::sys::event::DrawEvent;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -81,7 +80,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(frame: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(frame: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     let mut renderer = frame.create_renderer();
     renderer.clear(Some(Color::WHITE), Some(1.0), None);
     renderer.apply_pipeline(&state.pip);
