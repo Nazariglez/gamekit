@@ -1,9 +1,9 @@
 use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
-    BufferUsage, ColorMask, CompareMode, CullMode, DepthStencil, Device, DrawFrame, GKBuffer,
-    GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor,
-    Stencil, Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter, TextureFormat,
+    BufferUsage, ColorMask, CompareMode, CullMode, DepthStencil, Device, GKBuffer, GfxAttributes,
+    GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor, Stencil,
+    Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter, TextureFormat,
     TextureWrap, UniformBinding, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
@@ -13,7 +13,7 @@ use image::EncodableLayout;
 
 pub struct Gfx {
     pub(crate) raw: Device,
-    pub(crate) current_frame: Option<DrawFrame>,
+    pub(crate) current_frame: Option<WindowId>,
 }
 
 impl Plugin for Gfx {}
@@ -78,8 +78,8 @@ impl Gfx {
     }
 
     pub fn render(&mut self, renderer: &Renderer) -> Result<(), String> {
-        let frame = self.current_frame.ok_or("There is no frame surface information to render to. You can use 'gfx.render_to' instead.")?;
-        self.render_to(frame.window_id, renderer)
+        let window_id = self.current_frame.ok_or("There is no frame surface information to render to. You can use 'gfx.render_to' instead.")?;
+        self.render_to(window_id, renderer)
     }
 
     pub fn render_to(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String> {

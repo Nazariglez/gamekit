@@ -4,6 +4,7 @@ use crate::consts::{
 };
 use crate::{BindGroup, Buffer, ClearOptions, RenderPipeline};
 use arrayvec::ArrayVec;
+use gk_sys::event::DrawEvent;
 use std::ops::Range;
 
 // TODO gfx works with RenderPass, then we have Render2D, and Render3D
@@ -87,5 +88,17 @@ impl<'a> Renderer<'a> {
             rp.vertices = vertices;
             rp.instances = Some(instances);
         }
+    }
+}
+
+pub trait CreateRenderer {
+    fn create_renderer(&self) -> Renderer;
+}
+
+impl CreateRenderer for DrawEvent {
+    fn create_renderer(&self) -> Renderer {
+        let mut renderer = Renderer::new();
+        renderer.begin(self.width, self.height);
+        renderer
     }
 }

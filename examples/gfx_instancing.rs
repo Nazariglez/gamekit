@@ -1,7 +1,6 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, DrawFrame, Gfx, RenderPipeline, UniformBinding, VertexFormat,
-    VertexLayout,
+    BindGroup, Buffer, Color, Gfx, RenderPipeline, UniformBinding, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
 use gamekit::sys::event;
@@ -109,7 +108,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
+fn on_update(_: &event::UpdateEvent, time: &mut Time, state: &mut State) {
     state.count += 0.15 * time.delta_f32();
 }
 

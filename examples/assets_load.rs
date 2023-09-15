@@ -12,7 +12,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_init(_: &event::Init, loader: &mut AssetLoader) {
+fn on_init(_: &event::InitEvent, loader: &mut AssetLoader) {
     loader
         .load(&asset_path("cube.png"))
         .load(&asset_path("bunny.png"));

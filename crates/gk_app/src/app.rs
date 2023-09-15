@@ -25,6 +25,12 @@ impl App {
     pub fn create_window(&mut self, attrs: WindowAttributes) -> Result<WindowId, String> {
         let id = self.manager.create(attrs)?;
         self.window_ids.push(id);
+
+        // set this as main windows if there is no one
+        if self.main_window.is_none() {
+            self.main_window = Some(id);
+        }
+
         Ok(id)
     }
 
@@ -55,12 +61,19 @@ impl App {
     pub fn close(&mut self, id: WindowId) {
         let closed = self.manager.close(id);
         if closed {
+            // remove from the window_id list
             let pos = self
                 .window_ids
                 .iter()
                 .position(|stored_id| *stored_id == id);
+
             if let Some(pos) = pos {
                 self.window_ids.remove(pos);
+            }
+
+            // set main window as none if this was the main window
+            if self.main_window == Some(id) {
+                self.main_window = None;
             }
         }
     }

@@ -146,13 +146,13 @@ pub trait GKWindow: HasRawWindowHandle + HasRawDisplayHandle {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct WindowEvent {
     pub id: WindowId,
-    pub event: WindowEventId,
+    pub action: WindowAction,
 }
 
 /// Window's event type
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum WindowEventId {
+pub enum WindowAction {
     /// A new window was created
     Init,
 

@@ -103,7 +103,7 @@ pub struct TimeConfig;
 
 impl<S: GKState + 'static> BuildConfig<S> for TimeConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
-        let builder = builder.on(|_: &event::FrameStart, time: &mut Time| time.update());
+        let builder = builder.on(|_: &event::FrameStartEvent, time: &mut Time| time.update());
         Ok(builder.add_plugin(Time::default()))
     }
 }

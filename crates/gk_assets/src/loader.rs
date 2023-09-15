@@ -48,7 +48,7 @@ pub struct AssetLoaderConfig {}
 impl<S: GKState + 'static> BuildConfig<S> for AssetLoaderConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
         let builder = builder.on(
-            |_: &event::FrameStart, loader: &mut AssetLoader, events: &mut EventQueue<S>| {
+            |_: &event::FrameStartEvent, loader: &mut AssetLoader, events: &mut EventQueue<S>| {
                 loader.update(events)
             },
         );

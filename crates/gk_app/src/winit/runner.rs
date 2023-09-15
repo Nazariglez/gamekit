@@ -1,10 +1,10 @@
 use super::utils::win_id;
 use crate::winit::{keyboard, mouse};
 use crate::App;
-use gk_sys::mouse::MouseEvent;
-use gk_sys::window::{GKWindow, WindowEvent, WindowEventId, WindowId};
+use gk_sys::event::DrawEvent;
+use gk_sys::window::{GKWindow, WindowAction, WindowEvent, WindowId};
 use gk_sys::{GKState, System};
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use winit::event::{Event, WindowEvent as WWindowEvent};
 
 #[derive(Default)]
@@ -13,16 +13,26 @@ struct InnerWindowList(HashMap<WindowId, InnerWindowData>);
 impl InnerWindowList {
     fn init_window<S: GKState + 'static>(&mut self, id: WindowId, sys: &mut System<S>) {
         if !self.0.contains_key(&id) {
+            let (size, scale_factor) = sys
+                .get_mut_plugin::<App>()
+                .map(|app| {
+                    app.window(id)
+                        .map_or(((0, 0), 1.0), |win| (win.size(), win.scale()))
+                })
+                .unwrap_or(((0, 0), 1.0));
+
             self.0.insert(
                 id,
                 InnerWindowData {
                     id,
                     mouse_pos: None,
+                    size,
+                    scale_factor,
                 },
             );
             sys.event(WindowEvent {
                 id,
-                event: WindowEventId::Init,
+                action: WindowAction::Init,
             });
         }
     }
@@ -32,12 +42,29 @@ impl InnerWindowList {
     }
 
     fn mouse_pos(&self, id: &WindowId) -> Option<(f32, f32)> {
+        debug_assert!(self.0.get(id).is_some(), "Invalid window id: {:?}", id);
         self.0.get(id).and_then(|inner| inner.mouse_pos)
     }
 
     fn set_mouse_pos(&mut self, id: &WindowId, pos: Option<(f32, f32)>) {
+        debug_assert!(self.0.get(id).is_some(), "Invalid window id: {:?}", id);
         if let Some(win) = self.0.get_mut(id) {
             win.mouse_pos = pos;
+        }
+    }
+
+    fn size(&self, id: &WindowId) -> (u32, u32, f64) {
+        debug_assert!(self.0.get(id).is_some(), "Invalid window id: {:?}", id);
+        self.0.get(id).map_or((0, 0, 1.0), |win| {
+            (win.size.0, win.size.1, win.scale_factor)
+        })
+    }
+
+    fn set_size(&mut self, id: &WindowId, size: (u32, u32), scale_factor: f64) {
+        debug_assert!(self.0.get(id).is_some(), "Invalid window id: {:?}", id);
+        if let Some(win) = self.0.get_mut(id) {
+            win.size = size;
+            win.scale_factor = scale_factor;
         }
     }
 }
@@ -45,6 +72,8 @@ impl InnerWindowList {
 struct InnerWindowData {
     id: WindowId,
     mouse_pos: Option<(f32, f32)>,
+    size: (u32, u32),
+    scale_factor: f64,
 }
 
 pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
@@ -94,8 +123,14 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                 // Sometimes this event comes before any WindowEvent
                 // Initializing windows here too we avoid a first blank frame
                 inner_window_list.init_window(id, &mut sys);
+                let (width, height, scale_factor) = inner_window_list.size(&id);
 
-                sys.draw(id);
+                sys.event(DrawEvent {
+                    window_id: id,
+                    width,
+                    height,
+                    scale_factor,
+                });
             }
             Event::LoopDestroyed => {
                 sys.close();
@@ -157,9 +192,10 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                         // window events
                         WWindowEvent::Resized(size) => {
                             let size = size.to_logical::<u32>(scale_factor);
+                            inner_window_list.set_size(&id, size.into(), scale_factor);
                             sys.event(WindowEvent {
                                 id,
-                                event: WindowEventId::Resized {
+                                action: WindowAction::Resized {
                                     width: size.width,
                                     height: size.height,
                                     scale_factor,
@@ -170,7 +206,7 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                             let pos = pos.to_logical::<i32>(scale_factor);
                             sys.event(WindowEvent {
                                 id,
-                                event: WindowEventId::Moved { x: pos.x, y: pos.y },
+                                action: WindowAction::Moved { x: pos.x, y: pos.y },
                             });
                         }
                         WWindowEvent::CloseRequested => {
@@ -178,7 +214,7 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                             windows.close(id);
                             sys.event(WindowEvent {
                                 id,
-                                event: WindowEventId::Close,
+                                action: WindowAction::Close,
                             });
                         }
                         WWindowEvent::Destroyed => {}
@@ -189,10 +225,10 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                         WWindowEvent::Focused(focus) => {
                             sys.event(WindowEvent {
                                 id,
-                                event: if focus {
-                                    WindowEventId::FocusGained
+                                action: if focus {
+                                    WindowAction::FocusGained
                                 } else {
-                                    WindowEventId::FocusLost
+                                    WindowAction::FocusLost
                                 },
                             });
                         }
@@ -215,9 +251,10 @@ pub fn runner<S: GKState + 'static>(mut sys: System<S>) -> Result<(), String> {
                             new_inner_size,
                         } => {
                             let size = new_inner_size.to_logical::<u32>(scale_factor);
+                            inner_window_list.set_size(&id, size.into(), scale_factor);
                             sys.event(WindowEvent {
                                 id,
-                                event: WindowEventId::Resized {
+                                action: WindowAction::Resized {
                                     width: size.width,
                                     height: size.height,
                                     scale_factor,

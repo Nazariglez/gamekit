@@ -1,7 +1,7 @@
 use crate::gfx::Gfx;
-use crate::{DrawFrame, GfxAttributes};
+use crate::GfxAttributes;
 use gk_app::App;
-use gk_sys::window::{WindowEvent, WindowEventId};
+use gk_sys::window::{WindowAction, WindowEvent};
 use gk_sys::{AppBuilder, BuildConfig, EventQueue, GKState};
 
 #[derive(Default)]
@@ -38,13 +38,13 @@ impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
 }
 
 fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, platform: &mut App) {
-    match evt.event {
+    match evt.action {
         // when a new window is created let's initialize the surface for it
-        WindowEventId::Init => {
+        WindowAction::Init => {
             gfx.init_surface(platform.window(evt.id).unwrap()).unwrap();
         }
-        WindowEventId::Moved { .. } => {}
-        WindowEventId::Resized {
+        WindowAction::Moved { .. } => {}
+        WindowAction::Resized {
             width,
             height,
             scale_factor,
@@ -53,16 +53,16 @@ fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, platform: &mut App) {
             let h = (height as f64 * scale_factor) as u32;
             gfx.resize(evt.id, w, h).unwrap();
         }
-        WindowEventId::Minimized => {}
-        WindowEventId::Maximized => {}
-        WindowEventId::FocusGained => {}
-        WindowEventId::FocusLost => {}
-        WindowEventId::Close => {}
+        WindowAction::Minimized => {}
+        WindowAction::Maximized => {}
+        WindowAction::FocusGained => {}
+        WindowAction::FocusLost => {}
+        WindowAction::Close => {}
     }
 }
 
 fn on_draw<S: GKState + 'static>(
-    evt: &gk_sys::event::DrawRequest,
+    evt: &gk_sys::event::DrawEvent,
     gfx: &mut Gfx,
     events: &mut EventQueue<S>,
 ) {
@@ -70,26 +70,18 @@ fn on_draw<S: GKState + 'static>(
 
     match gfx.raw.surfaces.get(&window_id) {
         Some(surface) => {
-            let width = surface.config.width;
-            let height = surface.config.height;
-            let frame = DrawFrame {
-                window_id,
-                width,
-                height,
-            };
-            gfx.current_frame = Some(frame);
-            events.queue(frame);
+            gfx.current_frame = Some(window_id);
         }
         None => {
             log::warn!(
-                "Cannot find a surface for window {:?}. Skipping DrawFrame event.",
+                "Cannot find a surface for window {:?}. Skipping setting it as current frame event.",
                 window_id
             );
         }
     }
 }
 
-fn on_frame_end(_: &gk_sys::event::FrameEnd, gfx: &mut Gfx) {
+fn on_frame_end(_: &gk_sys::event::FrameEndEvent, gfx: &mut Gfx) {
     // Clean current frame info
     gfx.current_frame = None;
 }

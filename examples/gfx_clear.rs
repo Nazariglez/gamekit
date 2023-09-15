@@ -1,5 +1,6 @@
 use gamekit::app::App;
-use gamekit::gfx::{Color, DrawFrame, Gfx};
+use gamekit::gfx::{Color, CreateRenderer, Gfx};
+use gamekit::sys::event::DrawEvent;
 use gamekit::time::Time;
 
 fn main() -> Result<(), String> {
@@ -11,9 +12,9 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(frame: &DrawFrame, gfx: &mut Gfx, time: &mut Time) {
+fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, time: &mut Time) {
     let color = Color::rgb(time.elapsed_f32().cos(), time.elapsed_f32().sin(), 1.0);
-    let mut renderer = frame.create_renderer();
+    let mut renderer = evt.create_renderer();
     renderer.clear(Some(color), None, None);
     gfx.render(&renderer).unwrap();
 }

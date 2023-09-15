@@ -29,7 +29,7 @@ impl<S: GKState> System<S> {
         }
 
         self.initialized = true;
-        self.event(event::Init);
+        self.event(event::InitEvent);
     }
 
     pub fn frame_start(&mut self) {
@@ -41,7 +41,7 @@ impl<S: GKState> System<S> {
         }
 
         self.in_frame = true;
-        self.event(event::FrameStart);
+        self.event(event::FrameStartEvent);
     }
 
     pub fn frame_end(&mut self) {
@@ -51,7 +51,7 @@ impl<S: GKState> System<S> {
             return;
         }
 
-        self.event(event::FrameEnd);
+        self.event(event::FrameEndEvent);
         self.in_frame = false;
     }
 
@@ -152,17 +152,7 @@ impl<S: GKState> System<S> {
             return;
         }
 
-        self.event(event::Update);
-    }
-
-    pub fn draw(&mut self, window_id: WindowId) {
-        gk_profile::function!();
-
-        if !(self.initialized && self.in_frame) {
-            return;
-        }
-
-        self.event(event::DrawRequest { window_id });
+        self.event(event::UpdateEvent);
     }
 
     /// It's called when the backend/app is about to close
@@ -178,9 +168,9 @@ impl<S: GKState> System<S> {
             return;
         }
 
-        self.event(event::RequestedClose);
+        self.event(event::RequestCloseEvent);
         self.closed = true;
-        self.event(event::Close);
+        self.event(event::CloseEvent);
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::{runner, App};
 use gk_sys::event;
-use gk_sys::window::{GKWindow, WindowAttributes, WindowEvent, WindowEventId};
+use gk_sys::window::{GKWindow, WindowAction, WindowAttributes, WindowEvent};
 use gk_sys::{AppBuilder, BuildConfig, GKState};
 
 pub struct PlatformConfig {
@@ -36,12 +36,12 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
         // Initialize main windows if is not windowless mode
         if let Some(attrs) = self.main_window.take() {
             let id = platform.create_window(attrs)?;
-            platform.set_main_window(id);
+            log::info!("Window '{:?}' created.", id);
         }
 
         // Call request_draw on each frame
         let builder = if self.auto_redraw {
-            builder.on(|_: &event::Update, platform: &mut App| {
+            builder.on(|_: &event::UpdateEvent, platform: &mut App| {
                 platform.windows_mut().for_each(|win| win.request_redraw())
             })
         } else {
@@ -49,10 +49,8 @@ impl<S: GKState> BuildConfig<S> for PlatformConfig {
         };
 
         // Read windows event to set main window and close app when all windows are closed
-        let builder = builder.on(|evt: &WindowEvent, platform: &mut App| match evt.event {
-            // WindowEventId::Open => windows.set_main_window(evt.id),
-            WindowEventId::FocusGained => platform.set_main_window(evt.id),
-            WindowEventId::Close => {
+        let builder = builder.on(|evt: &WindowEvent, platform: &mut App| match evt.action {
+            WindowAction::Close => {
                 if platform.window_ids().is_empty() {
                     platform.exit();
                 }

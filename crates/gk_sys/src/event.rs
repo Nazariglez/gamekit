@@ -52,24 +52,27 @@ impl<S: GKState + 'static> EventQueue<S> {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct Init;
+pub struct InitEvent;
 
 #[derive(Debug, Copy, Clone)]
-pub struct FrameStart;
+pub struct FrameStartEvent;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Update;
+pub struct UpdateEvent;
 
 #[derive(Debug, Copy, Clone)]
-pub struct DrawRequest {
+pub struct DrawEvent {
     pub window_id: WindowId,
+    pub width: u32,
+    pub height: u32,
+    pub scale_factor: f64,
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct FrameEnd;
+pub struct FrameEndEvent;
 
 #[derive(Debug, Copy, Clone)]
-pub struct RequestedClose;
+pub struct RequestCloseEvent;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Close;
+pub struct CloseEvent;

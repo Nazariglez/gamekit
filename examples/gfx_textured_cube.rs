@@ -162,7 +162,7 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_update(_: &event::Update, time: &mut Time, state: &mut State) {
+fn on_update(_: &event::UpdateEvent, time: &mut Time, state: &mut State) {
     state.angle += 0.6 * time.delta_f32();
 }
 

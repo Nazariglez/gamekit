@@ -18,11 +18,12 @@ mod color;
 mod config;
 mod consts;
 mod device;
-mod frame;
 mod gfx;
 mod pipeline;
 mod renderer;
 mod texture;
+
+pub mod prelude;
 
 pub use attrs::*;
 pub use bind_group::*;
@@ -31,7 +32,6 @@ pub use buffer::*;
 pub use color::Color;
 pub use config::*;
 pub use device::*;
-pub use frame::*;
 pub use gfx::*;
 pub use pipeline::*;
 pub use renderer::*;
