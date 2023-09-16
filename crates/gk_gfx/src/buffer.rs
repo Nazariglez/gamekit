@@ -4,6 +4,8 @@ use arrayvec::ArrayVec;
 pub trait GKBuffer {
     fn usage(&self) -> BufferUsage;
     fn is_writable(&self) -> bool;
+    fn len(&self) -> usize;
+    fn is_empty(&self) -> bool;
 }
 
 #[derive(Default, Debug, Copy, Clone)]

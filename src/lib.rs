@@ -3,9 +3,9 @@ pub mod prelude;
 
 #[cfg(feature = "random")]
 pub mod random;
+pub mod spritebatch;
 pub mod time;
 pub mod utils;
-pub mod spritebatch;
 // pub mod tween;
 
 pub use gk_app as app;

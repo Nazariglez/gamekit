@@ -16,8 +16,8 @@ use crate::wgpu::utils::{
     wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format, wgpu_write_mask,
 };
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, Sampler, SamplerDescriptor, TextureData,
-    TextureFormat, MAX_BINDING_ENTRIES,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
+    TextureData, TextureFormat, MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
 use gk_sys::window::{GKWindow, WindowId};
@@ -182,16 +182,24 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
         });
 
         let usage = desc.usage;
+        let size = desc.content.len();
 
         Ok(Buffer {
             raw,
             usage,
             write: desc.write,
+            size,
         })
     }
 
     fn write_buffer(&mut self, buffer: &Buffer, offset: u64, data: &[u8]) -> Result<(), String> {
         debug_assert!(buffer.write, "Cannot write data to a static buffer");
+        debug_assert!(
+            buffer.len() <= offset as usize + data.len(),
+            "Invalid buffer size '{}' expected '{}'",
+            buffer.len(),
+            offset as usize + data.len()
+        );
         self.ctx.queue.write_buffer(&buffer.raw, offset as _, data);
         Ok(())
     }
@@ -312,6 +320,13 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             });
 
         Ok(BindGroup { raw, layout })
+    }
+
+    fn size(&self, id: WindowId) -> (u32, u32) {
+        self.surfaces
+            .get(&id)
+            .map(|surface| (surface.config.width, surface.config.height))
+            .unwrap_or((0, 0))
     }
 
     fn resize(&mut self, id: WindowId, width: u32, height: u32) -> Result<(), String> {

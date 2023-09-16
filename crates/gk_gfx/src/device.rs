@@ -22,5 +22,6 @@ pub trait GKDevice<RP: GKRenderPipeline, B: GKBuffer, T: GKTexture, S: GKSampler
     fn create_sampler(&mut self, desc: SamplerDescriptor) -> Result<S, String>;
     fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BG, String>;
     fn resize(&mut self, id: WindowId, width: u32, height: u32) -> Result<(), String>;
+    fn size(&self, id: WindowId) -> (u32, u32);
     fn render(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String>;
 }

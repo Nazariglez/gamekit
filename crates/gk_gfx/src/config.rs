@@ -70,7 +70,7 @@ fn on_draw<S: GKState + 'static>(
 
     match gfx.raw.surfaces.get(&window_id) {
         Some(surface) => {
-            gfx.current_frame = Some(window_id);
+            gfx.current_window = Some(window_id);
         }
         None => {
             log::warn!(
@@ -83,5 +83,5 @@ fn on_draw<S: GKState + 'static>(
 
 fn on_frame_end(_: &gk_sys::event::FrameEndEvent, gfx: &mut Gfx) {
     // Clean current frame info
-    gfx.current_frame = None;
+    gfx.current_window = None;
 }

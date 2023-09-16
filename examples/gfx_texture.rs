@@ -4,8 +4,8 @@ use gamekit::gfx::{
     TextureBinding, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
-use gamekit::time::Time;
 use gamekit::sys::event::DrawEvent;
+use gamekit::time::Time;
 
 // language=wgsl
 const SHADER: &str = r#"

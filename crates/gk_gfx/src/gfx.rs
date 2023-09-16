@@ -13,7 +13,7 @@ use image::EncodableLayout;
 
 pub struct Gfx {
     pub(crate) raw: Device,
-    pub(crate) current_frame: Option<WindowId>,
+    pub(crate) current_window: Option<WindowId>,
 }
 
 impl Plugin for Gfx {}
@@ -23,12 +23,16 @@ impl Gfx {
         let raw = Device::new(attrs)?;
         Ok(Self {
             raw,
-            current_frame: None,
+            current_window: None,
         })
     }
 
     pub fn config() -> GfxConfig {
         GfxConfig::default()
+    }
+
+    pub fn current_window(&self) -> Option<WindowId> {
+        self.current_window
     }
 
     pub fn init_surface<W: GKWindow>(&mut self, win: &W) -> Result<(), String> {
@@ -77,8 +81,12 @@ impl Gfx {
         self.raw.resize(id, width, height)
     }
 
+    pub fn size(&self, id: WindowId) -> (u32, u32) {
+        self.raw.size(id)
+    }
+
     pub fn render(&mut self, renderer: &Renderer) -> Result<(), String> {
-        let window_id = self.current_frame.ok_or("There is no frame surface information to render to. You can use 'gfx.render_to' instead.")?;
+        let window_id = self.current_window.ok_or("There is no frame surface information to render to. You can use 'gfx.render_to' instead.")?;
         self.render_to(window_id, renderer)
     }
 
@@ -384,6 +392,7 @@ impl<'a> BufferWriteBuilder<'a> {
             return Err("Buffer is not Writable".to_string());
         }
 
-        gfx.raw.write_buffer(buffer, offset, data.unwrap_or(&[]))
+        let data = data.unwrap_or(&[]);
+        gfx.raw.write_buffer(buffer, offset, data)
     }
 }
