@@ -5,6 +5,7 @@ pub mod prelude;
 pub mod random;
 pub mod time;
 pub mod utils;
+pub mod spritebatch;
 // pub mod tween;
 
 pub use gk_app as app;
