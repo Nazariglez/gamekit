@@ -566,7 +566,11 @@ fn create_texture(
 
     let view = raw.create_view(&wgpu::TextureViewDescriptor::default());
 
-    Ok(Texture { raw, view })
+    Ok(Texture {
+        raw,
+        view,
+        size: (size.width as _, size.height as _),
+    })
 }
 
 fn add_depth_texture_to(

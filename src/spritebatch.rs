@@ -42,6 +42,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 "#;
 
 pub struct SpriteBatch {
+    texture: Texture,
     pip: RenderPipeline,
     vbo: Buffer,
     ebo: Buffer,
@@ -58,7 +59,7 @@ pub struct SpriteBatch {
 }
 
 impl SpriteBatch {
-    pub fn new(tex_data: &[u8], gfx: &mut Gfx) -> Result<Self, String> {
+    pub fn new(tex_data: &[u8], projection: Mat4, gfx: &mut Gfx) -> Result<Self, String> {
         let max_elements = 256;
 
         let vbo_data: Vec<f32> = vec![0.0; max_elements * 16];
@@ -73,9 +74,8 @@ impl SpriteBatch {
             .with_write_flag(true)
             .build()?;
 
-        let mvp = Mat4::IDENTITY; //::orthographic_rh_gl(0.0, width as _, height as _, 0.0, -1.0, 1.0);
         let ubo = gfx
-            .create_uniform_buffer(mvp.as_ref())
+            .create_uniform_buffer(projection.as_ref())
             .with_write_flag(true)
             .build()?;
 
@@ -107,6 +107,7 @@ impl SpriteBatch {
             .build()?;
 
         Ok(Self {
+            texture,
             pip,
             vbo,
             ebo,
@@ -119,7 +120,7 @@ impl SpriteBatch {
             dirty_projection: false,
             max_elements,
             element_index: 0,
-            projection: mvp,
+            projection,
         })
     }
 
@@ -135,17 +136,16 @@ impl SpriteBatch {
             self.increase_data_buffers();
         }
 
-        let size = Vec2::new(100.0, 100.0);
-        let pos2 = pos + size;
-        println!("{:?}", pos2);
+        let Vec2 { x: x1, y: y1 } = pos;
+        let size: Vec2 = self.texture.size().into();
+        let Vec2 { x: x2, y: y2 } = pos + size;
 
         #[rustfmt::skip]
         let vertices = [
-            //pos           //coords
-            pos2.x,  pos2.y,     1.0, 1.0,
-            pos2.x, pos.y,     1.0, 0.0,
-            -pos.x, -pos.y,     0.0, 0.0,
-            -pos.x,  pos2.y,     0.0, 1.0
+            x1, y1, 0.0, 0.0,
+            x2, y1, 1.0, 0.0,
+            x1, y2, 0.0, 1.0,
+            x2, y2, 1.0, 1.0
         ];
 
         let vbo_index_start = self.element_index * 16;

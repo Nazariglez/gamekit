@@ -15,15 +15,12 @@ struct State {
 
 impl State {
     pub fn new(app: &mut App, gfx: &mut Gfx) -> Result<Self, String> {
-        let mut batch = SpriteBatch::new(include_bytes!("./assets/bunny.png"), gfx)?;
-
-        // Set camera projection
-        if let Some(win) = app.main_window() {
+        let projection = app.main_window().map_or(Mat4::IDENTITY, |win| {
             let (w, h) = win.size();
-            let projection = Mat4::orthographic_rh_gl(0.0, w as _, h as _, 0.0, -1.0, 1.0);
-            batch.set_projection(projection);
-        }
+            Mat4::orthographic_rh_gl(0.0, w as _, h as _, 0.0, -1.0, 1.0)
+        });
 
+        let mut batch = SpriteBatch::new(include_bytes!("./assets/bunny.png"), projection, gfx)?;
         Ok(Self { batch })
     }
 }
@@ -35,10 +32,10 @@ fn main() -> Result<(), String> {
         .add_config(Time::config())?
         .on(
             |evt: &DrawEvent, gfx: &mut Gfx, time: &mut Time, state: &mut State| {
-                state.batch.draw(vec2(10.0, 10.0));
-                // state.batch.draw(vec2(-0.2, -0.2));
-                // state.batch.draw(vec2(0.2, 0.2));
-                // state.batch.draw(vec2(0.4, 0.4));
+                state.batch.draw(vec2(100.0, 100.0));
+                state.batch.draw(vec2(200.0, 100.0));
+                state.batch.draw(vec2(300.0, 100.0));
+                state.batch.draw(vec2(400.0, 100.0));
                 state.batch.flush(gfx).unwrap();
                 state.batch.reset();
             },

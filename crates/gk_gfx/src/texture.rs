@@ -1,4 +1,6 @@
-pub trait GKTexture {}
+pub trait GKTexture {
+    fn size(&self) -> (f32, f32);
+}
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct TextureDescriptor<'a> {
