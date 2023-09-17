@@ -17,11 +17,11 @@ pub use gk_sys as sys;
 use gk_sys::GKState;
 
 pub fn init() -> sys::AppBuilder<()> {
-    simple_logger::SimpleLogger::new()
-        .without_timestamps()
-        .with_level(log::LevelFilter::Debug)
-        .init()
-        .unwrap();
+    // simple_logger::SimpleLogger::new()
+    //     .without_timestamps()
+    //     .with_level(log::LevelFilter::Debug)
+    //     .init()
+    //     .unwrap();
     sys::AppBuilder::init()
 }
 
@@ -30,10 +30,10 @@ where
     S: GKState + 'static,
     H: sys::handlers::SetupHandler<S, T> + 'static,
 {
-    simple_logger::SimpleLogger::new()
-        .without_timestamps()
-        .with_level(log::LevelFilter::Debug)
-        .init()
-        .unwrap();
+    // simple_logger::SimpleLogger::new()
+    //     .without_timestamps()
+    //     .with_level(log::LevelFilter::Debug)
+    //     .init()
+    //     .unwrap();
     sys::AppBuilder::init_with(handler)
 }

@@ -124,6 +124,10 @@ impl SpriteBatch {
         })
     }
 
+    pub fn elements(&self) -> usize {
+        self.element_index
+    }
+
     fn increase_data_buffers(&mut self) {
         self.max_elements *= 2;
         self.vbo_data.resize(self.max_elements * 16, 0.0);
@@ -158,8 +162,8 @@ impl SpriteBatch {
         let i = (self.element_index * 4) as u32; //4 vertices per element
         #[rustfmt::skip]
         let indices = [
-            0+i, 1+i, 3+i,
-            1+i, 2+i, 3+i,
+            0+i, 1+i, 2+i,
+            1+i, 3+i, 2+i,
         ];
 
         self.ebo_data
@@ -239,9 +243,9 @@ impl SpriteBatch {
     }
 
     pub fn flush(&mut self, gfx: &mut Gfx) -> Result<(), String> {
-        self.resize_gpu_buffers(gfx);
-        self.upload_gpu_buffers(gfx);
-        self.upload_gpu_projection(gfx);
+        self.resize_gpu_buffers(gfx)?;
+        self.upload_gpu_buffers(gfx)?;
+        self.upload_gpu_projection(gfx)?;
 
         let index = (self.element_index * 6) as _;
         let mut renderer = Renderer::new();
