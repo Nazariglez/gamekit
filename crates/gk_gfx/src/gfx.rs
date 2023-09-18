@@ -1,10 +1,10 @@
 use crate::renderer::Renderer;
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, BlendMode, Buffer, BufferDescriptor,
-    BufferUsage, ColorMask, CompareMode, CullMode, DepthStencil, Device, GKBuffer, GfxAttributes,
-    GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler, SamplerDescriptor, Stencil,
-    Texture, TextureBinding, TextureData, TextureDescriptor, TextureFilter, TextureFormat,
-    TextureWrap, UniformBinding, VertexLayout,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BlendMode, Buffer,
+    BufferDescriptor, BufferUsage, ColorMask, CompareMode, CullMode, DepthStencil, Device,
+    GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler,
+    SamplerDescriptor, Stencil, Texture, TextureData, TextureDescriptor, TextureFilter,
+    TextureFormat, TextureWrap, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_sys::window::{GKWindow, WindowId};
@@ -129,8 +129,8 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
-    pub fn with_bind_group(mut self, bind_group: &'a BindGroup) -> Self {
-        self.desc.bind_group_layout.push(bind_group);
+    pub fn with_bind_group_layout(mut self, layout: &BindGroupLayout) -> Self {
+        self.desc.bind_group_layout.push(layout.clone());
         self
     }
 
@@ -337,13 +337,29 @@ impl<'a> BindGroupBuilder<'a> {
         Self { gfx, desc }
     }
 
-    pub fn with_texture(mut self, texture: TextureBinding<'a>) -> Self {
-        self.desc.entry.push(BindGroupEntry::Texture(texture));
+    pub fn with_layout(mut self, layout: &BindGroupLayout) -> Self {
+        self.desc.layout = layout.clone();
         self
     }
 
-    pub fn with_uniform(mut self, uniform: UniformBinding<'a>) -> Self {
-        self.desc.entry.push(BindGroupEntry::Uniform(uniform));
+    pub fn with_texture(mut self, location: u32, texture: &'a Texture) -> Self {
+        self.desc
+            .entry
+            .push(BindGroupEntry::Texture { location, texture });
+        self
+    }
+
+    pub fn with_sampler(mut self, location: u32, sampler: &'a Sampler) -> Self {
+        self.desc
+            .entry
+            .push(BindGroupEntry::Sampler { location, sampler });
+        self
+    }
+
+    pub fn with_uniform(mut self, location: u32, buffer: &'a Buffer) -> Self {
+        self.desc
+            .entry
+            .push(BindGroupEntry::Uniform { location, buffer });
         self
     }
 

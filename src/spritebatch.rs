@@ -83,15 +83,17 @@ impl SpriteBatch {
 
         let sampler = gfx.create_sampler().build()?;
 
+        let bind_group_layout = BindGroupLayout::new()
+            .with_entry(BindingType::uniform(0).with_vertex_visibility(true))
+            .with_entry(BindingType::texture(1).with_fragment_visibility(true))
+            .with_entry(BindingType::sampler(2).with_fragment_visibility(true));
+
         let bind_group = gfx
             .create_bind_group()
-            .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
-            .with_texture(
-                TextureBinding::new()
-                    .with_texture(1, &texture)
-                    .with_sampler(2, &sampler)
-                    .with_fragment_visibility(true),
-            )
+            .with_layout(&bind_group_layout)
+            .with_uniform(0, &ubo)
+            .with_texture(1, &texture)
+            .with_sampler(2, &sampler)
             .build()?;
 
         let pip = gfx
@@ -101,8 +103,8 @@ impl SpriteBatch {
                     .with_attr(0, VertexFormat::Float32x2)
                     .with_attr(1, VertexFormat::Float32x2),
             )
+            .with_bind_group_layout(&bind_group_layout)
             .with_index_format(IndexFormat::UInt32)
-            .with_bind_group(&bind_group)
             .with_blend_mode(BlendMode::NORMAL)
             .build()?;
 

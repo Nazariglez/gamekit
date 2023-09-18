@@ -1,6 +1,6 @@
 use crate::buffer::{IndexFormat, VertexLayout};
 use crate::consts::{MAX_BIND_GROUPS_PER_PIPELINE, MAX_VERTEX_BUFFERS};
-use crate::{BindGroup, BlendMode, Color};
+use crate::{BindGroup, BindGroupLayout, BlendMode, Color};
 use arrayvec::ArrayVec;
 
 pub trait GKRenderPipeline {}
@@ -16,7 +16,7 @@ pub struct RenderPipelineDescriptor<'a> {
     pub vertex_layout: ArrayVec<VertexLayout, MAX_VERTEX_BUFFERS>,
     pub primitive: Primitive,
     pub index_format: IndexFormat,
-    pub bind_group_layout: ArrayVec<&'a BindGroup, MAX_BIND_GROUPS_PER_PIPELINE>,
+    pub bind_group_layout: ArrayVec<BindGroupLayout, MAX_BIND_GROUPS_PER_PIPELINE>,
     pub blend_mode: Option<BlendMode>,
     pub cull_mode: Option<CullMode>,
     pub vs_entry: Option<&'a str>,
