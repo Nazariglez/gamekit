@@ -1,13 +1,13 @@
 use gamekit::app::App;
 use gamekit::gfx::*;
-use gamekit::math::{vec2, Vec2, Mat4};
+use gamekit::math::{vec2, Mat4, Vec2};
 use gamekit::prelude::*;
+use gamekit::random::Rng;
 use gamekit::spritebatch::SpriteBatch;
 use gamekit::sys::event::{DrawEvent, UpdateEvent};
-use gamekit::time::Time;
-use gamekit::sys::window::GKWindow;
 use gamekit::sys::mouse::{MouseAction, MouseEvent};
-use gamekit::random::Rng;
+use gamekit::sys::window::GKWindow;
+use gamekit::time::Time;
 
 struct Bunny {
     pos: Vec2,
@@ -30,14 +30,18 @@ impl State {
 
         let mut batch = SpriteBatch::new(include_bytes!("./assets/bunny.png"), projection, gfx)?;
         let rng = Rng::new();
-        Ok(Self { batch, bunnies: vec![], rng })
+        Ok(Self {
+            batch,
+            bunnies: vec![],
+            rng,
+        })
     }
 
     fn spawn(&mut self, n: u32) {
         (0..n).for_each(|_| {
             self.bunnies.push(Bunny {
                 pos: Vec2::ZERO,
-                speed: vec2(0.0 + self.rng.gen::<f32>() * 10.0, -5.0 + self.rng.gen::<f32>() * 5.0),
+                speed: vec2(self.rng.range(0.0..10.0), self.rng.range(-5.0..5.0)),
             })
         });
     }
@@ -59,7 +63,7 @@ impl State {
                 b.speed.y *= -0.85;
                 b.pos.y = 600.0;
                 if self.rng.gen::<bool>() {
-                    b.speed.y -= self.rng.gen::<f32>() * 6.0;
+                    b.speed.y -= self.rng.range(0.0..6.0);
                 }
             } else if b.pos.y < 0.0 {
                 b.speed.y = 0.0;
@@ -74,32 +78,35 @@ fn main() -> Result<(), String> {
         .add_config(App::config())?
         .add_config(Gfx::config())?
         .add_config(Time::config())?
-        .on(|evt: &MouseEvent, state: &mut State| match evt.action {
-            MouseAction::ButtonPressed { .. } => {
-               state.spawn(1000);
-            }
-            MouseAction::ButtonReleased { .. } => {}
-            _ => {}
-        })
-        .on(
-            |evt: &UpdateEvent, app: &mut App, time: &mut Time, state: &mut State| {
-                app.main_window().unwrap().set_title(&format!(
-                    "Bunny: {} - Fps: {:.2}",
-                    state.bunnies.len(),
-                    time.fps()
-                ));
-
-                state.update();
-            },
-        )
-        .on(
-            |evt: &DrawEvent, gfx: &mut Gfx, time: &mut Time, state: &mut State| {
-                state.bunnies.iter().for_each(|bunny| {
-                   state.batch.draw(bunny.pos);
-                });
-                state.batch.flush(gfx).unwrap();
-                state.batch.reset();
-            },
-        )
+        .on(on_mouse_event)
+        .on(on_update_event)
+        .on(on_draw_update)
         .build()
+}
+
+fn on_mouse_event(evt: &MouseEvent, state: &mut State) {
+    match evt.action {
+        MouseAction::ButtonPressed { .. } => {
+            state.spawn(1000);
+        }
+        _ => {}
+    }
+}
+
+fn on_update_event(_: &UpdateEvent, app: &mut App, time: &mut Time, state: &mut State) {
+    app.main_window().unwrap().set_title(&format!(
+        "Bunny: {} - Fps: {:.2}",
+        state.bunnies.len(),
+        time.fps()
+    ));
+
+    state.update();
+}
+
+fn on_draw_update(_: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
+    state.bunnies.iter().for_each(|bunny| {
+        state.batch.draw(bunny.pos);
+    });
+    state.batch.flush(gfx).unwrap();
+    state.batch.reset();
 }

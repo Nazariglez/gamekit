@@ -1,4 +1,5 @@
 use fastrand::Rng as RawRng;
+use std::collections::Bound;
 use std::ops::RangeBounds;
 
 /// Random generator
@@ -89,6 +90,38 @@ impl_range_generator!(
     char, char, i8, i8, i16, i16, i32, i32, i64, i64, i128, i128, isize, isize, u8, u8, u16, u16,
     u32, u32, u64, u64, u128, u128, usize, usize
 );
+
+impl RangeGenerator for f32 {
+    fn range(rng: &mut Rng, range: impl RangeBounds<Self>) -> Self {
+        let min = match range.start_bound() {
+            Bound::Included(n) => *n,
+            Bound::Excluded(n) => *n,
+            Bound::Unbounded => 0.0,
+        };
+        let max = match range.end_bound() {
+            Bound::Included(n) => *n,
+            Bound::Excluded(n) => *n,
+            Bound::Unbounded => 1.0,
+        };
+        min + rng.raw.f32() * max
+    }
+}
+
+impl RangeGenerator for f64 {
+    fn range(rng: &mut Rng, range: impl RangeBounds<Self>) -> Self {
+        let min = match range.start_bound() {
+            Bound::Included(n) => *n,
+            Bound::Excluded(n) => *n,
+            Bound::Unbounded => 0.0,
+        };
+        let max = match range.end_bound() {
+            Bound::Included(n) => *n,
+            Bound::Excluded(n) => *n,
+            Bound::Unbounded => 1.0,
+        };
+        min + rng.raw.f64() * max
+    }
+}
 
 #[cfg(test)]
 mod test {
