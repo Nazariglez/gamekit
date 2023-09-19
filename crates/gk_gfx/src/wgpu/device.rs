@@ -322,7 +322,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
                 entries: &entries,
             });
 
-        Ok(BindGroup { raw, layout })
+        Ok(BindGroup { raw })
     }
 
     fn size(&self, id: WindowId) -> (u32, u32) {

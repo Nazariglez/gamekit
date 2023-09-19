@@ -12,9 +12,3 @@ pub struct BindGroupLayoutId {
 }
 
 impl GKBindGroupLayoutId for BindGroupLayoutId {}
-
-impl PartialEq for BindGroupLayoutId {
-    fn eq(&self, other: &Self) -> bool {
-        self.raw == other.raw
-    }
-}

@@ -4,7 +4,7 @@ use crate::{BindGroupLayout, BindGroupLayoutId, BlendMode, Color};
 use arrayvec::ArrayVec;
 
 pub trait GKRenderPipeline {
-    fn bind_group_layout(&self, index: u32) -> BindGroupLayoutId;
+    fn bind_group_layout_id(&self, index: u32) -> Result<&BindGroupLayoutId, String>;
 }
 
 // https://github.com/floooh/sokol/blob/master/sokol_gfx.h#L2213

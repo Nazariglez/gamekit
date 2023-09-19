@@ -99,12 +99,11 @@ impl BindingType {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct BindGroupDescriptor<'a> {
     pub label: Option<&'a str>,
-    pub layout: BindGroupLayoutId,
+    pub layout: Option<BindGroupLayoutId>,
     pub entry: ArrayVec<BindGroupEntry<'a>, MAX_BINDING_ENTRIES>,
-    pub pipeline: &'a RenderPipeline,
 }
 
 #[derive(Copy, Clone)]
