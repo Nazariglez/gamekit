@@ -1,7 +1,7 @@
 use crate::renderer::Renderer;
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BlendMode, Buffer,
-    BufferDescriptor, BufferUsage, ColorMask, CompareMode, CullMode, DepthStencil, Device,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutId, BlendMode,
+    Buffer, BufferDescriptor, BufferUsage, ColorMask, CompareMode, CullMode, DepthStencil, Device,
     GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler,
     SamplerDescriptor, Stencil, Texture, TextureData, TextureDescriptor, TextureFilter,
     TextureFormat, TextureWrap, VertexLayout,
@@ -129,8 +129,8 @@ impl<'a> RenderPipelineBuilder<'a> {
         self
     }
 
-    pub fn with_bind_group_layout(mut self, layout: &BindGroupLayout) -> Self {
-        self.desc.bind_group_layout.push(layout.clone());
+    pub fn with_bind_group_layout(mut self, layout: BindGroupLayout) -> Self {
+        self.desc.bind_group_layout.push(layout);
         self
     }
 
@@ -337,8 +337,8 @@ impl<'a> BindGroupBuilder<'a> {
         Self { gfx, desc }
     }
 
-    pub fn with_layout(mut self, layout: &BindGroupLayout) -> Self {
-        self.desc.layout = layout.clone();
+    pub fn with_layout(mut self, layout: BindGroupLayoutId) -> Self {
+        self.desc.layout = layout;
         self
     }
 

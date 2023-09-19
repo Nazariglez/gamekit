@@ -16,8 +16,8 @@ use crate::wgpu::utils::{
     wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format, wgpu_write_mask,
 };
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, GKBuffer, Sampler, SamplerDescriptor,
-    TextureData, TextureFormat, MAX_BINDING_ENTRIES,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutId, GKBuffer, Sampler,
+    SamplerDescriptor, TextureData, TextureFormat, MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
 use gk_sys::window::{GKWindow, WindowId};
@@ -36,7 +36,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
+impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutId> for Device {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let context = Context::new(attrs)?;
         Ok(Self {
@@ -70,11 +70,12 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
                 source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(desc.shader)),
             });
 
-        let bind_group_layouts = &desc
-            .bind_group_layout
-            .iter()
-            .map(|bg| &bg.layout)
-            .collect::<Vec<_>>();
+        /*let bind_group_layouts = &desc
+        .bind_group_layout
+        .iter()
+        .map(|bg| &bg)
+        .collect::<Vec<_>>();*/
+        let bind_group_layouts = desc.bind_group_layout;
 
         let pipeline_layout =
             self.ctx
@@ -166,6 +167,8 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup> for Device {
             index_format,
             uses_depth: desc.depth_stencil.is_some(),
             uses_stencil: desc.stencil.is_some(),
+            bind_group_layout: desc.bind_group_layout,
+            vertex_layout: desc.vertex_layout,
         })
     }
 

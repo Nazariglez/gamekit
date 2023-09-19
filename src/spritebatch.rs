@@ -60,6 +60,23 @@ pub struct SpriteBatch {
 
 impl SpriteBatch {
     pub fn new(tex_data: &[u8], projection: Mat4, gfx: &mut Gfx) -> Result<Self, String> {
+        let pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_attr(0, VertexFormat::Float32x2)
+                    .with_attr(1, VertexFormat::Float32x2),
+            )
+            .with_bind_group_layout(
+                BindGroupLayout::new()
+                    .with_entry(BindingType::uniform(0).with_vertex_visibility(true))
+                    .with_entry(BindingType::texture(1).with_fragment_visibility(true))
+                    .with_entry(BindingType::sampler(2).with_fragment_visibility(true)),
+            )
+            .with_index_format(IndexFormat::UInt32)
+            .with_blend_mode(BlendMode::NORMAL)
+            .build()?;
+
         let max_elements = 256;
 
         let vbo_data: Vec<f32> = vec![0.0; max_elements * 16];
@@ -83,29 +100,12 @@ impl SpriteBatch {
 
         let sampler = gfx.create_sampler().build()?;
 
-        let bind_group_layout = BindGroupLayout::new()
-            .with_entry(BindingType::uniform(0).with_vertex_visibility(true))
-            .with_entry(BindingType::texture(1).with_fragment_visibility(true))
-            .with_entry(BindingType::sampler(2).with_fragment_visibility(true));
-
         let bind_group = gfx
             .create_bind_group()
-            .with_layout(&bind_group_layout)
+            .with_layout(pip.bind_group_layout(0)?)
             .with_uniform(0, &ubo)
             .with_texture(1, &texture)
             .with_sampler(2, &sampler)
-            .build()?;
-
-        let pip = gfx
-            .create_render_pipeline(SHADER)
-            .with_vertex_layout(
-                VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x2)
-                    .with_attr(1, VertexFormat::Float32x2),
-            )
-            .with_bind_group_layout(&bind_group_layout)
-            .with_index_format(IndexFormat::UInt32)
-            .with_blend_mode(BlendMode::NORMAL)
             .build()?;
 
         Ok(Self {
