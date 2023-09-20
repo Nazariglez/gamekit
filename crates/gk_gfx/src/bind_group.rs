@@ -3,6 +3,7 @@ use crate::{BindGroupLayoutId, Buffer, RenderPipeline, Sampler, Texture};
 use arrayvec::ArrayVec;
 
 pub trait GKBindGroup {}
+
 pub trait GKBindGroupLayoutId {}
 
 pub const MAX_BINDING_ENTRIES: usize =
@@ -102,7 +103,7 @@ impl BindingType {
 #[derive(Default)]
 pub struct BindGroupDescriptor<'a> {
     pub label: Option<&'a str>,
-    pub layout: Option<BindGroupLayoutId>,
+    pub layout: Option<&'a BindGroupLayoutId>,
     pub entry: ArrayVec<BindGroupEntry<'a>, MAX_BINDING_ENTRIES>,
 }
 

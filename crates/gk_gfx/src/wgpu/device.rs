@@ -5,6 +5,7 @@ use super::surface::Surface;
 use super::texture::Texture;
 use super::utils::wgpu_color;
 use crate::attrs::GfxAttributes;
+use crate::bind_group::BindType;
 use crate::buffer::{BufferDescriptor, BufferUsage};
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
@@ -70,19 +71,68 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
                 source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(desc.shader)),
             });
 
-        /*let bind_group_layouts = &desc
-        .bind_group_layout
-        .iter()
-        .map(|bg| &bg)
-        .collect::<Vec<_>>();*/
-        let bind_group_layouts = desc.bind_group_layout;
+        let mut bind_group_layouts = desc
+            .bind_group_layout
+            .iter()
+            .map(|bgl| {
+                self.ctx
+                    .device
+                    .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                        label: desc.label,
+                        entries: &bgl
+                            .entries
+                            .iter()
+                            .map(|entry| {
+                                let visibility = wgpu_shader_visibility(
+                                    entry.visible_vertex,
+                                    entry.visible_fragment,
+                                    entry.visible_compute,
+                                );
+                                let binding = entry.location;
+                                match entry.typ {
+                                    BindType::Texture => wgpu::BindGroupLayoutEntry {
+                                        binding,
+                                        visibility,
+                                        ty: wgpu::BindingType::Texture {
+                                            multisampled: false,
+                                            view_dimension: wgpu::TextureViewDimension::D2,
+                                            sample_type: wgpu::TextureSampleType::Float {
+                                                filterable: true,
+                                            },
+                                        },
+                                        count: None,
+                                    },
+                                    BindType::Sampler => wgpu::BindGroupLayoutEntry {
+                                        binding,
+                                        visibility,
+                                        ty: wgpu::BindingType::Sampler(
+                                            wgpu::SamplerBindingType::Filtering,
+                                        ),
+                                        count: None,
+                                    },
+                                    BindType::Uniform => wgpu::BindGroupLayoutEntry {
+                                        binding,
+                                        visibility,
+                                        ty: wgpu::BindingType::Buffer {
+                                            ty: wgpu::BufferBindingType::Uniform,
+                                            has_dynamic_offset: false,
+                                            min_binding_size: None,
+                                        },
+                                        count: None,
+                                    },
+                                }
+                            })
+                            .collect::<Vec<_>>(),
+                    })
+            })
+            .collect::<Vec<_>>();
 
         let pipeline_layout =
             self.ctx
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: desc.label,
-                    bind_group_layouts,
+                    bind_group_layouts: &bind_group_layouts.iter().collect::<Vec<&_>>(),
                     push_constant_ranges: &[],
                 });
 
@@ -162,13 +212,17 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
             });
 
         let index_format = wgpu_index_format(desc.index_format);
+        let mut bind_group_layout = ArrayVec::new();
+        bind_group_layouts.reverse();
+        while let Some(bgl) = bind_group_layouts.pop() {
+            bind_group_layout.push(BindGroupLayoutId { raw: bgl });
+        }
         Ok(RenderPipeline {
             raw,
             index_format,
             uses_depth: desc.depth_stencil.is_some(),
             uses_stencil: desc.stencil.is_some(),
-            bind_group_layout: desc.bind_group_layout,
-            vertex_layout: desc.vertex_layout,
+            bind_group_layout,
         })
     }
 
@@ -232,84 +286,24 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
     }
 
     fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BindGroup, String> {
-        let mut layout_entries: ArrayVec<_, MAX_BINDING_ENTRIES> = Default::default();
-        desc.entry.iter().for_each(|entry| match entry {
-            BindGroupEntry::Texture(binding) => {
-                let visibility = wgpu_shader_visibility(
-                    binding.visible_vertex,
-                    binding.visible_fragment,
-                    binding.visible_compute,
-                );
-                if let Some((loc, _tex)) = binding.texture {
-                    layout_entries.push(wgpu::BindGroupLayoutEntry {
-                        binding: loc,
-                        visibility,
-                        ty: wgpu::BindingType::Texture {
-                            multisampled: false,
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        },
-                        count: None,
-                    });
-                }
-
-                if let Some((loc, _sampler)) = binding.sampler {
-                    layout_entries.push(wgpu::BindGroupLayoutEntry {
-                        binding: loc,
-                        visibility,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
-                    });
-                }
-            }
-            BindGroupEntry::Uniform(binding) => {
-                let visibility = wgpu_shader_visibility(
-                    binding.visible_vertex,
-                    binding.visible_fragment,
-                    binding.visible_compute,
-                );
-
-                layout_entries.push(wgpu::BindGroupLayoutEntry {
-                    binding: binding.location,
-                    visibility,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                });
-            }
-        });
-        let layout = self
-            .ctx
-            .device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: desc.label,
-                entries: &layout_entries,
-            });
-
         let mut entries: ArrayVec<_, MAX_BINDING_ENTRIES> = Default::default();
         desc.entry.iter().for_each(|entry| match entry {
-            BindGroupEntry::Texture(binding) => {
-                if let Some((loc, tex)) = binding.texture {
-                    entries.push(wgpu::BindGroupEntry {
-                        binding: loc,
-                        resource: wgpu::BindingResource::TextureView(&tex.view),
-                    });
-                }
-
-                if let Some((loc, sampler)) = binding.sampler {
-                    entries.push(wgpu::BindGroupEntry {
-                        binding: loc,
-                        resource: wgpu::BindingResource::Sampler(&sampler.raw),
-                    });
-                }
-            }
-            BindGroupEntry::Uniform(binding) => {
+            BindGroupEntry::Texture { location, texture } => {
                 entries.push(wgpu::BindGroupEntry {
-                    binding: binding.location,
-                    resource: binding.uniform.raw.as_entire_binding(),
+                    binding: *location,
+                    resource: wgpu::BindingResource::TextureView(&texture.view),
+                });
+            }
+            BindGroupEntry::Uniform { location, buffer } => {
+                entries.push(wgpu::BindGroupEntry {
+                    binding: *location,
+                    resource: buffer.raw.as_entire_binding(),
+                });
+            }
+            BindGroupEntry::Sampler { location, sampler } => {
+                entries.push(wgpu::BindGroupEntry {
+                    binding: *location,
+                    resource: wgpu::BindingResource::Sampler(&sampler.raw),
                 });
             }
         });
@@ -318,7 +312,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
             .device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 label: desc.label,
-                layout: &layout,
+                layout: &desc
+                    .layout
+                    .ok_or_else(|| "Cannot create binding group with a missing layout.")?
+                    .raw,
                 entries: &entries,
             });
 

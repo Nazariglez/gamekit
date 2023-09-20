@@ -337,7 +337,7 @@ impl<'a> BindGroupBuilder<'a> {
         Self { gfx, desc }
     }
 
-    pub fn with_layout(mut self, layout: BindGroupLayoutId) -> Self {
+    pub fn with_layout(mut self, layout: &'a BindGroupLayoutId) -> Self {
         self.desc.layout = Some(layout);
         self
     }
