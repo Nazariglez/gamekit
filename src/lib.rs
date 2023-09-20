@@ -3,6 +3,7 @@ pub mod prelude;
 
 #[cfg(feature = "random")]
 pub mod random;
+pub mod sprite;
 pub mod spritebatch;
 pub mod time;
 pub mod utils;

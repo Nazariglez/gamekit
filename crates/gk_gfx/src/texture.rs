@@ -44,7 +44,12 @@ pub enum TextureFilter {
     Nearest,
 }
 
-pub trait GKSampler {}
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ResourceId)]
+pub struct SamplerId(u64);
+
+pub trait GKSampler {
+    fn id(&self) -> SamplerId;
+}
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct SamplerDescriptor<'a> {

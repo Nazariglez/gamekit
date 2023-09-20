@@ -291,7 +291,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
                 .map_or(Default::default(), wgpu_texture_filter),
             ..Default::default()
         });
-        Ok(Sampler { raw: Arc::new(raw) })
+        Ok(Sampler {
+            id: resource_id(&mut self.next_resource_id),
+            raw: Arc::new(raw),
+        })
     }
 
     fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BindGroup, String> {
