@@ -1,7 +1,7 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, CreateRenderer, CullMode, Gfx, IndexFormat, RenderPipeline,
-    UniformBinding, VertexFormat, VertexLayout,
+    BindGroup, BindGroupLayout, BindingType, Buffer, Color, CreateRenderer, CullMode,
+    GKRenderPipeline, Gfx, IndexFormat, RenderPipeline, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::prelude::*;
@@ -108,11 +108,6 @@ impl State {
             .with_write_flag(true)
             .build()?;
 
-        let bind_group = gfx
-            .create_bind_group()
-            .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
-            .build()?;
-
         let pip = gfx
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
@@ -120,9 +115,18 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x3)
                     .with_attr(1, VertexFormat::Float32x4),
             )
-            .with_bind_group(&bind_group)
+            .with_bind_group_layout(
+                BindGroupLayout::new()
+                    .with_entry(BindingType::uniform(0).with_vertex_visibility(true)),
+            )
             .with_index_format(IndexFormat::UInt16)
             .with_cull_mode(CullMode::Front)
+            .build()?;
+
+        let bind_group = gfx
+            .create_bind_group()
+            .with_layout(pip.bind_group_layout_id(0)?)
+            .with_uniform(0, &ubo)
             .build()?;
 
         Ok(State {

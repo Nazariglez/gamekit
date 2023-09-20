@@ -1,11 +1,11 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline,
-    TextureBinding, UniformBinding, VertexFormat, VertexLayout,
+    BindGroup, BindGroupLayout, BindingType, Buffer, Color, CreateRenderer, CullMode,
+    GKRenderPipeline, Gfx, IndexFormat, RenderPipeline, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::prelude::*;
-use gamekit::sys::event;
+use gamekit::sys::event::{DrawEvent, UpdateEvent};
 use gamekit::time::Time;
 
 // language=wgsl
@@ -115,21 +115,6 @@ impl State {
 
         let sampler = gfx.create_sampler().build()?;
 
-        let bind_group_1 = gfx
-            .create_bind_group()
-            .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
-            .build()?;
-
-        let bind_group_2 = gfx
-            .create_bind_group()
-            .with_texture(
-                TextureBinding::new()
-                    .with_texture(0, &texture)
-                    .with_sampler(1, &sampler)
-                    .with_fragment_visibility(true),
-            )
-            .build()?;
-
         let pip = gfx
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
@@ -137,10 +122,30 @@ impl State {
                     .with_attr(0, VertexFormat::Float32x3)
                     .with_attr(1, VertexFormat::Float32x2),
             )
-            .with_bind_group(&bind_group_1)
-            .with_bind_group(&bind_group_2)
+            .with_bind_group_layout(
+                BindGroupLayout::new()
+                    .with_entry(BindingType::uniform(0).with_vertex_visibility(true)),
+            )
+            .with_bind_group_layout(
+                BindGroupLayout::new()
+                    .with_entry(BindingType::texture(0).with_fragment_visibility(true))
+                    .with_entry(BindingType::sampler(1).with_fragment_visibility(true)),
+            )
             .with_index_format(IndexFormat::UInt16)
             .with_cull_mode(CullMode::Back)
+            .build()?;
+
+        let bind_group_1 = gfx
+            .create_bind_group()
+            .with_layout(pip.bind_group_layout_id(0)?)
+            .with_uniform(0, &ubo)
+            .build()?;
+
+        let bind_group_2 = gfx
+            .create_bind_group()
+            .with_layout(pip.bind_group_layout_id(1)?)
+            .with_texture(0, &texture)
+            .with_sampler(1, &sampler)
             .build()?;
 
         Ok(State {
@@ -169,11 +174,11 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_update(_: &event::UpdateEvent, time: &mut Time, state: &mut State) {
+fn on_update(_: &UpdateEvent, time: &mut Time, state: &mut State) {
     state.angle += 0.6 * time.delta_f32();
 }
 
-fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     // update mvp
     gfx.write_buffer(&state.ubo)
         .with_data(state.rotated_mvp().as_ref())
