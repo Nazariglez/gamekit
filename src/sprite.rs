@@ -30,20 +30,28 @@ impl Sprite {
         }
     }
 
-    fn id(&self) -> SpriteId {
+    pub fn id(&self) -> SpriteId {
         self.id
     }
 
-    fn size(&self) -> Vec2 {
+    pub fn size(&self) -> Vec2 {
         self.size
     }
 
-    fn width(&self) -> f32 {
+    pub fn width(&self) -> f32 {
         self.size.x
     }
 
-    fn height(&self) -> f32 {
+    pub fn height(&self) -> f32 {
         self.size.y
+    }
+
+    pub fn texture(&self) -> &Texture {
+        &self.texture
+    }
+
+    pub fn sampler(&self) -> &Sampler {
+        &self.sampler
     }
 }
 

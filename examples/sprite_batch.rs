@@ -3,6 +3,7 @@ use gamekit::gfx::*;
 use gamekit::math::{vec2, Mat4, Vec2};
 use gamekit::prelude::*;
 use gamekit::random::Rng;
+use gamekit::sprite::Sprite;
 use gamekit::spritebatch::SpriteBatch;
 use gamekit::sys::event::{DrawEvent, UpdateEvent};
 use gamekit::sys::mouse::{MouseAction, MouseEvent};
@@ -16,6 +17,7 @@ struct Bunny {
 
 #[derive(AppState)]
 struct State {
+    sprite: Sprite,
     batch: SpriteBatch,
     bunnies: Vec<Bunny>,
     rng: Rng,
@@ -28,9 +30,17 @@ impl State {
             Mat4::orthographic_rh_gl(0.0, w as _, h as _, 0.0, -1.0, 1.0)
         });
 
-        let mut batch = SpriteBatch::new(include_bytes!("./assets/bunny.png"), projection, gfx)?;
+        let texture = gfx
+            .create_texture()
+            .from_image(include_bytes!("./assets/bunny.png"))
+            .build()?;
+        let sampler = gfx.create_sampler().build()?;
+        let sprite = Sprite::new(texture, sampler);
+
+        let mut batch = SpriteBatch::new(projection, gfx)?;
         let rng = Rng::new();
         Ok(Self {
+            sprite,
             batch,
             bunnies: vec![],
             rng,
@@ -105,7 +115,7 @@ fn on_update_event(_: &UpdateEvent, app: &mut App, time: &mut Time, state: &mut 
 
 fn on_draw_update(_: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     state.bunnies.iter().for_each(|bunny| {
-        state.batch.draw(bunny.pos);
+        state.batch.draw(&state.sprite, bunny.pos);
     });
     state.batch.flush(gfx).unwrap();
     state.batch.reset();

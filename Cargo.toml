@@ -69,6 +69,7 @@ gk_math.workspace = true
 
 log.workspace = true
 anymap.workspace = true
+hashbrown.workspace = true
 
 # profilling
 puffin = { workspace = true, optional = true}

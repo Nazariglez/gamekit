@@ -1,5 +1,7 @@
+use crate::sprite::{Sprite, SpriteId};
 use gk_gfx::*;
 use gk_math::{Mat4, Vec2};
+use hashbrown::HashMap;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -41,13 +43,20 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 }
 "#;
 
+struct BatchData {
+    sprite: Sprite,
+    bind_group: Option<BindGroup>,
+    start_element: usize,
+    end_element: Option<usize>,
+}
+
 pub struct SpriteBatch {
-    texture: Texture,
+    batches: Vec<BatchData>,
+    cached_bind_groups: HashMap<SpriteId, BindGroup>,
     pip: RenderPipeline,
     vbo: Buffer,
     ebo: Buffer,
     ubo: Buffer,
-    bind_group: BindGroup,
     vbo_data: Vec<f32>,
     ebo_data: Vec<u32>,
     projection: Mat4,
@@ -59,7 +68,7 @@ pub struct SpriteBatch {
 }
 
 impl SpriteBatch {
-    pub fn new(tex_data: &[u8], projection: Mat4, gfx: &mut Gfx) -> Result<Self, String> {
+    pub fn new(projection: Mat4, gfx: &mut Gfx) -> Result<Self, String> {
         let pip = gfx
             .create_render_pipeline(SHADER)
             .with_vertex_layout(
@@ -96,25 +105,13 @@ impl SpriteBatch {
             .with_write_flag(true)
             .build()?;
 
-        let texture = gfx.create_texture().from_image(tex_data).build()?;
-
-        let sampler = gfx.create_sampler().build()?;
-
-        let bind_group = gfx
-            .create_bind_group()
-            .with_layout(pip.bind_group_layout_id(0)?)
-            .with_uniform(0, &ubo)
-            .with_texture(1, &texture)
-            .with_sampler(2, &sampler)
-            .build()?;
-
         Ok(Self {
-            texture,
+            batches: vec![],
+            cached_bind_groups: Default::default(),
             pip,
             vbo,
             ebo,
             ubo,
-            bind_group,
             vbo_data,
             ebo_data,
             dirty_upload: false,
@@ -137,14 +134,36 @@ impl SpriteBatch {
         self.dirty_resize = true;
     }
 
-    pub fn draw(&mut self, pos: Vec2) {
-        if self.max_elements < self.element_index + 1 {
+    fn need_new_batch(&self, sprite: &Sprite) -> bool {
+        self.batches.last().map_or(true, |batch| sprite != sprite)
+    }
+
+    pub fn draw(&mut self, sprite: &Sprite, pos: Vec2) {
+        // TODO instead of "pos" pass Transform2d which converts into Mat3
+        let current_index = self.element_index;
+        let next_index = self.element_index + 1;
+
+        if self.need_new_batch(sprite) {
+            // set the end of the batch
+            if let Some(batch) = self.batches.last_mut() {
+                batch.end_element = Some(current_index);
+            }
+
+            // starts a new batch
+            self.batches.push(BatchData {
+                sprite: sprite.clone(),
+                bind_group: self.cached_bind_groups.get(&sprite.id()).cloned(),
+                start_element: current_index,
+                end_element: None,
+            });
+        }
+
+        if self.max_elements < next_index {
             self.increase_data_buffers();
         }
 
         let Vec2 { x: x1, y: y1 } = pos;
-        let size: Vec2 = self.texture.size().into();
-        let Vec2 { x: x2, y: y2 } = pos + size;
+        let Vec2 { x: x2, y: y2 } = pos + sprite.size();
 
         #[rustfmt::skip]
         let vertices = [
@@ -154,14 +173,14 @@ impl SpriteBatch {
             x2, y2, 1.0, 1.0
         ];
 
-        let vbo_index_start = self.element_index * 16;
+        let vbo_index_start = current_index * 16;
         let vbo_index_end = vbo_index_start + 16;
         self.vbo_data
             .splice(vbo_index_start..vbo_index_end, vertices);
 
-        let ebo_index_start = self.element_index * 6;
+        let ebo_index_start = current_index * 6;
         let ebo_index_end = ebo_index_start + 6;
-        let i = (self.element_index * 4) as u32; //4 vertices per element
+        let i = (current_index * 4) as u32; //4 vertices per element
         #[rustfmt::skip]
         let indices = [
             0+i, 1+i, 2+i,
@@ -172,7 +191,7 @@ impl SpriteBatch {
             .splice(ebo_index_start..ebo_index_end, indices);
 
         self.dirty_upload = true;
-        self.element_index += 1;
+        self.element_index = next_index;
     }
 
     fn resize_gpu_buffers(&mut self, gfx: &mut Gfx) -> Result<(), String> {
@@ -244,23 +263,65 @@ impl SpriteBatch {
         self.dirty_projection = true;
     }
 
+    /// Upload buffers and render everything that's batched
     pub fn flush(&mut self, gfx: &mut Gfx) -> Result<(), String> {
         self.resize_gpu_buffers(gfx)?;
         self.upload_gpu_buffers(gfx)?;
         self.upload_gpu_projection(gfx)?;
 
-        let index = (self.element_index * 6) as _;
-        let mut renderer = Renderer::new();
-        renderer.begin(1600, 800);
-        renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-        renderer.apply_pipeline(&self.pip);
-        renderer.apply_buffers(&[&self.vbo, &self.ebo]);
-        renderer.apply_bindings(&[&self.bind_group]);
-        renderer.draw(0..index);
-        gfx.render(&renderer)
+        // let index = (self.element_index * 6) as _;
+        // let mut renderer = Renderer::new();
+        // renderer.begin(1600, 800);
+        // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+        // renderer.apply_pipeline(&self.pip);
+        // renderer.apply_buffers(&[&self.vbo, &self.ebo]);
+        // renderer.apply_bindings(&[&self.bind_group]);
+        // renderer.draw(0..index);
+        // gfx.render(&renderer)
+
+        for batch in &mut self.batches {
+            // if the batch do not have bind group, create, assign and cache it
+            if batch.bind_group.is_none() {
+                let bind_group = gfx
+                    .create_bind_group()
+                    .with_layout(self.pip.bind_group_layout_id(0)?)
+                    .with_uniform(0, &self.ubo)
+                    .with_texture(1, batch.sprite.texture())
+                    .with_sampler(2, batch.sprite.sampler())
+                    .build()?;
+
+                batch.bind_group = Some(bind_group.clone());
+                self.cached_bind_groups
+                    .insert(batch.sprite.id(), bind_group);
+            }
+
+            // draw the batch
+            let start = (batch.start_element as u32) * 6;
+            let end = (batch.end_element.unwrap_or(self.element_index) as u32) * 6;
+            let mut renderer = Renderer::new();
+            renderer.begin(1600, 800);
+            renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+            renderer.apply_pipeline(&self.pip);
+            renderer.apply_buffers(&[&self.vbo, &self.ebo]);
+            renderer.apply_bindings(&[batch.bind_group.as_ref().unwrap()]);
+            renderer.draw(start..end);
+            gfx.render(&renderer)?;
+        }
+
+        Ok(())
     }
 
+    /// Reset the batches to start drawing again
     pub fn reset(&mut self) {
         self.element_index = 0;
+        self.batches.clear();
+    }
+
+    /// Clear everything in memory
+    pub fn clear(&mut self) {
+        self.reset();
+        self.cached_bind_groups.clear();
+        self.vbo_data.clear();
+        self.ebo_data.clear();
     }
 }
