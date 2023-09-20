@@ -25,6 +25,7 @@ use gk_sys::window::{GKWindow, WindowId};
 use gk_sys::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
+use std::sync::Arc;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::{Queue, TextureDimension};
 
@@ -282,7 +283,7 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
                 .map_or(Default::default(), wgpu_texture_filter),
             ..Default::default()
         });
-        Ok(Sampler { raw })
+        Ok(Sampler { raw: Arc::new(raw) })
     }
 
     fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BindGroup, String> {
@@ -567,8 +568,8 @@ fn create_texture(
     let view = raw.create_view(&wgpu::TextureViewDescriptor::default());
 
     Ok(Texture {
-        raw,
-        view,
+        raw: Arc::new(raw),
+        view: Arc::new(view),
         size: (size.width as _, size.height as _),
     })
 }
