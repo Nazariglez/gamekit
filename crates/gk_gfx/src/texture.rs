@@ -1,4 +1,10 @@
+use gk_macro::ResourceId;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ResourceId)]
+pub struct TextureId(u64);
+
 pub trait GKTexture {
+    fn id(&self) -> TextureId;
     fn size(&self) -> (f32, f32);
 }
 

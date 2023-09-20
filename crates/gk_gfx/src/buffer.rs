@@ -1,7 +1,12 @@
 use crate::consts::MAX_VERTEX_ATTRIBUTES;
 use arrayvec::ArrayVec;
+use gk_macro::ResourceId;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ResourceId)]
+pub struct BufferId(u64);
 
 pub trait GKBuffer {
+    fn id(&self) -> BufferId;
     fn usage(&self) -> BufferUsage;
     fn is_writable(&self) -> bool;
     fn len(&self) -> usize;

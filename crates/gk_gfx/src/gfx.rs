@@ -1,10 +1,10 @@
 use crate::renderer::Renderer;
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutId, BlendMode,
-    Buffer, BufferDescriptor, BufferUsage, ColorMask, CompareMode, CullMode, DepthStencil, Device,
-    GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive, RenderPipeline, Sampler,
-    SamplerDescriptor, Stencil, Texture, TextureData, TextureDescriptor, TextureFilter,
-    TextureFormat, TextureWrap, VertexLayout,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutId,
+    BindGroupLayoutRef, BlendMode, Buffer, BufferDescriptor, BufferUsage, ColorMask, CompareMode,
+    CullMode, DepthStencil, Device, GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive,
+    RenderPipeline, Sampler, SamplerDescriptor, Stencil, Texture, TextureData, TextureDescriptor,
+    TextureFilter, TextureFormat, TextureWrap, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_sys::window::{GKWindow, WindowId};
@@ -337,7 +337,7 @@ impl<'a> BindGroupBuilder<'a> {
         Self { gfx, desc }
     }
 
-    pub fn with_layout(mut self, layout: &'a BindGroupLayoutId) -> Self {
+    pub fn with_layout(mut self, layout: &'a BindGroupLayoutRef) -> Self {
         self.desc.layout = Some(layout);
         self
     }

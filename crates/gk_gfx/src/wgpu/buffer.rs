@@ -1,14 +1,21 @@
-use crate::{BufferUsage, GKBuffer};
+use crate::buffer::{BufferId, BufferUsage, GKBuffer};
+use std::sync::Arc;
 use wgpu::Buffer as RawBuffer;
 
+#[derive(Clone)]
 pub struct Buffer {
-    pub(crate) raw: RawBuffer,
+    pub(crate) id: BufferId,
+    pub(crate) raw: Arc<RawBuffer>,
     pub(crate) usage: BufferUsage,
     pub(crate) write: bool,
     pub(crate) size: usize,
 }
 
 impl GKBuffer for Buffer {
+    fn id(&self) -> BufferId {
+        self.id
+    }
+
     fn usage(&self) -> BufferUsage {
         self.usage
     }

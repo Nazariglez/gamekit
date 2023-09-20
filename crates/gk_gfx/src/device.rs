@@ -3,7 +3,7 @@ use crate::buffer::{BufferDescriptor, GKBuffer};
 use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
 use crate::renderer::Renderer;
 use crate::texture::{GKSampler, GKTexture, SamplerDescriptor, TextureData, TextureDescriptor};
-use crate::{BindGroupDescriptor, GKBindGroup, GKBindGroupLayoutId};
+use crate::{BindGroupDescriptor, GKBindGroup, GKBindGroupLayoutRef};
 use gk_sys::window::{GKWindow, WindowId};
 
 pub trait GKDevice<
@@ -12,7 +12,7 @@ pub trait GKDevice<
     T: GKTexture,
     S: GKSampler,
     BG: GKBindGroup,
-    BGL: GKBindGroupLayoutId,
+    BGL: GKBindGroupLayoutRef,
 >
 {
     fn new(attrs: GfxAttributes) -> Result<Self, String>

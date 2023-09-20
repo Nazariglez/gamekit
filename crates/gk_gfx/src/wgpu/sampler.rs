@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use crate::texture::GKSampler;
+use std::sync::Arc;
 use wgpu::Sampler as RawSampler;
 
 #[derive(Clone)]

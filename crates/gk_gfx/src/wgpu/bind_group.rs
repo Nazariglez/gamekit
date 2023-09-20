@@ -1,14 +1,27 @@
-use crate::{GKBindGroup, GKBindGroupLayoutId};
+use crate::{BindGroupId, BindGroupLayoutId, GKBindGroup, GKBindGroupLayoutRef};
+use std::sync::Arc;
 use wgpu::{BindGroup as RawBindGroup, BindGroupLayout};
 
+#[derive(Clone)]
 pub struct BindGroup {
-    pub(crate) raw: RawBindGroup,
+    pub(crate) id: BindGroupId,
+    pub(crate) raw: Arc<RawBindGroup>,
 }
 
-impl GKBindGroup for BindGroup {}
-
-pub struct BindGroupLayoutId {
-    pub(crate) raw: BindGroupLayout,
+impl GKBindGroup for BindGroup {
+    fn id(&self) -> BindGroupId {
+        self.id
+    }
 }
 
-impl GKBindGroupLayoutId for BindGroupLayoutId {}
+#[derive(Clone)]
+pub struct BindGroupLayoutRef {
+    pub(crate) id: BindGroupLayoutId,
+    pub(crate) raw: Arc<BindGroupLayout>,
+}
+
+impl GKBindGroupLayoutRef for BindGroupLayoutRef {
+    fn id(&self) -> BindGroupLayoutId {
+        self.id
+    }
+}

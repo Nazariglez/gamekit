@@ -1,10 +1,20 @@
 use crate::consts::{MAX_SAMPLED_TEXTURES_PER_SHADER_STAGE, MAX_UNIFORM_BUFFERS_PER_SHADER_STAGE};
-use crate::{BindGroupLayoutId, Buffer, RenderPipeline, Sampler, Texture};
+use crate::{BindGroupLayoutRef, Buffer, Sampler, Texture};
 use arrayvec::ArrayVec;
+use gk_macro::ResourceId;
 
-pub trait GKBindGroup {}
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ResourceId)]
+pub struct BindGroupId(u64);
 
-pub trait GKBindGroupLayoutId {}
+pub trait GKBindGroup {
+    fn id(&self) -> BindGroupId;
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ResourceId)]
+pub struct BindGroupLayoutId(u64);
+pub trait GKBindGroupLayoutRef {
+    fn id(&self) -> BindGroupLayoutId;
+}
 
 pub const MAX_BINDING_ENTRIES: usize =
     MAX_UNIFORM_BUFFERS_PER_SHADER_STAGE + MAX_SAMPLED_TEXTURES_PER_SHADER_STAGE;
@@ -103,7 +113,7 @@ impl BindingType {
 #[derive(Default)]
 pub struct BindGroupDescriptor<'a> {
     pub label: Option<&'a str>,
-    pub layout: Option<&'a BindGroupLayoutId>,
+    pub layout: Option<&'a BindGroupLayoutRef>,
     pub entry: ArrayVec<BindGroupEntry<'a>, MAX_BINDING_ENTRIES>,
 }
 

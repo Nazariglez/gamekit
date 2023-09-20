@@ -17,8 +17,9 @@ use crate::wgpu::utils::{
     wgpu_texture_format, wgpu_texture_wrap, wgpu_vertex_format, wgpu_write_mask,
 };
 use crate::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutId, GKBuffer, Sampler,
-    SamplerDescriptor, TextureData, TextureFormat, MAX_BINDING_ENTRIES,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutId, BindGroupLayoutRef,
+    GKBuffer, Sampler, SamplerDescriptor, TextureData, TextureFormat, TextureId,
+    MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
 use gk_sys::window::{GKWindow, WindowId};
@@ -30,6 +31,7 @@ use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::{Queue, TextureDimension};
 
 pub struct Device {
+    next_resource_id: u64,
     attrs: GfxAttributes,
     ctx: Context,
     depth_format: TextureFormat,
@@ -38,10 +40,11 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutId> for Device {
+impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef> for Device {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let context = Context::new(attrs)?;
         Ok(Self {
+            next_resource_id: 0,
             attrs,
             ctx: context,
             depth_format: attrs.depth_format,
@@ -216,7 +219,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
         let mut bind_group_layout = ArrayVec::new();
         bind_group_layouts.reverse();
         while let Some(bgl) = bind_group_layouts.pop() {
-            bind_group_layout.push(BindGroupLayoutId { raw: bgl });
+            bind_group_layout.push(BindGroupLayoutRef {
+                id: resource_id(&mut self.next_resource_id),
+                raw: Arc::new(bgl),
+            });
         }
         Ok(RenderPipeline {
             raw,
@@ -243,7 +249,8 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
         let size = desc.content.len();
 
         Ok(Buffer {
-            raw,
+            id: resource_id(&mut self.next_resource_id),
+            raw: Arc::new(raw),
             usage,
             write: desc.write,
             size,
@@ -267,7 +274,8 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
         desc: TextureDescriptor,
         data: Option<TextureData>,
     ) -> Result<Texture, String> {
-        create_texture(&self.ctx.device, &self.ctx.queue, desc, data)
+        let id = resource_id(&mut self.next_resource_id);
+        create_texture(&self.ctx.device, &self.ctx.queue, desc, data, id)
     }
 
     fn create_sampler(&mut self, desc: SamplerDescriptor) -> Result<Sampler, String> {
@@ -320,7 +328,10 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
                 entries: &entries,
             });
 
-        Ok(BindGroup { raw })
+        Ok(BindGroup {
+            id: resource_id(&mut self.next_resource_id),
+            raw: Arc::new(raw),
+        })
     }
 
     fn size(&self, id: WindowId) -> (u32, u32) {
@@ -336,12 +347,14 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
 
             // update depth texture if exists
             if surface.depth_texture.is_some() {
+                let id = resource_id(&mut self.next_resource_id);
                 add_depth_texture_to(
                     &self.ctx.device,
                     &self.ctx.queue,
                     surface,
                     self.depth_format,
                     Some("Resize surface's depth texture"),
+                    id,
                 )?;
             }
         }
@@ -374,12 +387,14 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
                 // initialize depth texture on the surface if needed
                 let uses_depth_tex = uses_depth || uses_stencil;
                 if uses_depth_tex && surface.depth_texture.is_none() {
+                    let id = resource_id(&mut self.next_resource_id);
                     add_depth_texture_to(
                         &self.ctx.device,
                         &self.ctx.queue,
                         surface,
                         self.depth_format,
                         Some("Initialize surface's depth texture"),
+                        id,
                     )?;
                 }
 
@@ -516,11 +531,18 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
     }
 }
 
+fn resource_id<T: From<u64>>(count: &mut u64) -> T {
+    let id = *count;
+    *count += 1;
+    T::from(id)
+}
+
 fn create_texture(
     device: &wgpu::Device,
     queue: &Queue,
     desc: TextureDescriptor,
     data: Option<TextureData>,
+    id: TextureId,
 ) -> Result<Texture, String> {
     let size = data.map_or(wgpu::Extent3d::default(), |d| wgpu::Extent3d {
         width: d.width,
@@ -568,6 +590,7 @@ fn create_texture(
     let view = raw.create_view(&wgpu::TextureViewDescriptor::default());
 
     Ok(Texture {
+        id,
         raw: Arc::new(raw),
         view: Arc::new(view),
         size: (size.width as _, size.height as _),
@@ -580,6 +603,7 @@ fn add_depth_texture_to(
     surface: &mut Surface,
     format: TextureFormat,
     label: Option<&str>,
+    id: TextureId,
 ) -> Result<(), String> {
     let tex = create_texture(
         device,
@@ -590,6 +614,7 @@ fn add_depth_texture_to(
             width: surface.config.width,
             height: surface.config.height,
         }),
+        id,
     )?;
     surface.depth_texture = Some(tex);
 

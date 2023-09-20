@@ -1,10 +1,10 @@
 use crate::buffer::{IndexFormat, VertexLayout};
 use crate::consts::{MAX_BIND_GROUPS_PER_PIPELINE, MAX_VERTEX_BUFFERS};
-use crate::{BindGroupLayout, BindGroupLayoutId, BlendMode, Color};
+use crate::{BindGroupLayout, BindGroupLayoutId, BindGroupLayoutRef, BlendMode, Color};
 use arrayvec::ArrayVec;
 
 pub trait GKRenderPipeline {
-    fn bind_group_layout_id(&self, index: u32) -> Result<&BindGroupLayoutId, String>;
+    fn bind_group_layout_id(&self, index: u32) -> Result<&BindGroupLayoutRef, String>;
 }
 
 // https://github.com/floooh/sokol/blob/master/sokol_gfx.h#L2213
