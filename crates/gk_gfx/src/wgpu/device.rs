@@ -225,7 +225,8 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
             });
         }
         Ok(RenderPipeline {
-            raw,
+            id: resource_id(&mut self.next_resource_id),
+            raw: Arc::new(raw),
             index_format,
             uses_depth: desc.depth_stencil.is_some(),
             uses_stencil: desc.stencil.is_some(),

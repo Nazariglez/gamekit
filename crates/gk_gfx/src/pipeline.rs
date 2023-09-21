@@ -2,8 +2,13 @@ use crate::buffer::{IndexFormat, VertexLayout};
 use crate::consts::{MAX_BIND_GROUPS_PER_PIPELINE, MAX_VERTEX_BUFFERS};
 use crate::{BindGroupLayout, BindGroupLayoutId, BindGroupLayoutRef, BlendMode, Color};
 use arrayvec::ArrayVec;
+use gk_macro::ResourceId;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, ResourceId)]
+pub struct PipelineId(u64);
 
 pub trait GKRenderPipeline {
+    fn id(&self) -> PipelineId;
     fn bind_group_layout_id(&self, index: u32) -> Result<&BindGroupLayoutRef, String>;
 }
 
