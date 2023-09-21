@@ -11,6 +11,7 @@ use gamekit::sys::window::GKWindow;
 use gamekit::time::Time;
 
 struct Bunny {
+    sprite: Sprite,
     pos: Vec2,
     speed: Vec2,
 }
@@ -18,6 +19,7 @@ struct Bunny {
 #[derive(AppState)]
 struct State {
     sprite: Sprite,
+    sprite2: Sprite,
     batch: SpriteBatch,
     bunnies: Vec<Bunny>,
     rng: Rng,
@@ -34,26 +36,37 @@ impl State {
             .create_texture()
             .from_image(include_bytes!("./assets/bunny.png"))
             .build()?;
+        let texture2 = gfx
+            .create_texture()
+            .from_image(include_bytes!("./assets/bunny2.png"))
+            .build()?;
         let sampler = gfx.create_sampler().build()?;
-        let sprite = Sprite::new(texture, sampler);
+        let sprite = Sprite::new(texture, sampler.clone());
+        let sprite2 = Sprite::new(texture2, sampler);
 
         let mut batch = SpriteBatch::new(projection, gfx)?;
         let rng = Rng::new();
-        Ok(Self {
+        let mut s = Self {
             sprite,
+            sprite2,
             batch,
             bunnies: vec![],
             rng,
-        })
+        };
+        // s.spawn(100);
+        Ok(s)
     }
 
     fn spawn(&mut self, n: u32) {
         (0..n).for_each(|_| {
             self.bunnies.push(Bunny {
+                sprite: self.sprite.clone(),
                 pos: Vec2::ZERO,
                 speed: vec2(self.rng.range(0.0..10.0), self.rng.range(-5.0..5.0)),
             })
         });
+
+        std::mem::swap(&mut self.sprite, &mut self.sprite2);
     }
 
     fn update(&mut self) {
@@ -113,9 +126,9 @@ fn on_update_event(_: &UpdateEvent, app: &mut App, time: &mut Time, state: &mut 
     state.update();
 }
 
-fn on_draw_update(_: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
+fn on_draw_update(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     state.bunnies.iter().for_each(|bunny| {
-        state.batch.draw(&state.sprite, bunny.pos);
+        state.batch.draw(&bunny.sprite, bunny.pos);
     });
     state.batch.flush(gfx).unwrap();
     state.batch.reset();

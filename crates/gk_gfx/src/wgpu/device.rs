@@ -472,6 +472,9 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
                         )
                     });
 
+                // println!("{:?}", color);
+                // TODO clear between renderers?
+
                 let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: None,
                     color_attachments: &[color],

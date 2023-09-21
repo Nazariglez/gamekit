@@ -135,7 +135,9 @@ impl SpriteBatch {
     }
 
     fn need_new_batch(&self, sprite: &Sprite) -> bool {
-        self.batches.last().map_or(true, |batch| sprite != sprite)
+        self.batches
+            .last()
+            .map_or(true, |batch| &batch.sprite != sprite)
     }
 
     pub fn draw(&mut self, sprite: &Sprite, pos: Vec2) {
@@ -279,6 +281,12 @@ impl SpriteBatch {
         // renderer.draw(0..index);
         // gfx.render(&renderer)
 
+        let mut renderer = Renderer::new();
+        renderer.begin(1600, 800);
+        renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+        renderer.apply_pipeline(&self.pip);
+        renderer.apply_buffers(&[&self.vbo, &self.ebo]);
+
         for batch in &mut self.batches {
             // if the batch do not have bind group, create, assign and cache it
             if batch.bind_group.is_none() {
@@ -295,18 +303,20 @@ impl SpriteBatch {
                     .insert(batch.sprite.id(), bind_group);
             }
 
+            debug_assert!(
+                batch.bind_group.is_some(),
+                "This should not happen. BindGroup is not present for batch"
+            );
+
             // draw the batch
             let start = (batch.start_element as u32) * 6;
             let end = (batch.end_element.unwrap_or(self.element_index) as u32) * 6;
-            let mut renderer = Renderer::new();
-            renderer.begin(1600, 800);
-            renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-            renderer.apply_pipeline(&self.pip);
-            renderer.apply_buffers(&[&self.vbo, &self.ebo]);
+
             renderer.apply_bindings(&[batch.bind_group.as_ref().unwrap()]);
             renderer.draw(start..end);
-            gfx.render(&renderer)?;
         }
+
+        gfx.render(&renderer)?;
 
         Ok(())
     }
