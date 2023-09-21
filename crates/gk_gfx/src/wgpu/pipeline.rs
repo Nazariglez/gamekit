@@ -4,6 +4,7 @@ use arrayvec::ArrayVec;
 use std::sync::Arc;
 use wgpu::RenderPipeline as RawRenderPipeline;
 
+#[derive(Clone)]
 pub struct RenderPipeline {
     pub(crate) id: PipelineId,
     pub(crate) raw: Arc<RawRenderPipeline>,
