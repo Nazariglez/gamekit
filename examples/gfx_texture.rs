@@ -102,8 +102,10 @@ impl State {
             0, 1, 3,
             1, 2, 3,
 
-            4, 5, 7,
-            5, 6, 7,
+            7, 6, 5,
+            7, 5, 4,
+            // 4, 5, 7,
+            // 5, 6, 7,
         ];
         let ebo = gfx.create_index_buffer(indices).build()?;
 
