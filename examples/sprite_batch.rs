@@ -110,7 +110,7 @@ fn main() -> Result<(), String> {
 fn on_mouse_event(evt: &MouseEvent, state: &mut State) {
     match evt.action {
         MouseAction::ButtonPressed { .. } => {
-            state.spawn(1000);
+            state.spawn(1);
         }
         _ => {}
     }

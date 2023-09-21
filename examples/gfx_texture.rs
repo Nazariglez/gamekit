@@ -1,11 +1,12 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, BlendMode, Buffer, Color, CreateRenderer, Gfx, IndexFormat, RenderPipeline,
-    TextureBinding, VertexFormat, VertexLayout,
+    BindGroup, BindGroupLayout, BindingType, BlendMode, Buffer, Color, CreateRenderer, Gfx,
+    IndexFormat, RenderPipeline, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
 use gamekit::sys::event::DrawEvent;
 use gamekit::time::Time;
+use gk_gfx::GKRenderPipeline;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -50,6 +51,22 @@ struct State {
 
 impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
+        let pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_attr(0, VertexFormat::Float32x2)
+                    .with_attr(1, VertexFormat::Float32x2),
+            )
+            .with_bind_group_layout(
+                BindGroupLayout::new()
+                    .with_entry(BindingType::texture(0).with_fragment_visibility(true))
+                    .with_entry(BindingType::sampler(1).with_fragment_visibility(true)),
+            )
+            .with_index_format(IndexFormat::UInt16)
+            .with_blend_mode(BlendMode::NORMAL)
+            .build()?;
+
         let texture = gfx
             .create_texture()
             .from_image(include_bytes!("assets/bunny.png"))
@@ -59,24 +76,9 @@ impl State {
 
         let bind_group = gfx
             .create_bind_group()
-            .with_texture(
-                TextureBinding::new()
-                    .with_texture(0, &texture)
-                    .with_sampler(1, &sampler)
-                    .with_fragment_visibility(true),
-            )
-            .build()?;
-
-        let pip = gfx
-            .create_render_pipeline(SHADER)
-            .with_vertex_layout(
-                VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x2)
-                    .with_attr(1, VertexFormat::Float32x2),
-            )
-            .with_index_format(IndexFormat::UInt16)
-            .with_bind_group(&bind_group)
-            .with_blend_mode(BlendMode::NORMAL)
+            .with_layout(pip.bind_group_layout_id(0)?)
+            .with_texture(0, &texture)
+            .with_sampler(1, &sampler)
             .build()?;
 
         #[rustfmt::skip]
@@ -85,7 +87,13 @@ impl State {
              0.5,  0.5,     1.0, 1.0,
              0.5, -0.5,     1.0, 0.0,
             -0.5, -0.5,     0.0, 0.0,
-            -0.5,  0.5,     0.0, 1.0
+            -0.5,  0.5,     0.0, 1.0,
+
+        //pos           //coords
+        0.3,  0.3,     1.0, 1.0,
+        0.3, -0.3,     1.0, 0.0,
+        -0.3, -0.3,     0.0, 0.0,
+        -0.3,  0.3,     0.0, 1.0
         ];
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
@@ -93,6 +101,9 @@ impl State {
         let indices: &[u16] = &[
             0, 1, 3,
             1, 2, 3,
+
+            4, 5, 7,
+            5, 6, 7,
         ];
         let ebo = gfx.create_index_buffer(indices).build()?;
 
@@ -121,5 +132,13 @@ fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
     renderer.apply_bindings(&[&state.bind_group]);
     renderer.draw(0..6);
+    gfx.render(&renderer).unwrap();
+
+    let mut renderer = evt.create_renderer();
+    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+    renderer.apply_pipeline(&state.pip);
+    renderer.apply_buffers(&[&state.vbo, &state.ebo]);
+    renderer.apply_bindings(&[&state.bind_group]);
+    renderer.draw(6..12);
     gfx.render(&renderer).unwrap();
 }

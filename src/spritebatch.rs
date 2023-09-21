@@ -283,7 +283,7 @@ impl SpriteBatch {
 
         let mut renderer = Renderer::new();
         renderer.begin(1600, 800);
-        renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+        // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
         renderer.apply_pipeline(&self.pip);
         renderer.apply_buffers(&[&self.vbo, &self.ebo]);
 
