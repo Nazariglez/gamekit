@@ -1,7 +1,7 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, Buffer, Color, CullMode, DrawFrame, Gfx, IndexFormat, RenderPipeline, Renderer,
-    TextureBinding, UniformBinding, VertexFormat, VertexLayout,
+    BindGroup, BindGroupLayout, BindingType, Buffer, Color, CullMode, GKRenderPipeline, Gfx,
+    IndexFormat, RenderPipeline, Renderer, VertexFormat, VertexLayout,
 };
 use gamekit::math::{Mat4, Vec3};
 use gamekit::prelude::*;
@@ -99,6 +99,24 @@ impl State {
             -1.0,1.0,1.0,       1.000004,0.671847,
             1.0,-1.0,1.0,       0.667979,0.335_851
         ];
+
+        let pip = gfx
+            .create_render_pipeline(SHADER)
+            .with_vertex_layout(
+                VertexLayout::new()
+                    .with_attr(0, VertexFormat::Float32x3)
+                    .with_attr(1, VertexFormat::Float32x2),
+            )
+            .with_bind_group_layout(
+                BindGroupLayout::new()
+                    .with_entry(BindingType::uniform(0).with_vertex_visibility(true))
+                    .with_entry(BindingType::texture(1).with_fragment_visibility(true))
+                    .with_entry(BindingType::sampler(2).with_fragment_visibility(true)),
+            )
+            .with_index_format(IndexFormat::UInt16)
+            .with_cull_mode(CullMode::Back)
+            .build()?;
+
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
         let mvp = create_mvp();
@@ -116,25 +134,10 @@ impl State {
 
         let bind_group = gfx
             .create_bind_group()
-            .with_uniform(UniformBinding::new(0, &ubo).with_vertex_visibility(true))
-            .with_texture(
-                TextureBinding::new()
-                    .with_texture(1, &texture)
-                    .with_sampler(2, &sampler)
-                    .with_fragment_visibility(true),
-            )
-            .build()?;
-
-        let pip = gfx
-            .create_render_pipeline(SHADER)
-            .with_vertex_layout(
-                VertexLayout::new()
-                    .with_attr(0, VertexFormat::Float32x3)
-                    .with_attr(1, VertexFormat::Float32x2),
-            )
-            .with_bind_group(&bind_group)
-            .with_index_format(IndexFormat::UInt16)
-            .with_cull_mode(CullMode::Back)
+            .with_layout(pip.bind_group_layout_id(0)?)
+            .with_uniform(0, &ubo)
+            .with_texture(1, &texture)
+            .with_sampler(2, &sampler)
             .build()?;
 
         Ok(State {
@@ -166,21 +169,27 @@ fn on_update(_: &event::UpdateEvent, time: &mut Time, state: &mut State) {
     state.angle += 0.6 * time.delta_f32();
 }
 
-fn on_draw(_evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
+fn on_draw(evt: &event::DrawEvent, gfx: &mut Gfx, state: &mut State) {
     // update mvp
     gfx.write_buffer(&state.ubo)
         .with_data(state.rotated_mvp().as_ref())
         .build()
         .unwrap();
 
+    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+
     let mut renderer = Renderer::new();
-    renderer.begin(1600, 1200);
-    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo]);
-    renderer.apply_bindings(&[&state.bind_group]);
-    renderer.draw(0..36);
-    gfx.render(&renderer).unwrap();
+    renderer
+        .begin_pass()
+        .clear_color(Color::rgb(0.1, 0.2, 0.3))
+        .pipeline(&state.pip)
+        .buffers(&[&state.vbo])
+        .bindings(&[&state.bind_group])
+        .draw(0..36);
+
+    gfx.render(&mut frame, &renderer).unwrap();
+
+    gfx.present(frame).unwrap();
 }
 
 fn create_mvp() -> Mat4 {

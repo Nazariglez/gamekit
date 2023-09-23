@@ -1,7 +1,7 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, BindGroupLayout, BindingType, BlendMode, Buffer, Color, CreateRenderer, Gfx,
-    IndexFormat, RenderPipeline, VertexFormat, VertexLayout,
+    BindGroup, BindGroupLayout, BindingType, BlendMode, Buffer, Color, Gfx, IndexFormat,
+    RenderPipeline, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
 use gamekit::sys::event::DrawEvent;
@@ -130,27 +130,14 @@ fn main() -> Result<(), String> {
 fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     let mut frame = gfx.create_frame(evt.window_id).unwrap();
 
-    // // render pass
-    // let mut renderer = evt.create_renderer();
-    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-    // renderer.apply_pipeline(&state.pip);
-    // renderer.apply_buffers(&[&state.vbo, &state.ebo]);
-    // renderer.apply_bindings(&[&state.bind_group]);
-    // renderer.draw(0..6);
-    //
-    // // draw to the frame
-    // gfx.render(&mut frame, &renderer).unwrap();
-
     let mut renderer = Renderer::new();
-    renderer.pass(
-        RenderPass::default()
-            .clear_color(Color::rgb(0.1, 0.2, 0.3))
-            .pipeline(&state.pip)
-            .buffers(&[&state.vbo, &state.ebo])
-            .bindings(&[&state.bind_group])
-            .draw(0..6)
-            .draw(6..12),
-    );
+    renderer
+        .begin_pass()
+        .clear_color(Color::rgb(0.1, 0.2, 0.3))
+        .pipeline(&state.pip)
+        .buffers(&[&state.vbo, &state.ebo])
+        .bindings(&[&state.bind_group])
+        .draw(0..6);
 
     gfx.render(&mut frame, &renderer).unwrap();
 

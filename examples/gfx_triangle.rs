@@ -1,6 +1,7 @@
 use gamekit::app::App;
-use gamekit::gfx::{Buffer, Color, DrawFrame, Gfx, RenderPipeline, VertexFormat, VertexLayout};
+use gamekit::gfx::{Buffer, Color, Gfx, RenderPipeline, Renderer, VertexFormat, VertexLayout};
 use gamekit::prelude::*;
+use gamekit::sys::event::DrawEvent;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -68,11 +69,22 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
-    let mut renderer = evt.create_renderer();
-    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo]);
-    renderer.draw(0..3);
-    gfx.render(&renderer).unwrap();
+fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
+    // Create new frame
+    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+
+    // Renderer with the render pass for the triangle
+    let mut renderer = Renderer::new();
+    renderer
+        .begin_pass()
+        .clear_color(Color::rgb(0.1, 0.2, 0.3))
+        .pipeline(&state.pip)
+        .buffers(&[&state.vbo])
+        .draw(0..3);
+
+    // Render to the frame
+    gfx.render(&mut frame, &renderer).unwrap();
+
+    // Present frame to screen
+    gfx.present(frame).unwrap();
 }

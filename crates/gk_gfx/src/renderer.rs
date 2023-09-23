@@ -30,42 +30,51 @@ pub struct RenderPass<'a> {
 }
 
 impl<'a> RenderPass<'a> {
-    pub fn size(mut self, width: u32, height: u32) -> Self {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn size(&mut self, width: u32, height: u32) -> &mut Self {
         self.size = Some((width, height));
         self
     }
 
-    pub fn clear_color(mut self, color: Color) -> Self {
+    pub fn stencil_reference(&mut self, reference: u8) -> &mut Self {
+        self.stencil_ref = Some(reference);
+        self
+    }
+
+    pub fn clear_color(&mut self, color: Color) -> &mut Self {
         self.clear_options.color = Some(color);
         self
     }
 
-    pub fn clear_depth(mut self, depth: f32) -> Self {
+    pub fn clear_depth(&mut self, depth: f32) -> &mut Self {
         self.clear_options.depth = Some(depth);
         self
     }
 
-    pub fn clear_stencil(mut self, stencil: u32) -> Self {
+    pub fn clear_stencil(&mut self, stencil: u32) -> &mut Self {
         self.clear_options.stencil = Some(stencil);
         self
     }
 
-    pub fn pipeline(mut self, pipeline: &'a RenderPipeline) -> Self {
+    pub fn pipeline(&mut self, pipeline: &'a RenderPipeline) -> &mut Self {
         self.pipeline = Some(pipeline);
         self
     }
 
-    pub fn buffers(mut self, buffers: &[&'a Buffer]) -> Self {
+    pub fn buffers(&mut self, buffers: &[&'a Buffer]) -> &mut Self {
         self.buffers.try_extend_from_slice(buffers).unwrap();
         self
     }
 
-    pub fn bindings(mut self, groups: &[&'a BindGroup]) -> Self {
+    pub fn bindings(&mut self, groups: &[&'a BindGroup]) -> &mut Self {
         self.bind_groups.try_extend_from_slice(groups).unwrap();
         self
     }
 
-    pub fn draw(mut self, vertices: Range<u32>) -> Self {
+    pub fn draw(&mut self, vertices: Range<u32>) -> &mut Self {
         self.vertices.push(RPassVertices {
             range: vertices,
             instances: None,
@@ -73,7 +82,7 @@ impl<'a> RenderPass<'a> {
         self
     }
 
-    pub fn draw_instanced(mut self, vertices: Range<u32>, instances: u32) -> Self {
+    pub fn draw_instanced(&mut self, vertices: Range<u32>, instances: u32) -> &mut Self {
         self.vertices.push(RPassVertices {
             range: vertices,
             instances: Some(instances),
@@ -92,86 +101,12 @@ impl<'a> Renderer<'a> {
         Default::default()
     }
 
-    pub fn pass(&mut self, rpass: RenderPass<'a>) {
+    pub fn add_pass(&mut self, rpass: RenderPass<'a>) {
         self.passes.push(rpass);
     }
 
-    // pub fn begin_pass(&mut self) -> &mut RenderPass {
-    //     self.passes.push(RenderPass::default());
-    //     self.passes.last_mut().unwrap()
-    // }
-
-    pub fn begin(&mut self) {
-        self.passes.push(RenderPass {
-            size: None,
-            ..Default::default()
-        });
-    }
-
-    pub fn size(&mut self, width: u32, height: u32) {
-        if let Some(rp) = self.passes.last_mut() {
-            rp.size = Some((width, height));
-        }
-    }
-
-    pub fn clear(&mut self, color: Option<Color>, depth: Option<f32>, stencil: Option<u32>) {
-        if let Some(rp) = self.passes.last_mut() {
-            // rp.clear_options = Some(ClearOptions {
-            //     color,
-            //     depth,
-            //     stencil,
-            // });
-        }
-    }
-
-    pub fn apply_pipeline(&mut self, pip: &'a RenderPipeline) {
-        if let Some(rp) = self.passes.last_mut() {
-            rp.pipeline = Some(pip);
-        }
-    }
-
-    pub fn apply_buffers(&mut self, buffers: &[&'a Buffer]) {
-        if let Some(rp) = self.passes.last_mut() {
-            rp.buffers = ArrayVec::new();
-            rp.buffers.try_extend_from_slice(buffers).unwrap();
-        }
-    }
-
-    pub fn apply_bindings(&mut self, groups: &[&'a BindGroup]) {
-        if let Some(rp) = self.passes.last_mut() {
-            rp.bind_groups = ArrayVec::new();
-            rp.bind_groups.try_extend_from_slice(groups).unwrap();
-        }
-    }
-
-    pub fn stencil_reference(&mut self, stencil: u8) {
-        if let Some(rp) = self.passes.last_mut() {
-            rp.stencil_ref = Some(stencil);
-        }
-    }
-
-    pub fn draw(&mut self, vertices: Range<u32>) {
-        if let Some(rp) = self.passes.last_mut() {
-            // rp.vertices = vertices;
-        }
-    }
-
-    pub fn draw_instanced(&mut self, vertices: Range<u32>, instances: u32) {
-        if let Some(rp) = self.passes.last_mut() {
-            // rp.vertices = vertices;
-            // rp.instances = Some(instances);
-        }
-    }
-}
-
-pub trait CreateRenderer {
-    fn create_renderer(&self) -> Renderer;
-}
-
-impl CreateRenderer for DrawEvent {
-    fn create_renderer(&self) -> Renderer {
-        let mut renderer = Renderer::new();
-        renderer.begin();
-        renderer
+    pub fn begin_pass(&mut self) -> &mut RenderPass<'a> {
+        self.passes.push(RenderPass::default());
+        self.passes.last_mut().unwrap()
     }
 }

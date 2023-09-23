@@ -266,20 +266,15 @@ impl SpriteBatch {
     }
 
     /// Upload buffers and render everything that's batched
-    pub fn flush(&mut self, gfx: &mut Gfx, frame: &mut DrawFrame) -> Result<(), String> {
+    pub fn flush<'a>(
+        &'a mut self,
+        gfx: &mut Gfx,
+        frame: &mut DrawFrame,
+        mut renderer: Renderer<'a>,
+    ) -> Result<(), String> {
         self.resize_gpu_buffers(gfx)?;
         self.upload_gpu_buffers(gfx)?;
         self.upload_gpu_projection(gfx)?;
-
-        // let index = (self.element_index * 6) as _;
-        // let mut renderer = Renderer::new();
-        // renderer.begin(1600, 800);
-        // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-        // renderer.apply_pipeline(&self.pip);
-        // renderer.apply_buffers(&[&self.vbo, &self.ebo]);
-        // renderer.apply_bindings(&[&self.bind_group]);
-        // renderer.draw(0..index);
-        // gfx.render(&renderer)
 
         for batch in &mut self.batches {
             // if the batch do not have bind group, create, assign and cache it
@@ -306,17 +301,15 @@ impl SpriteBatch {
             let start = (batch.start_element as u32) * 6;
             let end = (batch.end_element.unwrap_or(self.element_index) as u32) * 6;
 
-            let mut renderer = Renderer::new();
-            renderer.begin();
-            // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-            renderer.apply_pipeline(&self.pip);
-            renderer.apply_buffers(&[&self.vbo, &self.ebo]);
-
-            renderer.apply_bindings(&[batch.bind_group.as_ref().unwrap()]);
-            renderer.draw(start..end);
-
-            gfx.render(frame, &renderer)?;
+            renderer
+                .begin_pass()
+                .pipeline(&self.pip)
+                .buffers(&[&self.vbo, &self.ebo])
+                .bindings(&[batch.bind_group.as_ref().unwrap()])
+                .draw(start..end);
         }
+
+        gfx.render(frame, &renderer)?;
 
         Ok(())
     }

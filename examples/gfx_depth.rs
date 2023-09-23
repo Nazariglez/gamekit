@@ -1,9 +1,8 @@
 use gamekit::app::App;
-use gamekit::gfx::{
-    Buffer, Color, CompareMode, CreateRenderer, Gfx, RenderPipeline, VertexFormat, VertexLayout,
-};
+use gamekit::gfx::{Buffer, Color, CompareMode, Gfx, RenderPipeline, VertexFormat, VertexLayout};
 use gamekit::prelude::*;
 use gamekit::sys::event::DrawEvent;
+use gk_gfx::Renderer;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -80,11 +79,19 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(frame: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
-    let mut renderer = frame.create_renderer();
-    renderer.clear(Some(Color::WHITE), Some(1.0), None);
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo]);
-    renderer.draw(0..9);
-    gfx.render(&renderer).unwrap();
+fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
+    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+
+    let mut renderer = Renderer::new();
+    renderer
+        .begin_pass()
+        .clear_color(Color::WHITE)
+        .clear_depth(1.0)
+        .pipeline(&state.pip)
+        .buffers(&[&state.vbo])
+        .draw(0..9);
+
+    gfx.render(&mut frame, &renderer).unwrap();
+
+    gfx.present(frame).unwrap();
 }

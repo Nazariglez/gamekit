@@ -1,16 +1,11 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    Buffer, Color, CompareMode, DrawFrame, Gfx, RenderPipeline, Stencil, StencilAction,
-    VertexFormat, VertexLayout,
+    Buffer, Color, CompareMode, Gfx, RenderPipeline, Stencil, StencilAction, VertexFormat,
+    VertexLayout,
 };
 use gamekit::prelude::*;
-
-// TODO https://webglfundamentals.org/webgl/lessons/webgl-qna-how-to-use-the-stencil-buffer.html
-// https://github.com/Nazariglez/notan/blob/0815528fd42e96fd1d2299871c3e49251cf684bf/crates/notan_draw/src/manager.rs#L202
-// https://maxammann.org/posts/2022/01/wgpu-stencil-testing/
-// https://stackoverflow.com/questions/76240723/why-webgpu-stencil-buffer-2d-clipping-result-invisible-when-antialias-enabled
-// https://learnopengl.com/Advanced-OpenGL/Stencil-testing
-// https://carmencincotti.com/2022-06-13/webgpu-the-depth-texture/
+use gk_gfx::Renderer;
+use gk_sys::event::DrawEvent;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -141,19 +136,27 @@ fn main() -> Result<(), String> {
         .build()
 }
 
-fn on_draw(evt: &DrawFrame, gfx: &mut Gfx, state: &mut State) {
-    let mut renderer = evt.create_renderer();
-    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, Some(0));
-    renderer.apply_pipeline(&state.mask_pip);
-    renderer.apply_buffers(&[&state.mask_vbo]);
-    renderer.stencil_reference(1);
-    renderer.draw(0..18);
+fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
+    let mut frame = gfx.create_frame(evt.window_id).unwrap();
 
-    renderer.begin(1600, 1200);
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo]);
-    renderer.stencil_reference(1);
-    renderer.draw(0..3);
+    let mut renderer = Renderer::new();
+    renderer
+        .begin_pass()
+        .clear_color(Color::rgb(0.1, 0.2, 0.3))
+        .clear_stencil(0)
+        .pipeline(&state.mask_pip)
+        .buffers(&[&state.mask_vbo])
+        .stencil_reference(1)
+        .draw(0..18);
 
-    gfx.render(&renderer).unwrap();
+    renderer
+        .begin_pass()
+        .pipeline(&state.pip)
+        .buffers(&[&state.vbo])
+        .stencil_reference(1)
+        .draw(0..3);
+
+    gfx.render(&mut frame, &renderer).unwrap();
+
+    gfx.present(frame).unwrap();
 }
