@@ -59,7 +59,19 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
             return Ok(());
         }
 
-        let surface = Surface::new(&mut self.ctx, window, self.attrs)?;
+        let depth_texture = self.create_texture(
+            TextureDescriptor {
+                label: Some("Depth Texture for Surface"),
+                format: self.depth_format,
+            },
+            Some(TextureData {
+                bytes: &[],
+                width: window.width(),
+                height: window.height(),
+            }),
+        )?;
+
+        let surface = Surface::new(&mut self.ctx, window, self.attrs, depth_texture)?;
         self.surfaces.insert(window.id(), surface);
 
         Ok(())
@@ -351,18 +363,16 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         if let Some(surface) = self.surfaces.get_mut(&id) {
             surface.resize(&self.ctx.device, width, height);
 
-            // update depth texture if exists
-            if surface.depth_texture.is_some() {
-                let id = resource_id(&mut self.next_resource_id);
-                add_depth_texture_to(
-                    &self.ctx.device,
-                    &self.ctx.queue,
-                    surface,
-                    self.depth_format,
-                    Some("Resize surface's depth texture"),
-                    id,
-                )?;
-            }
+            // update depth texture
+            let id = resource_id(&mut self.next_resource_id);
+            add_depth_texture_to(
+                &self.ctx.device,
+                &self.ctx.queue,
+                surface,
+                self.depth_format,
+                Some("Resize surface's depth texture"),
+                id,
+            )?;
         }
 
         Ok(())
@@ -377,20 +387,6 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                 let (uses_depth, uses_stencil) = rp
                     .pipeline
                     .map_or((false, false), |pip| (pip.uses_depth, pip.uses_stencil));
-
-                // initialize depth texture on the surface if needed
-                let uses_depth_tex = uses_depth || uses_stencil;
-                if uses_depth_tex && frame.surface.depth_texture.is_none() {
-                    let id = resource_id(&mut self.next_resource_id);
-                    add_depth_texture_to(
-                        &self.ctx.device,
-                        &self.ctx.queue,
-                        &mut frame.surface.clone(), // TODO: FIXME: this is wrong because the depth_texture is under an option not under a mutex, this does nothing
-                        self.depth_format,
-                        Some("Initialize surface's depth texture"),
-                        id,
-                    )?;
-                }
 
                 let (color, depth, stencil) = rp
                     .clear_options
@@ -472,12 +468,10 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                         label: None,
                         color_attachments: &[color],
                         depth_stencil_attachment: if depth.is_some() || stencil.is_some() {
-                            frame.surface.depth_texture.as_ref().map(|dt| {
-                                wgpu::RenderPassDepthStencilAttachment {
-                                    view: &dt.view,
-                                    depth_ops: depth,
-                                    stencil_ops: stencil,
-                                }
+                            Some(wgpu::RenderPassDepthStencilAttachment {
+                                view: &frame.surface.depth_texture.view,
+                                depth_ops: depth,
+                                stencil_ops: stencil,
                             })
                         } else {
                             None
@@ -584,7 +578,10 @@ fn create_texture(
         depth_or_array_layers: 1,
     });
 
-    let is_depth_texture = matches!(desc.format, TextureFormat::Depth32Float);
+    let is_depth_texture = match desc.format {
+        TextureFormat::Depth32Float => true,
+        _ => false,
+    };
     let mut usage = wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST;
     if is_depth_texture {
         usage |= wgpu::TextureUsages::RENDER_ATTACHMENT;
@@ -639,7 +636,7 @@ fn add_depth_texture_to(
     label: Option<&str>,
     id: TextureId,
 ) -> Result<(), String> {
-    let tex = create_texture(
+    surface.depth_texture = create_texture(
         device,
         queue,
         TextureDescriptor { label, format },
@@ -650,7 +647,6 @@ fn add_depth_texture_to(
         }),
         id,
     )?;
-    surface.depth_texture = Some(tex);
 
     Ok(())
 }

@@ -66,7 +66,7 @@ impl State {
             })
         });
 
-        // std::mem::swap(&mut self.sprite, &mut self.sprite2);
+        std::mem::swap(&mut self.sprite, &mut self.sprite2);
     }
 
     fn update(&mut self) {

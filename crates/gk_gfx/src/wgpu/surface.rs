@@ -12,7 +12,7 @@ pub(crate) struct Surface {
     pub surface: Arc<RawSurface>,
     pub config: SurfaceConfiguration,
     pub capabilities: Arc<SurfaceCapabilities>,
-    pub depth_texture: Option<Texture>, // TODO this shopuld not be an options it must be instantiated always
+    pub depth_texture: Texture,
 }
 
 impl Surface {
@@ -20,6 +20,7 @@ impl Surface {
         ctx: &mut Context,
         window: &W,
         attrs: GfxAttributes,
+        depth_texture: Texture,
     ) -> Result<Self, String> {
         log::trace!("Creating a new Surface for Window {:?}", window.id());
         let surface = unsafe { ctx.instance.create_surface(window) }.map_err(|e| e.to_string())?;
@@ -54,7 +55,7 @@ impl Surface {
             surface: Arc::new(surface),
             config,
             capabilities: Arc::new(capabilities),
-            depth_texture: None,
+            depth_texture,
         })
     }
 
