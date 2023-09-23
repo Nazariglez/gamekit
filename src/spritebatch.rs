@@ -316,7 +316,7 @@ impl SpriteBatch {
             renderer.draw(start..end);
         }
 
-        gfx.render(&renderer)?;
+        // gfx.render(&renderer)?;
 
         Ok(())
     }

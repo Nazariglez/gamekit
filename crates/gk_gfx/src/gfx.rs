@@ -2,9 +2,9 @@ use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutId,
     BindGroupLayoutRef, BlendMode, Buffer, BufferDescriptor, BufferUsage, ColorMask, CompareMode,
-    CullMode, DepthStencil, Device, GKBuffer, GfxAttributes, GfxConfig, IndexFormat, Primitive,
-    RenderPipeline, Sampler, SamplerDescriptor, Stencil, Texture, TextureData, TextureDescriptor,
-    TextureFilter, TextureFormat, TextureWrap, VertexLayout,
+    CullMode, DepthStencil, Device, DrawFrame, GKBuffer, GfxAttributes, GfxConfig, IndexFormat,
+    Primitive, RenderPipeline, Sampler, SamplerDescriptor, Stencil, Texture, TextureData,
+    TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_sys::window::{GKWindow, WindowId};
@@ -13,7 +13,6 @@ use image::EncodableLayout;
 
 pub struct Gfx {
     pub(crate) raw: Device,
-    pub(crate) current_window: Option<WindowId>,
 }
 
 impl Plugin for Gfx {}
@@ -21,22 +20,15 @@ impl Plugin for Gfx {}
 impl Gfx {
     pub fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let raw = Device::new(attrs)?;
-        Ok(Self {
-            raw,
-            current_window: None,
-        })
+        Ok(Self { raw })
     }
 
     pub fn config() -> GfxConfig {
         GfxConfig::default()
     }
 
-    pub fn create_frame(&mut self, window_id: WindowId) -> DrawFrame {
+    pub fn create_frame(&mut self, window_id: WindowId) -> Result<DrawFrame, String> {
         self.raw.create_frame(window_id)
-    }
-
-    pub fn current_window(&self) -> Option<WindowId> {
-        self.current_window
     }
 
     pub fn init_surface<W: GKWindow>(&mut self, win: &W) -> Result<(), String> {
@@ -89,13 +81,14 @@ impl Gfx {
         self.raw.size(id)
     }
 
-    pub fn render(&mut self, renderer: &Renderer) -> Result<(), String> {
-        let window_id = self.current_window.ok_or("There is no frame surface information to render to. You can use 'gfx.render_to' instead.")?;
-        self.render_to(window_id, renderer)
+    pub fn render(&mut self, frame: &mut DrawFrame, renderer: &Renderer) -> Result<(), String> {
+        // TODO add a flag to check if there is work to present and avoid the call if not?
+        self.raw.render(frame, renderer)
     }
 
-    pub fn render_to(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String> {
-        self.raw.render(window, renderer)
+    pub fn present(&mut self, frame: DrawFrame) -> Result<(), String> {
+        // TODO add a flag to check if there is work to present and avoid the call if not?
+        self.raw.present(frame)
     }
 }
 

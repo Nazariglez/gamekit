@@ -368,22 +368,8 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         Ok(())
     }
 
-    fn render(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String> {
-        // TODO surface here should not be need if rendering to texture
-        // TODO also, maybe surface must be part of DrawFrame?
-        let surface = self
-            .surfaces
-            .get_mut(&window)
-            .ok_or_else(|| format!("No WGPU context for {:?}", window))?;
-        // let frame = surface.frame()?;
-        // let view = frame
-        //     .texture
-        //     .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self
-            .ctx
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-
+    fn render(&mut self, frame: &mut DrawFrame, renderer: &Renderer) -> Result<(), String> {
+        // TODO render to texture should create a new encoder per call
         renderer
             .passes
             .iter()
@@ -394,12 +380,12 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
 
                 // initialize depth texture on the surface if needed
                 let uses_depth_tex = uses_depth || uses_stencil;
-                if uses_depth_tex && surface.depth_texture.is_none() {
+                if uses_depth_tex && frame.surface.depth_texture.is_none() {
                     let id = resource_id(&mut self.next_resource_id);
                     add_depth_texture_to(
                         &self.ctx.device,
                         &self.ctx.queue,
-                        surface,
+                        &mut frame.surface.clone(), // TODO: FIXME: this is wrong because the depth_texture is under an option not under a mutex, this does nothing
                         self.depth_format,
                         Some("Initialize surface's depth texture"),
                         id,
@@ -410,7 +396,7 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                     .clear_options
                     .map(|clear| {
                         let color = Some(wgpu::RenderPassColorAttachment {
-                            view: &view,
+                            view: &frame.view,
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: clear.color.map_or(wgpu::LoadOp::Load, |color| {
@@ -444,7 +430,7 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                     })
                     .unwrap_or_else(|| {
                         let default_color_attachment = wgpu::RenderPassColorAttachment {
-                            view: &view,
+                            view: &frame.view,
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Load,
@@ -480,21 +466,23 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                 // println!("{:?}", color);
                 // TODO clear between renderers?
 
-                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                    label: None,
-                    color_attachments: &[color],
-                    depth_stencil_attachment: if depth.is_some() || stencil.is_some() {
-                        surface.depth_texture.as_ref().map(|dt| {
-                            wgpu::RenderPassDepthStencilAttachment {
-                                view: &dt.view,
-                                depth_ops: depth,
-                                stencil_ops: stencil,
-                            }
-                        })
-                    } else {
-                        None
-                    },
-                });
+                let mut rpass = frame
+                    .encoder
+                    .begin_render_pass(&wgpu::RenderPassDescriptor {
+                        label: None,
+                        color_attachments: &[color],
+                        depth_stencil_attachment: if depth.is_some() || stencil.is_some() {
+                            frame.surface.depth_texture.as_ref().map(|dt| {
+                                wgpu::RenderPassDepthStencilAttachment {
+                                    view: &dt.view,
+                                    depth_ops: depth,
+                                    stencil_ops: stencil,
+                                }
+                            })
+                        } else {
+                            None
+                        },
+                    });
 
                 if let Some(pip) = rp.pipeline {
                     rpass.set_pipeline(&pip.raw);
@@ -535,9 +523,6 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                 Ok(())
             })?;
 
-        self.ctx.queue.submit(Some(encoder.finish()));
-        frame.present();
-
         Ok(())
     }
 
@@ -550,11 +535,24 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        Ok(DrawFrame { frame, view })
+        let mut encoder = self
+            .ctx
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        Ok(DrawFrame {
+            window_id,
+            surface: surface.clone(),
+            frame,
+            view,
+            encoder,
+        })
     }
 
-    fn present(&mut self, frame: &DrawFrame) -> Result<(), String> {
-        todo!()
+    fn present(&mut self, frame: DrawFrame) -> Result<(), String> {
+        let DrawFrame { frame, encoder, .. } = frame;
+        self.ctx.queue.submit(Some(encoder.finish()));
+        frame.present();
+        Ok(())
     }
 }
 

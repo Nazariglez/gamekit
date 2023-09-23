@@ -2,15 +2,17 @@ use super::context::Context;
 use crate::attrs::GfxAttributes;
 use crate::Texture;
 use gk_sys::window::GKWindow;
+use std::sync::Arc;
 use wgpu::{
     Device, Surface as RawSurface, SurfaceCapabilities, SurfaceConfiguration, SurfaceTexture,
 };
 
+#[derive(Clone)]
 pub(crate) struct Surface {
-    pub surface: RawSurface,
+    pub surface: Arc<RawSurface>,
     pub config: SurfaceConfiguration,
-    pub capabilities: SurfaceCapabilities,
-    pub depth_texture: Option<Texture>,
+    pub capabilities: Arc<SurfaceCapabilities>,
+    pub depth_texture: Option<Texture>, // TODO this shopuld not be an options it must be instantiated always
 }
 
 impl Surface {
@@ -49,9 +51,9 @@ impl Surface {
         surface.configure(&ctx.device, &config);
 
         Ok(Self {
-            surface,
+            surface: Arc::new(surface),
             config,
-            capabilities,
+            capabilities: Arc::new(capabilities),
             depth_texture: None,
         })
     }

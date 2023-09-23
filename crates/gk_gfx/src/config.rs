@@ -23,7 +23,7 @@ impl GfxConfig {
 
 impl<S: GKState + 'static> BuildConfig<S> for GfxConfig {
     fn apply(&mut self, builder: AppBuilder<S>) -> Result<AppBuilder<S>, String> {
-        let builder = builder.on(on_window_event).on(on_draw).on(on_frame_end);
+        let builder = builder.on(on_window_event);
 
         let attrs = self.attrs;
         builder.add_plugin_with(move |platform: &mut App| {
@@ -59,29 +59,4 @@ fn on_window_event(evt: &WindowEvent, gfx: &mut Gfx, platform: &mut App) {
         WindowAction::FocusLost => {}
         WindowAction::Close => {}
     }
-}
-
-fn on_draw<S: GKState + 'static>(
-    evt: &gk_sys::event::DrawEvent,
-    gfx: &mut Gfx,
-    events: &mut EventQueue<S>,
-) {
-    let window_id = evt.window_id;
-
-    match gfx.raw.surfaces.get(&window_id) {
-        Some(surface) => {
-            gfx.current_window = Some(window_id);
-        }
-        None => {
-            log::warn!(
-                "Cannot find a surface for window {:?}. Skipping setting it as current frame event.",
-                window_id
-            );
-        }
-    }
-}
-
-fn on_frame_end(_: &gk_sys::event::FrameEndEvent, gfx: &mut Gfx) {
-    // Clean current frame info
-    gfx.current_window = None;
 }

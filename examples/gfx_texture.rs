@@ -128,6 +128,9 @@ fn main() -> Result<(), String> {
 }
 
 fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
+    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+
+    // render pass
     let mut renderer = evt.create_renderer();
     renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);
@@ -135,9 +138,21 @@ fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_bindings(&[&state.bind_group]);
     renderer.draw(0..6);
 
-    let frame = gfx.create_frame(evt.window_id);
-    gfx.render(&frame, &renderer).unwrap();
-    gfx.present(frame);
+    // draw to the frame
+    gfx.render(&mut frame, &renderer).unwrap();
+
+    // render pass
+    let mut renderer = evt.create_renderer();
+    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+    renderer.apply_pipeline(&state.pip);
+    renderer.apply_buffers(&[&state.vbo, &state.ebo]);
+    renderer.apply_bindings(&[&state.bind_group]);
+    renderer.draw(6..12);
+
+    gfx.render(&mut frame, &renderer).unwrap();
+
+    // present the frame to the screen
+    gfx.present(frame).unwrap();
     // frame.render(&renderer).unwrap();
     // gfx.present(frame);
 
