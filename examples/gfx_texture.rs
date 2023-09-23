@@ -6,7 +6,7 @@ use gamekit::gfx::{
 use gamekit::prelude::*;
 use gamekit::sys::event::DrawEvent;
 use gamekit::time::Time;
-use gk_gfx::GKRenderPipeline;
+use gk_gfx::{GKRenderPipeline, RenderPass, Renderer};
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -130,36 +130,30 @@ fn main() -> Result<(), String> {
 fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     let mut frame = gfx.create_frame(evt.window_id).unwrap();
 
-    // render pass
-    let mut renderer = evt.create_renderer();
-    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo, &state.ebo]);
-    renderer.apply_bindings(&[&state.bind_group]);
-    renderer.draw(0..6);
-
-    // draw to the frame
-    gfx.render(&mut frame, &renderer).unwrap();
-
-    let mut renderer = evt.create_renderer();
+    // // render pass
+    // let mut renderer = evt.create_renderer();
     // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo, &state.ebo]);
-    renderer.apply_bindings(&[&state.bind_group]);
-    renderer.draw(6..12);
+    // renderer.apply_pipeline(&state.pip);
+    // renderer.apply_buffers(&[&state.vbo, &state.ebo]);
+    // renderer.apply_bindings(&[&state.bind_group]);
+    // renderer.draw(0..6);
+    //
+    // // draw to the frame
+    // gfx.render(&mut frame, &renderer).unwrap();
+
+    let mut renderer = Renderer::new();
+    renderer.pass(
+        RenderPass::default()
+            .clear_color(Color::rgb(0.1, 0.2, 0.3))
+            .pipeline(&state.pip)
+            .buffers(&[&state.vbo, &state.ebo])
+            .bindings(&[&state.bind_group])
+            .draw(0..6)
+            .draw(6..12),
+    );
 
     gfx.render(&mut frame, &renderer).unwrap();
 
     // present the frame to the screen
     gfx.present(frame).unwrap();
-    // frame.render(&renderer).unwrap();
-    // gfx.present(frame);
-
-    // let mut renderer = evt.create_renderer();
-    // // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-    // renderer.apply_pipeline(&state.pip);
-    // renderer.apply_buffers(&[&state.vbo, &state.ebo]);
-    // renderer.apply_bindings(&[&state.bind_group]);
-    // renderer.draw(6..12);
-    // gfx.render(&renderer).unwrap();
 }

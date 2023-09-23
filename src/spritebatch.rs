@@ -307,7 +307,7 @@ impl SpriteBatch {
             let end = (batch.end_element.unwrap_or(self.element_index) as u32) * 6;
 
             let mut renderer = Renderer::new();
-            renderer.begin(1600, 800);
+            renderer.begin();
             // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
             renderer.apply_pipeline(&self.pip);
             renderer.apply_buffers(&[&self.vbo, &self.ebo]);

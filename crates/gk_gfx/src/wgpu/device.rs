@@ -388,79 +388,50 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                     .pipeline
                     .map_or((false, false), |pip| (pip.uses_depth, pip.uses_stencil));
 
-                let (color, depth, stencil) = rp
-                    .clear_options
-                    .map(|clear| {
-                        let color = Some(wgpu::RenderPassColorAttachment {
-                            view: &frame.view,
-                            resolve_target: None,
-                            ops: wgpu::Operations {
-                                load: clear.color.map_or(wgpu::LoadOp::Load, |color| {
-                                    wgpu::LoadOp::Clear(wgpu_color(color))
-                                }),
-                                store: true,
-                            },
-                        });
+                let color = Some(rp.clear_options.color.map_or_else(
+                    || wgpu::RenderPassColorAttachment {
+                        view: &frame.view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Load,
+                            store: true,
+                        },
+                    },
+                    |color| wgpu::RenderPassColorAttachment {
+                        view: &frame.view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: rp.clear_options.color.map_or(wgpu::LoadOp::Load, |color| {
+                                wgpu::LoadOp::Clear(wgpu_color(color))
+                            }),
+                            store: true,
+                        },
+                    },
+                ));
 
-                        let depth = if uses_depth {
-                            Some(wgpu::Operations {
-                                load: clear.depth.map_or(wgpu::LoadOp::Load, wgpu::LoadOp::Clear),
-                                store: true,
-                            })
-                        } else {
-                            None
-                        };
-
-                        let stencil = if uses_stencil {
-                            Some(wgpu::Operations {
-                                load: clear.stencil.map_or(wgpu::LoadOp::Load, |stencil| {
-                                    wgpu::LoadOp::Clear(stencil)
-                                }),
-                                store: true,
-                            })
-                        } else {
-                            None
-                        };
-
-                        (color, depth, stencil)
+                let depth = if uses_depth {
+                    Some(wgpu::Operations {
+                        load: rp
+                            .clear_options
+                            .depth
+                            .map_or(wgpu::LoadOp::Load, wgpu::LoadOp::Clear),
+                        store: true,
                     })
-                    .unwrap_or_else(|| {
-                        let default_color_attachment = wgpu::RenderPassColorAttachment {
-                            view: &frame.view,
-                            resolve_target: None,
-                            ops: wgpu::Operations {
-                                load: wgpu::LoadOp::Load,
-                                store: true,
-                            },
-                        };
+                } else {
+                    None
+                };
 
-                        let default_depth = if uses_depth {
-                            Some(wgpu::Operations {
-                                load: wgpu::LoadOp::Load,
-                                store: true,
-                            })
-                        } else {
-                            None
-                        };
-
-                        let default_stencil = if uses_stencil {
-                            Some(wgpu::Operations {
-                                load: wgpu::LoadOp::Load,
-                                store: true,
-                            })
-                        } else {
-                            None
-                        };
-
-                        (
-                            Some(default_color_attachment),
-                            default_depth,
-                            default_stencil,
-                        )
-                    });
-
-                // println!("{:?}", color);
-                // TODO clear between renderers?
+                let stencil = if uses_stencil {
+                    Some(wgpu::Operations {
+                        load: rp
+                            .clear_options
+                            .stencil
+                            .map_or(wgpu::LoadOp::Load, |stencil| wgpu::LoadOp::Clear(stencil)),
+                        store: true,
+                    })
+                } else {
+                    None
+                };
 
                 let mut rpass = frame
                     .encoder
@@ -504,14 +475,16 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                         rpass.set_stencil_reference(sr as _);
                     }
 
-                    if !rp.vertices.is_empty() {
-                        let instances = 0..rp.instances.unwrap_or(1);
-                        if indexed {
-                            rpass.draw_indexed(rp.vertices.clone(), 0, instances);
-                        } else {
-                            rpass.draw(rp.vertices.clone(), instances);
+                    rp.vertices.iter().for_each(|vertices| {
+                        if !vertices.range.is_empty() {
+                            let instances = 0..vertices.instances.unwrap_or(1);
+                            if indexed {
+                                rpass.draw_indexed(vertices.range.clone(), 0, instances);
+                            } else {
+                                rpass.draw(vertices.range.clone(), instances);
+                            }
                         }
-                    }
+                    });
                 }
 
                 Ok(())
