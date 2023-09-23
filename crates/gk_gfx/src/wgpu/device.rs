@@ -545,13 +545,22 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
             frame,
             view,
             encoder,
+            present_check: Default::default(),
         })
     }
 
-    fn present(&mut self, frame: DrawFrame) -> Result<(), String> {
-        let DrawFrame { frame, encoder, .. } = frame;
+    fn present(&mut self, mut frame: DrawFrame) -> Result<(), String> {
+        let DrawFrame {
+            frame,
+            encoder,
+            present_check: mut was_presented,
+            ..
+        } = frame;
         self.ctx.queue.submit(Some(encoder.finish()));
         frame.present();
+
+        // mark the frame as presented, if not dropping it will leave an error
+        was_presented.validate();
         Ok(())
     }
 }

@@ -141,7 +141,6 @@ fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     // draw to the frame
     gfx.render(&mut frame, &renderer).unwrap();
 
-    // render pass
     let mut renderer = evt.create_renderer();
     // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
     renderer.apply_pipeline(&state.pip);

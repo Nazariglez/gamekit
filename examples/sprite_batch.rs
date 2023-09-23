@@ -66,7 +66,7 @@ impl State {
             })
         });
 
-        std::mem::swap(&mut self.sprite, &mut self.sprite2);
+        // std::mem::swap(&mut self.sprite, &mut self.sprite2);
     }
 
     fn update(&mut self) {
@@ -110,7 +110,7 @@ fn main() -> Result<(), String> {
 fn on_mouse_event(evt: &MouseEvent, state: &mut State) {
     match evt.action {
         MouseAction::ButtonPressed { .. } => {
-            state.spawn(1);
+            state.spawn(2000);
         }
         _ => {}
     }
@@ -127,9 +127,17 @@ fn on_update_event(_: &UpdateEvent, app: &mut App, time: &mut Time, state: &mut 
 }
 
 fn on_draw_update(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
+    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+
+    let mut renderer = evt.create_renderer();
+    renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+    gfx.render(&mut frame, &renderer).unwrap();
+
     state.bunnies.iter().for_each(|bunny| {
         state.batch.draw(&bunny.sprite, bunny.pos);
     });
-    state.batch.flush(gfx).unwrap();
+    state.batch.flush(gfx, &mut frame).unwrap();
     state.batch.reset();
+
+    gfx.present(frame).unwrap();
 }

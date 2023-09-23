@@ -9,6 +9,22 @@ pub struct DrawFrame {
     pub(crate) frame: SurfaceTexture,
     pub(crate) view: TextureView,
     pub(crate) encoder: CommandEncoder,
+    pub(crate) present_check: FramePresented,
 }
 
 impl GKDrawFrame for DrawFrame {}
+
+#[derive(Default)]
+pub(crate) struct FramePresented(bool);
+impl FramePresented {
+    pub fn validate(&mut self) {
+        self.0 = true;
+    }
+}
+
+impl Drop for FramePresented {
+    fn drop(&mut self) {
+        debug_assert!(self.0, "DrawFrame must be presented before drop it");
+        log::error!("DrawFrame must be presented before drop it");
+    }
+}
