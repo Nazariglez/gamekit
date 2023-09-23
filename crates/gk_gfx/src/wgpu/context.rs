@@ -53,7 +53,7 @@ async fn generate_inner(
     let limits = if cfg!(all(target_arch = "wasm32", feature = "webgl")) {
         wgpu::Limits::downlevel_webgl2_defaults()
     } else {
-        wgpu::Limits::downlevel_defaults()
+        wgpu::Limits::default()
     };
 
     let (device, queue) = adapter
