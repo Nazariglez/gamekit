@@ -18,7 +18,7 @@ use crate::wgpu::utils::{
 };
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutId, BindGroupLayoutRef,
-    GKBuffer, Sampler, SamplerDescriptor, TextureData, TextureFormat, TextureId,
+    DrawFrame, GKBuffer, Sampler, SamplerDescriptor, TextureData, TextureFormat, TextureId,
     MAX_BINDING_ENTRIES,
 };
 use arrayvec::ArrayVec;
@@ -40,7 +40,9 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef> for Device {
+impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef>
+    for Device
+{
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let context = Context::new(attrs)?;
         Ok(Self {
@@ -367,14 +369,16 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
     }
 
     fn render(&mut self, window: WindowId, renderer: &Renderer) -> Result<(), String> {
+        // TODO surface here should not be need if rendering to texture
+        // TODO also, maybe surface must be part of DrawFrame?
         let surface = self
             .surfaces
             .get_mut(&window)
             .ok_or_else(|| format!("No WGPU context for {:?}", window))?;
-        let frame = surface.frame()?;
-        let view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        // let frame = surface.frame()?;
+        // let view = frame
+        //     .texture
+        //     .create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = self
             .ctx
             .device
@@ -535,6 +539,22 @@ impl GKDevice<RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayo
         frame.present();
 
         Ok(())
+    }
+
+    fn create_frame(&mut self, window_id: WindowId) -> Result<DrawFrame, String> {
+        let surface = self
+            .surfaces
+            .get_mut(&window_id)
+            .ok_or_else(|| format!("No WGPU context for {:?}", window_id))?;
+        let frame = surface.frame()?;
+        let view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        Ok(DrawFrame { frame, view })
+    }
+
+    fn present(&mut self, frame: &DrawFrame) -> Result<(), String> {
+        todo!()
     }
 }
 

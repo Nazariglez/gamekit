@@ -1,5 +1,6 @@
 use crate::attrs::GfxAttributes;
 use crate::buffer::{BufferDescriptor, GKBuffer};
+use crate::frame::GKDrawFrame;
 use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
 use crate::renderer::Renderer;
 use crate::texture::{GKSampler, GKTexture, SamplerDescriptor, TextureData, TextureDescriptor};
@@ -7,6 +8,7 @@ use crate::{BindGroupDescriptor, GKBindGroup, GKBindGroupLayoutRef};
 use gk_sys::window::{GKWindow, WindowId};
 
 pub trait GKDevice<
+    DF: GKDrawFrame,
     RP: GKRenderPipeline,
     B: GKBuffer,
     T: GKTexture,
@@ -18,6 +20,8 @@ pub trait GKDevice<
     fn new(attrs: GfxAttributes) -> Result<Self, String>
     where
         Self: Sized;
+    fn create_frame(&mut self, window_id: WindowId) -> Result<DF, String>;
+    fn present(&mut self, frame: &DF) -> Result<(), String>;
     fn init_surface<W: GKWindow>(&mut self, win: &W) -> Result<(), String>;
     fn create_render_pipeline(&mut self, desc: RenderPipelineDescriptor) -> Result<RP, String>;
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<B, String>;

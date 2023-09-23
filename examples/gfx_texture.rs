@@ -134,13 +134,18 @@ fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     renderer.apply_buffers(&[&state.vbo, &state.ebo]);
     renderer.apply_bindings(&[&state.bind_group]);
     renderer.draw(0..6);
-    gfx.render(&renderer).unwrap();
 
-    let mut renderer = evt.create_renderer();
-    // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
-    renderer.apply_pipeline(&state.pip);
-    renderer.apply_buffers(&[&state.vbo, &state.ebo]);
-    renderer.apply_bindings(&[&state.bind_group]);
-    renderer.draw(6..12);
-    gfx.render(&renderer).unwrap();
+    let frame = gfx.create_frame(evt.window_id);
+    gfx.render(&frame, &renderer).unwrap();
+    gfx.present(frame);
+    // frame.render(&renderer).unwrap();
+    // gfx.present(frame);
+
+    // let mut renderer = evt.create_renderer();
+    // // renderer.clear(Some(Color::rgb(0.1, 0.2, 0.3)), None, None);
+    // renderer.apply_pipeline(&state.pip);
+    // renderer.apply_buffers(&[&state.vbo, &state.ebo]);
+    // renderer.apply_bindings(&[&state.bind_group]);
+    // renderer.draw(6..12);
+    // gfx.render(&renderer).unwrap();
 }

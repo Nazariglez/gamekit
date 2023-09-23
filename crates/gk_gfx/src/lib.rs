@@ -23,6 +23,8 @@ mod pipeline;
 mod renderer;
 mod texture;
 
+mod frame;
+
 pub mod prelude;
 
 pub use attrs::*;

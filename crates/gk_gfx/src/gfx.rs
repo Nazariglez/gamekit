@@ -31,6 +31,10 @@ impl Gfx {
         GfxConfig::default()
     }
 
+    pub fn create_frame(&mut self, window_id: WindowId) -> DrawFrame {
+        self.raw.create_frame(window_id)
+    }
+
     pub fn current_window(&self) -> Option<WindowId> {
         self.current_window
     }
