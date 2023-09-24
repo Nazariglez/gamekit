@@ -10,6 +10,7 @@ use crate::buffer::{BufferDescriptor, BufferUsage};
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
 use crate::render_target::RenderTarget;
+use crate::render_texture::RenderTextureDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::render_texture::RenderTexture;
@@ -75,7 +76,7 @@ impl
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self
+        let encoder = self
             .ctx
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -85,6 +86,7 @@ impl
             frame,
             view,
             encoder: RefCell::new(encoder),
+            dirty: RefCell::new(false),
             present_check: Default::default(),
         })
     }
@@ -93,11 +95,15 @@ impl
         let DrawFrame {
             frame,
             encoder,
+            dirty,
             present_check: mut was_presented,
             ..
         } = frame;
-        self.ctx.queue.submit(Some(encoder.into_inner().finish()));
-        frame.present();
+
+        if *dirty.borrow() {
+            self.ctx.queue.submit(Some(encoder.into_inner().finish()));
+            frame.present();
+        }
 
         // mark the frame as presented, if not dropping it will leave an error
         was_presented.validate();
@@ -323,6 +329,59 @@ impl
         })
     }
 
+    fn create_render_texture(
+        &mut self,
+        desc: RenderTextureDescriptor,
+    ) -> Result<RenderTexture, String> {
+        println!("HERE1");
+        // Create the color texture
+        let texture = self.create_texture(
+            TextureDescriptor {
+                label: Some("Create RenderTexture inner color texture"),
+                format: desc.format,
+                write: false,
+            },
+            Some(TextureData {
+                bytes: &[],
+                width: desc.width,
+                height: desc.height,
+            }),
+        )?;
+
+        println!("HERE2");
+        // Create the depth texture
+        let depth_texture = {
+            let tex = desc.depth.then(|| {
+                self.create_texture(
+                    TextureDescriptor {
+                        label: Some("Create RenderTexture inner color texture"),
+                        format: TextureFormat::Depth32Float,
+                        write: true,
+                    },
+                    Some(TextureData {
+                        bytes: &[],
+                        width: desc.width,
+                        height: desc.height,
+                    }),
+                )
+            });
+
+            println!("HERE3");
+
+            match tex {
+                Some(Ok(t)) => Some(t),
+                Some(Err(e)) => return Err(e),
+                None => None,
+            }
+        };
+
+        Ok(RenderTexture {
+            id: resource_id(&mut self.next_resource_id),
+            texture,
+            depth_texture,
+        })
+    }
+
     fn create_texture(
         &mut self,
         desc: TextureDescriptor,
@@ -430,6 +489,8 @@ impl
     }
 
     fn render_to_frame(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
+        let mut dirty = false;
+
         renderer
             .passes
             .iter()
@@ -526,6 +587,8 @@ impl
 
                     rp.vertices.iter().for_each(|vertices| {
                         if !vertices.range.is_empty() {
+                            dirty = true;
+
                             let instances = 0..vertices.instances.unwrap_or(1);
                             if indexed {
                                 rpass.draw_indexed(vertices.range.clone(), 0, instances);
@@ -538,6 +601,10 @@ impl
 
                 Ok(())
             })?;
+
+        if dirty {
+            *frame.dirty.borrow_mut() = true;
+        }
 
         Ok(())
     }
@@ -616,7 +683,7 @@ fn create_texture(
         id,
         raw: Arc::new(raw),
         view: Arc::new(view),
-        size: (size.width as _, size.height as _),
+        size: (size.width, size.height),
     })
 }
 
@@ -646,3 +713,5 @@ fn add_depth_texture_to(
 
     Ok(())
 }
+
+// TODO viewport

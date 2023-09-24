@@ -14,6 +14,7 @@ pub struct DrawFrame {
     pub(crate) frame: SurfaceTexture,
     pub(crate) view: TextureView,
     pub(crate) encoder: RefCell<CommandEncoder>,
+    pub(crate) dirty: RefCell<bool>,
     pub(crate) present_check: FramePresented,
 }
 

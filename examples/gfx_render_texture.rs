@@ -1,12 +1,11 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, BindGroupLayout, BindingType, BlendMode, Buffer, Color, Gfx, IndexFormat,
-    RenderPipeline, Texture, VertexFormat, VertexLayout,
+    BindGroup, BindGroupLayout, BindingType, BlendMode, Buffer, Color, GKRenderPipeline, GKTexture,
+    Gfx, IndexFormat, RenderPipeline, RenderTexture, Renderer, VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
 use gamekit::sys::event::DrawEvent;
 use gamekit::time::Time;
-use gk_gfx::{GKRenderPipeline, RenderPass, Renderer};
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -47,8 +46,8 @@ struct State {
     vbo: Buffer,
     ebo: Buffer,
     bind_group: BindGroup,
-    rt: Texture,
-    rt2: Texture,
+    rt: RenderTexture,
+    rt2: RenderTexture,
     texture_initiated: bool,
 }
 
@@ -101,13 +100,19 @@ impl State {
         ];
         let ebo = gfx.create_index_buffer(indices).build()?;
 
+        let rt = gfx
+            .create_render_texture()
+            .with_size(texture.width(), texture.height())
+            .build()?;
+        let rt2 = gfx.create_render_texture().build()?;
+
         Ok(State {
             pip,
             vbo,
             ebo,
             bind_group,
-            rt: texture.clone(),
-            rt2: texture.clone(),
+            rt,
+            rt2,
             texture_initiated: false,
         })
     }
@@ -123,10 +128,15 @@ fn main() -> Result<(), String> {
 }
 
 fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
-    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+    let frame = gfx.create_frame(evt.window_id).unwrap();
 
+    // render to texture
     let renderer = render_texture(state, None);
-    gfx.render(&mut state.rt, &renderer).unwrap();
+    gfx.render(&state.rt, &renderer).unwrap();
+
+    // render to frame
+    let renderer = render_texture(state, Some(Color::rgb(0.1, 0.2, 0.3)));
+    gfx.render(&frame, &renderer).unwrap();
 
     // present the frame to the screen
     gfx.present(frame).unwrap();

@@ -3,7 +3,7 @@ use crate::buffer::{BufferDescriptor, GKBuffer};
 use crate::frame::GKDrawFrame;
 use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
 use crate::render_target::RenderTarget;
-use crate::render_texture::GKRenderTexture;
+use crate::render_texture::{GKRenderTexture, RenderTextureDescriptor};
 use crate::renderer::Renderer;
 use crate::texture::{GKSampler, GKTexture, SamplerDescriptor, TextureData, TextureDescriptor};
 use crate::{BindGroupDescriptor, DrawFrame, GKBindGroup, GKBindGroupLayoutRef};
@@ -28,7 +28,7 @@ pub trait GKDevice<
     fn init_surface<W: GKWindow>(&mut self, win: &W) -> Result<(), String>;
     fn create_render_pipeline(&mut self, desc: RenderPipelineDescriptor) -> Result<RP, String>;
     fn create_buffer(&mut self, desc: BufferDescriptor) -> Result<B, String>;
-    // TODO create_render_texture (tex_descriptor, uses_depth?)
+    fn create_render_texture(&mut self, desc: RenderTextureDescriptor) -> Result<RT, String>;
     fn create_texture(
         &mut self,
         desc: TextureDescriptor,

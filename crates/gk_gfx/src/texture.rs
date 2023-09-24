@@ -5,7 +5,10 @@ pub struct TextureId(u64);
 
 pub trait GKTexture {
     fn id(&self) -> TextureId;
-    fn size(&self) -> (f32, f32);
+    fn size(&self) -> (u32, u32);
+
+    fn width(&self) -> u32;
+    fn height(&self) -> u32;
 }
 
 #[derive(Debug, Default, Copy, Clone)]

@@ -10,7 +10,7 @@ pub struct Texture {
     pub(crate) id: TextureId,
     pub(crate) raw: Arc<RawTexture>,
     pub(crate) view: Arc<TextureView>,
-    pub(crate) size: (f32, f32),
+    pub(crate) size: (u32, u32),
 }
 
 impl GKTexture for Texture {
@@ -18,8 +18,16 @@ impl GKTexture for Texture {
         self.id
     }
 
-    fn size(&self) -> (f32, f32) {
+    fn size(&self) -> (u32, u32) {
         self.size
+    }
+
+    fn width(&self) -> u32 {
+        self.size.0
+    }
+
+    fn height(&self) -> u32 {
+        self.size.1
     }
 }
 

@@ -1,4 +1,5 @@
 use crate::render_target::RenderTarget;
+use crate::render_texture::RenderTextureDescriptor;
 use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutId,
@@ -63,6 +64,10 @@ where
 
     pub fn create_texture(&mut self) -> TextureBuilder {
         TextureBuilder::new(self)
+    }
+
+    pub fn create_render_texture(&mut self) -> RenderTextureBuilder {
+        RenderTextureBuilder::new(self)
     }
 
     pub fn write_buffer<'a>(&'a mut self, buffer: &'a Buffer) -> BufferWriteBuilder {
@@ -420,5 +425,51 @@ impl<'a> BufferWriteBuilder<'a> {
 
         let data = data.unwrap_or(&[]);
         gfx.raw.write_buffer(buffer, offset, data)
+    }
+}
+
+pub struct RenderTextureBuilder<'a> {
+    gfx: &'a mut Gfx,
+    desc: RenderTextureDescriptor<'a>,
+}
+
+impl<'a> RenderTextureBuilder<'a> {
+    pub fn new(gfx: &'a mut Gfx) -> Self {
+        let desc = RenderTextureDescriptor::default();
+        Self { gfx, desc }
+    }
+
+    pub fn with_label(mut self, label: &'a str) -> Self {
+        self.desc.label = Some(label);
+        self
+    }
+
+    pub fn with_format(mut self, format: TextureFormat) -> Self {
+        self.desc.format = format;
+        self
+    }
+
+    pub fn with_depth(mut self, enabled: bool) -> Self {
+        self.desc.depth = enabled;
+        self
+    }
+
+    pub fn with_size(mut self, width: u32, height: u32) -> Self {
+        self.desc.width = width;
+        self.desc.height = height;
+        self
+    }
+
+    pub fn build(self) -> Result<RenderTexture, String> {
+        let Self { gfx, desc } = self;
+
+        if self.desc.width == 0 || self.desc.height == 0 {
+            return Err(format!(
+                "RenderTexture size cannot be zero 'width={}', 'height={}'",
+                self.desc.width, self.desc.height
+            ));
+        }
+
+        gfx.raw.create_render_texture(desc)
     }
 }

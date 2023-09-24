@@ -1,5 +1,5 @@
 use gk_gfx::{GKSampler, GKTexture, Sampler, SamplerId, Texture, TextureId};
-use gk_math::Vec2;
+use gk_math::{vec2, Vec2};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct SpriteId {
@@ -21,7 +21,7 @@ impl Sprite {
             texture_id: texture.id().into(),
             sampler_id: sampler.id().into(),
         };
-        let size = texture.size().into();
+        let size = vec2(texture.width() as _, texture.height() as _);
         Self {
             id,
             texture,

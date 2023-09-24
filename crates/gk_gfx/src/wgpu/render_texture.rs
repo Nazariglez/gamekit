@@ -1,19 +1,19 @@
 use crate::frame::GKDrawFrame;
 use crate::render_target::RenderTarget;
-use crate::render_texture::GKRenderTexture;
-use crate::{Texture, TextureId};
+use crate::render_texture::{GKRenderTexture, RenderTextureId};
+use crate::Texture;
 use std::ops::Deref;
 
 #[derive(Clone, Debug)]
 pub struct RenderTexture {
-    id: TextureId,
-    texture: Texture,
-    depth_texture: Texture,
+    pub(crate) id: RenderTextureId,
+    pub(crate) texture: Texture,
+    pub(crate) depth_texture: Option<Texture>,
 }
 
 impl GKRenderTexture for RenderTexture {
-    fn id(&self) -> TextureId {
-        self.texture.id
+    fn id(&self) -> RenderTextureId {
+        self.id
     }
 
     fn texture(&self) -> &Texture {
