@@ -9,7 +9,6 @@ use crate::bind_group::BindType;
 use crate::buffer::{BufferDescriptor, BufferUsage};
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
-use crate::render_target::RenderTarget;
 use crate::render_texture::RenderTextureDescriptor;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
@@ -485,8 +484,6 @@ impl
     }
 
     fn render_to_frame(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
-        let mut dirty = false;
-
         renderer
             .passes
             .iter()
@@ -583,8 +580,6 @@ impl
 
                     rp.vertices.iter().for_each(|vertices| {
                         if !vertices.range.is_empty() {
-                            dirty = true;
-
                             let instances = 0..vertices.instances.unwrap_or(1);
                             if indexed {
                                 rpass.draw_indexed(vertices.range.clone(), 0, instances);
@@ -598,7 +593,8 @@ impl
                 Ok(())
             })?;
 
-        if dirty {
+        // mark the frame as dirty if some work was made
+        if !renderer.passes.is_empty() {
             *frame.dirty.borrow_mut() = true;
         }
 
