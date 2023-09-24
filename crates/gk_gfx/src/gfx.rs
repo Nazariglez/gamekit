@@ -463,11 +463,16 @@ impl<'a> RenderTextureBuilder<'a> {
     pub fn build(self) -> Result<RenderTexture, String> {
         let Self { gfx, desc } = self;
 
-        if self.desc.width == 0 || self.desc.height == 0 {
+        let no_size = self.desc.width == 0 || self.desc.height == 0;
+        if no_size {
             return Err(format!(
                 "RenderTexture size cannot be zero 'width={}', 'height={}'",
                 self.desc.width, self.desc.height
             ));
+        }
+
+        if matches!(self.desc.format, TextureFormat::Depth32Float) {
+            return Err("RenderTexture cannot use a depth format".to_owned());
         }
 
         gfx.raw.create_render_texture(desc)

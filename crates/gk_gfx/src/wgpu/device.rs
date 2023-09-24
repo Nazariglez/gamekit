@@ -333,7 +333,6 @@ impl
         &mut self,
         desc: RenderTextureDescriptor,
     ) -> Result<RenderTexture, String> {
-        println!("HERE1");
         // Create the color texture
         let texture = self.create_texture(
             TextureDescriptor {
@@ -348,7 +347,6 @@ impl
             }),
         )?;
 
-        println!("HERE2");
         // Create the depth texture
         let depth_texture = {
             let tex = desc.depth.then(|| {
@@ -365,8 +363,6 @@ impl
                     }),
                 )
             });
-
-            println!("HERE3");
 
             match tex {
                 Some(Ok(t)) => Some(t),
@@ -659,21 +655,23 @@ fn create_texture(
 
     if !is_depth_texture {
         if let Some(d) = data {
-            queue.write_texture(
-                wgpu::ImageCopyTexture {
-                    texture: &raw,
-                    mip_level: 0,
-                    origin: wgpu::Origin3d::ZERO,
-                    aspect: wgpu::TextureAspect::All,
-                },
-                d.bytes,
-                wgpu::ImageDataLayout {
-                    offset: 0,
-                    bytes_per_row: Some(d.width * 4),
-                    rows_per_image: Some(d.height),
-                },
-                size,
-            );
+            if !d.bytes.is_empty() {
+                queue.write_texture(
+                    wgpu::ImageCopyTexture {
+                        texture: &raw,
+                        mip_level: 0,
+                        origin: wgpu::Origin3d::ZERO,
+                        aspect: wgpu::TextureAspect::All,
+                    },
+                    d.bytes,
+                    wgpu::ImageDataLayout {
+                        offset: 0,
+                        bytes_per_row: Some(d.width * 4),
+                        rows_per_image: Some(d.height),
+                    },
+                    size,
+                );
+            }
         }
     }
 

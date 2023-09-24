@@ -104,7 +104,10 @@ impl State {
             .create_render_texture()
             .with_size(texture.width(), texture.height())
             .build()?;
-        let rt2 = gfx.create_render_texture().build()?;
+        let rt2 = gfx
+            .create_render_texture()
+            .with_size(texture.width(), texture.height())
+            .build()?;
 
         Ok(State {
             pip,
