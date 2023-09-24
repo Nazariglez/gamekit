@@ -1,6 +1,9 @@
+use std::fmt::{Debug, Formatter};
 use crate::texture::{GKTexture, TextureId};
 use std::sync::Arc;
 use wgpu::{Texture as RawTexture, TextureView};
+use crate::frame::GKDrawFrame;
+use crate::render_target::RenderTarget;
 
 #[derive(Clone)]
 pub struct Texture {
@@ -17,5 +20,21 @@ impl GKTexture for Texture {
 
     fn size(&self) -> (f32, f32) {
         self.size
+    }
+}
+
+impl Debug for Texture {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Texture")
+            .field("id", &self.id)
+            .field("size", &self.size)
+            .finish()
+    }
+}
+
+impl<'a, DF> Into<RenderTarget<'a, DF, Texture>> for &'a Texture
+    where DF: GKDrawFrame {
+    fn into(self) -> RenderTarget<'a, DF, Texture> {
+        RenderTarget::Texture(self)
     }
 }

@@ -25,6 +25,8 @@ mod texture;
 
 mod frame;
 
+mod render_target;
+
 pub mod prelude;
 
 pub use attrs::*;

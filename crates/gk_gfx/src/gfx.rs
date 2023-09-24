@@ -10,6 +10,7 @@ use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_sys::window::{GKWindow, WindowId};
 use gk_sys::Plugin;
 use image::EncodableLayout;
+use crate::render_target::RenderTarget;
 
 pub struct Gfx {
     pub(crate) raw: Device,
@@ -84,6 +85,13 @@ impl Gfx {
     pub fn render(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
         // TODO add a flag to check if there is work to present and avoid the call if not?
         self.raw.render(frame, renderer)
+    }
+
+    pub fn render_to<'a>(&mut self, frame: impl Into<RenderTarget<'a, DrawFrame, Texture>>, renderer: &Renderer) -> Result<(), String> {
+        // TODO add a flag to check if there is work to present and avoid the call if not?
+        // self.raw.render(frame, renderer)
+        println!("{:?}", frame.into());
+        Ok(())
     }
 
     pub fn present(&mut self, frame: DrawFrame) -> Result<(), String> {
