@@ -31,12 +31,3 @@ impl Debug for Texture {
             .finish()
     }
 }
-
-impl<'a, DF> Into<RenderTarget<'a, DF, Texture>> for &'a Texture
-where
-    DF: GKDrawFrame,
-{
-    fn into(self) -> RenderTarget<'a, DF, Texture> {
-        RenderTarget::Texture(self)
-    }
-}

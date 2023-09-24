@@ -1,12 +1,12 @@
 use crate::frame::GKDrawFrame;
-use crate::texture::GKTexture;
+use crate::render_texture::GKRenderTexture;
 
 #[derive(Debug)]
-pub enum RenderTarget<'a, DF, T>
+pub enum RenderTarget<'a, DF, RT>
 where
     DF: GKDrawFrame + 'a,
-    T: GKTexture + 'a,
+    RT: GKRenderTexture + 'a,
 {
     Frame(&'a DF),
-    Texture(&'a T),
+    Texture(&'a RT),
 }

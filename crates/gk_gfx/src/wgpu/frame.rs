@@ -1,5 +1,6 @@
 use crate::frame::GKDrawFrame;
 use crate::render_target::RenderTarget;
+use crate::render_texture::GKRenderTexture;
 use crate::wgpu::surface::Surface;
 use crate::GKTexture;
 use gk_sys::window::WindowId;
@@ -39,11 +40,11 @@ impl Drop for FramePresented {
     }
 }
 
-impl<'a, T> Into<RenderTarget<'a, DrawFrame, T>> for &'a DrawFrame
+impl<'a, RT> Into<RenderTarget<'a, DrawFrame, RT>> for &'a DrawFrame
 where
-    T: GKTexture,
+    RT: GKRenderTexture,
 {
-    fn into(self) -> RenderTarget<'a, DrawFrame, T> {
+    fn into(self) -> RenderTarget<'a, DrawFrame, RT> {
         RenderTarget::Frame(self)
     }
 }

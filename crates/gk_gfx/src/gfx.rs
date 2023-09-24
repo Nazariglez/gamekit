@@ -4,8 +4,8 @@ use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutId,
     BindGroupLayoutRef, BlendMode, Buffer, BufferDescriptor, BufferUsage, ColorMask, CompareMode,
     CullMode, DepthStencil, Device, DrawFrame, GKBuffer, GfxAttributes, GfxConfig, IndexFormat,
-    Primitive, RenderPipeline, Sampler, SamplerDescriptor, Stencil, Texture, TextureData,
-    TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, VertexLayout,
+    Primitive, RenderPipeline, RenderTexture, Sampler, SamplerDescriptor, Stencil, Texture,
+    TextureData, TextureDescriptor, TextureFilter, TextureFormat, TextureWrap, VertexLayout,
 };
 use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_sys::window::{GKWindow, WindowId};
@@ -87,7 +87,7 @@ where
 
     pub fn render<'a, T>(&mut self, target: T, renderer: &Renderer) -> Result<(), String>
     where
-        T: Into<RenderTarget<'a, DrawFrame, Texture>>,
+        T: Into<RenderTarget<'a, DrawFrame, RenderTexture>>,
     {
         match target.into() {
             RenderTarget::Frame(frame) => self.raw.render_to_frame(frame, renderer),

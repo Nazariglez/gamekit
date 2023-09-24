@@ -12,6 +12,7 @@ use crate::pipeline::RenderPipelineDescriptor;
 use crate::render_target::RenderTarget;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
+use crate::wgpu::render_texture::RenderTexture;
 use crate::wgpu::utils::{
     wgpu_blend_mode, wgpu_buffer_usages, wgpu_cull_mode, wgpu_depth_stencil, wgpu_index_format,
     wgpu_primitive, wgpu_shader_visibility, wgpu_step_mode, wgpu_texture_filter,
@@ -42,8 +43,17 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef>
-    for Device
+impl
+    GKDevice<
+        DrawFrame,
+        RenderPipeline,
+        Buffer,
+        Texture,
+        Sampler,
+        BindGroup,
+        BindGroupLayoutRef,
+        RenderTexture,
+    > for Device
 {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let context = Context::new(attrs)?;
@@ -532,7 +542,11 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         Ok(())
     }
 
-    fn render_to_texture(&mut self, frame: &Texture, renderer: &Renderer) -> Result<(), String> {
+    fn render_to_texture(
+        &mut self,
+        frame: &RenderTexture,
+        renderer: &Renderer,
+    ) -> Result<(), String> {
         Ok(())
     }
 }

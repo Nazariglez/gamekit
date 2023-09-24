@@ -25,6 +25,8 @@ mod texture;
 
 mod frame;
 
+mod render_texture;
+
 mod render_target;
 
 pub mod prelude;
