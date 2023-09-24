@@ -81,7 +81,7 @@ impl Gfx {
         self.raw.size(id)
     }
 
-    pub fn render(&mut self, frame: &mut DrawFrame, renderer: &Renderer) -> Result<(), String> {
+    pub fn render(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
         // TODO add a flag to check if there is work to present and avoid the call if not?
         self.raw.render(frame, renderer)
     }
@@ -241,6 +241,11 @@ impl<'a> TextureBuilder<'a> {
 
     pub fn with_format(mut self, format: TextureFormat) -> Self {
         self.desc.format = format;
+        self
+    }
+
+    pub fn with_write_flag(mut self, writable: bool) -> Self {
+        self.desc.write = writable;
         self
     }
 

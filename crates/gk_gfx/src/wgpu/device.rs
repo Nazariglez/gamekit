@@ -26,6 +26,7 @@ use gk_sys::window::{GKWindow, WindowId};
 use gk_sys::Plugin;
 use hashbrown::HashMap;
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::sync::Arc;
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::{Queue, TextureDimension};
@@ -54,6 +55,44 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         })
     }
 
+    fn create_frame(&mut self, window_id: WindowId) -> Result<DrawFrame, String> {
+        let surface = self
+            .surfaces
+            .get_mut(&window_id)
+            .ok_or_else(|| format!("No WGPU context for {:?}", window_id))?;
+        let frame = surface.frame()?;
+        let view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        let mut encoder = self
+            .ctx
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        Ok(DrawFrame {
+            window_id,
+            surface: surface.clone(),
+            frame,
+            view,
+            encoder: RefCell::new(encoder),
+            present_check: Default::default(),
+        })
+    }
+
+    fn present(&mut self, mut frame: DrawFrame) -> Result<(), String> {
+        let DrawFrame {
+            frame,
+            encoder,
+            present_check: mut was_presented,
+            ..
+        } = frame;
+        self.ctx.queue.submit(Some(encoder.into_inner().finish()));
+        frame.present();
+
+        // mark the frame as presented, if not dropping it will leave an error
+        was_presented.validate();
+        Ok(())
+    }
+
     fn init_surface<W: GKWindow>(&mut self, window: &W) -> Result<(), String> {
         if self.surfaces.contains_key(&window.id()) {
             return Ok(());
@@ -63,6 +102,7 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
             TextureDescriptor {
                 label: Some("Depth Texture for Surface"),
                 format: self.depth_format,
+                write: true,
             },
             Some(TextureData {
                 bytes: &[],
@@ -272,6 +312,15 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         })
     }
 
+    fn create_texture(
+        &mut self,
+        desc: TextureDescriptor,
+        data: Option<TextureData>,
+    ) -> Result<Texture, String> {
+        let id = resource_id(&mut self.next_resource_id);
+        create_texture(&self.ctx.device, &self.ctx.queue, desc, data, id)
+    }
+
     fn write_buffer(&mut self, buffer: &Buffer, offset: u64, data: &[u8]) -> Result<(), String> {
         debug_assert!(buffer.write, "Cannot write data to a static buffer");
         debug_assert!(
@@ -282,15 +331,6 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         );
         self.ctx.queue.write_buffer(&buffer.raw, offset as _, data);
         Ok(())
-    }
-
-    fn create_texture(
-        &mut self,
-        desc: TextureDescriptor,
-        data: Option<TextureData>,
-    ) -> Result<Texture, String> {
-        let id = resource_id(&mut self.next_resource_id);
-        create_texture(&self.ctx.device, &self.ctx.queue, desc, data, id)
     }
 
     fn create_sampler(&mut self, desc: SamplerDescriptor) -> Result<Sampler, String> {
@@ -352,13 +392,6 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         })
     }
 
-    fn size(&self, id: WindowId) -> (u32, u32) {
-        self.surfaces
-            .get(&id)
-            .map(|surface| (surface.config.width, surface.config.height))
-            .unwrap_or((0, 0))
-    }
-
     fn resize(&mut self, id: WindowId, width: u32, height: u32) -> Result<(), String> {
         if let Some(surface) = self.surfaces.get_mut(&id) {
             surface.resize(&self.ctx.device, width, height);
@@ -378,7 +411,14 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
         Ok(())
     }
 
-    fn render(&mut self, frame: &mut DrawFrame, renderer: &Renderer) -> Result<(), String> {
+    fn size(&self, id: WindowId) -> (u32, u32) {
+        self.surfaces
+            .get(&id)
+            .map(|surface| (surface.config.width, surface.config.height))
+            .unwrap_or((0, 0))
+    }
+
+    fn render(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
         // TODO render to texture should create a new encoder per call
         renderer
             .passes
@@ -433,21 +473,20 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
                     None
                 };
 
-                let mut rpass = frame
-                    .encoder
-                    .begin_render_pass(&wgpu::RenderPassDescriptor {
-                        label: None,
-                        color_attachments: &[color],
-                        depth_stencil_attachment: if depth.is_some() || stencil.is_some() {
-                            Some(wgpu::RenderPassDepthStencilAttachment {
-                                view: &frame.surface.depth_texture.view,
-                                depth_ops: depth,
-                                stencil_ops: stencil,
-                            })
-                        } else {
-                            None
-                        },
-                    });
+                let mut encoder = frame.encoder.borrow_mut();
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: None,
+                    color_attachments: &[color],
+                    depth_stencil_attachment: if depth.is_some() || stencil.is_some() {
+                        Some(wgpu::RenderPassDepthStencilAttachment {
+                            view: &frame.surface.depth_texture.view,
+                            depth_ops: depth,
+                            stencil_ops: stencil,
+                        })
+                    } else {
+                        None
+                    },
+                });
 
                 if let Some(pip) = rp.pipeline {
                     rpass.set_pipeline(&pip.raw);
@@ -492,44 +531,6 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
 
         Ok(())
     }
-
-    fn create_frame(&mut self, window_id: WindowId) -> Result<DrawFrame, String> {
-        let surface = self
-            .surfaces
-            .get_mut(&window_id)
-            .ok_or_else(|| format!("No WGPU context for {:?}", window_id))?;
-        let frame = surface.frame()?;
-        let view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self
-            .ctx
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-        Ok(DrawFrame {
-            window_id,
-            surface: surface.clone(),
-            frame,
-            view,
-            encoder,
-            present_check: Default::default(),
-        })
-    }
-
-    fn present(&mut self, mut frame: DrawFrame) -> Result<(), String> {
-        let DrawFrame {
-            frame,
-            encoder,
-            present_check: mut was_presented,
-            ..
-        } = frame;
-        self.ctx.queue.submit(Some(encoder.finish()));
-        frame.present();
-
-        // mark the frame as presented, if not dropping it will leave an error
-        was_presented.validate();
-        Ok(())
-    }
 }
 
 fn resource_id<T: From<u64>>(count: &mut u64) -> T {
@@ -556,7 +557,7 @@ fn create_texture(
         _ => false,
     };
     let mut usage = wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST;
-    if is_depth_texture {
+    if is_depth_texture || desc.write {
         usage |= wgpu::TextureUsages::RENDER_ATTACHMENT;
     }
 
@@ -612,7 +613,11 @@ fn add_depth_texture_to(
     surface.depth_texture = create_texture(
         device,
         queue,
-        TextureDescriptor { label, format },
+        TextureDescriptor {
+            label,
+            format,
+            write: true,
+        },
         Some(TextureData {
             bytes: &[],
             width: surface.config.width,

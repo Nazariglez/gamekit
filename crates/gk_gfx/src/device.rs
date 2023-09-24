@@ -35,5 +35,5 @@ pub trait GKDevice<
     fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BG, String>;
     fn resize(&mut self, id: WindowId, width: u32, height: u32) -> Result<(), String>;
     fn size(&self, id: WindowId) -> (u32, u32);
-    fn render(&mut self, frame: &mut DrawFrame, renderer: &Renderer) -> Result<(), String>;
+    fn render(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String>;
 }

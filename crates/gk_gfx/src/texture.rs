@@ -12,6 +12,7 @@ pub trait GKTexture {
 pub struct TextureDescriptor<'a> {
     pub label: Option<&'a str>,
     pub format: TextureFormat,
+    pub write: bool,
 }
 
 #[derive(Debug, Default, Copy, Clone)]

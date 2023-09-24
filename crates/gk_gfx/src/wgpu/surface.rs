@@ -51,6 +51,11 @@ impl Surface {
 
         surface.configure(&ctx.device, &config);
 
+        println!(
+            "Surface size({:?} {:?}) depth_texture({:?})",
+            config.width, config.height, depth_texture.size
+        );
+
         Ok(Self {
             surface: Arc::new(surface),
             config,

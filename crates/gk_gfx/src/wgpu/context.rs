@@ -15,6 +15,8 @@ impl Context {
         let instance = Instance::default();
         let (adapter, device, queue) = pollster::block_on(generate_inner(&instance, None))?;
 
+        println!("{:?}", adapter.get_info()); // TODO check if d3d11 to apply limits?
+
         Ok(Self {
             instance,
             adapter,
@@ -50,6 +52,7 @@ async fn generate_inner(
         .await
         .ok_or_else(|| "Cannot create WGPU Adapter for {:?}".to_string())?;
 
+    // TODO depending on adapter here, require limits for it.
     let limits = if cfg!(all(target_arch = "wasm32", feature = "webgl")) {
         wgpu::Limits::downlevel_webgl2_defaults()
     } else {

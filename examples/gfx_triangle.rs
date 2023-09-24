@@ -71,7 +71,7 @@ fn main() -> Result<(), String> {
 
 fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     // Create new frame
-    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+    let frame = gfx.create_frame(evt.window_id).unwrap();
 
     // Renderer with the render pass for the triangle
     let mut renderer = Renderer::new();
@@ -83,7 +83,7 @@ fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
         .draw(0..3);
 
     // Render to the frame
-    gfx.render(&mut frame, &renderer).unwrap();
+    gfx.render(&frame, &renderer).unwrap();
 
     // Present frame to screen
     gfx.present(frame).unwrap();
