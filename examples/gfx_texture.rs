@@ -6,7 +6,7 @@ use gamekit::gfx::{
 use gamekit::prelude::*;
 use gamekit::sys::event::DrawEvent;
 use gamekit::time::Time;
-use gk_gfx::{GKRenderPipeline, RenderPass, Renderer};
+use gk_gfx::{GKRenderPipeline, RenderPass, Renderer, Texture};
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -47,6 +47,7 @@ struct State {
     vbo: Buffer,
     ebo: Buffer,
     bind_group: BindGroup,
+    texture: Texture,
 }
 
 impl State {
@@ -88,12 +89,6 @@ impl State {
              0.5, -0.5,     1.0, 0.0,
             -0.5, -0.5,     0.0, 0.0,
             -0.5,  0.5,     0.0, 1.0,
-
-        //pos           //coords
-        0.3,  0.3,     1.0, 1.0,
-        0.3, -0.3,     1.0, 0.0,
-        -0.3, -0.3,     0.0, 0.0,
-        -0.3,  0.3,     0.0, 1.0
         ];
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
@@ -101,11 +96,6 @@ impl State {
         let indices: &[u16] = &[
             0, 1, 3,
             1, 2, 3,
-
-            7, 6, 5,
-            7, 5, 4,
-            // 4, 5, 7,
-            // 5, 6, 7,
         ];
         let ebo = gfx.create_index_buffer(indices).build()?;
 
@@ -114,6 +104,7 @@ impl State {
             vbo,
             ebo,
             bind_group,
+            texture,
         })
     }
 }
@@ -128,7 +119,7 @@ fn main() -> Result<(), String> {
 }
 
 fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
-    let mut frame = gfx.create_frame(evt.window_id).unwrap();
+    let frame = gfx.create_frame(evt.window_id).unwrap();
 
     let mut renderer = Renderer::new();
     renderer
@@ -139,7 +130,7 @@ fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
         .bindings(&[&state.bind_group])
         .draw(0..6);
 
-    gfx.render(&mut frame, &renderer).unwrap();
+    gfx.render(&frame, &renderer).unwrap();
 
     // present the frame to the screen
     gfx.present(frame).unwrap();

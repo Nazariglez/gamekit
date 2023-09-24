@@ -85,11 +85,10 @@ where
         self.raw.size(id)
     }
 
-    pub fn render<'a>(
-        &mut self,
-        target: impl Into<RenderTarget<'a, DrawFrame, Texture>>,
-        renderer: &Renderer,
-    ) -> Result<(), String> {
+    pub fn render<'a, T>(&mut self, target: T, renderer: &Renderer) -> Result<(), String>
+    where
+        T: Into<RenderTarget<'a, DrawFrame, Texture>>,
+    {
         match target.into() {
             RenderTarget::Frame(frame) => self.raw.render_to_frame(frame, renderer),
             RenderTarget::Texture(texture) => self.raw.render_to_texture(texture, renderer),

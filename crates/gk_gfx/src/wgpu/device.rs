@@ -533,7 +533,7 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
     }
 
     fn render_to_texture(&mut self, frame: &Texture, renderer: &Renderer) -> Result<(), String> {
-        todo!()
+        Ok(())
     }
 }
 
