@@ -42,7 +42,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl<'a> GKDevice<'a, DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef>
+impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef>
     for Device
 {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
@@ -419,12 +419,7 @@ impl<'a> GKDevice<'a, DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindG
             .unwrap_or((0, 0))
     }
 
-    fn render(
-        &mut self,
-        frame: impl Into<RenderTarget<'a, DrawFrame, Texture>>,
-        renderer: &Renderer,
-    ) -> Result<(), String> {
-        /*// TODO render to texture should create a new encoder per call
+    fn render_to_frame(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
         renderer
             .passes
             .iter()
@@ -533,8 +528,12 @@ impl<'a> GKDevice<'a, DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindG
 
                 Ok(())
             })?;
-*/
+
         Ok(())
+    }
+
+    fn render_to_texture(&mut self, frame: &Texture, renderer: &Renderer) -> Result<(), String> {
+        todo!()
     }
 }
 

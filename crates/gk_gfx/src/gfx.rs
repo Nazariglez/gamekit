@@ -18,7 +18,10 @@ pub struct Gfx {
 
 impl Plugin for Gfx {}
 
-impl<'b> Gfx where Self: 'b {
+impl<'b> Gfx
+where
+    Self: 'b,
+{
     pub fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let raw = Device::new(attrs)?;
         Ok(Self { raw })
@@ -82,19 +85,18 @@ impl<'b> Gfx where Self: 'b {
         self.raw.size(id)
     }
 
-    pub fn render(
+    pub fn render<'a>(
         &mut self,
-        frame: impl Into<RenderTarget<'b, DrawFrame, Texture>>,
+        target: impl Into<RenderTarget<'a, DrawFrame, Texture>>,
         renderer: &Renderer,
     ) -> Result<(), String> {
-        // TODO add a flag to check if there is work to present and avoid the call if not?
-        // self.raw.render(frame, renderer)
-        // println!("{:?}", frame.into());
-        self.raw.render(frame, renderer)
+        match target.into() {
+            RenderTarget::Frame(frame) => self.raw.render_to_frame(frame, renderer),
+            RenderTarget::Texture(texture) => self.raw.render_to_texture(texture, renderer),
+        }
     }
 
     pub fn present(&mut self, frame: DrawFrame) -> Result<(), String> {
-        // TODO add a flag to check if there is work to present and avoid the call if not?
         self.raw.present(frame)
     }
 }
