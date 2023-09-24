@@ -2,21 +2,21 @@ use crate::attrs::GfxAttributes;
 use crate::buffer::{BufferDescriptor, GKBuffer};
 use crate::frame::GKDrawFrame;
 use crate::pipeline::{GKRenderPipeline, RenderPipelineDescriptor};
+use crate::render_target::RenderTarget;
 use crate::renderer::Renderer;
 use crate::texture::{GKSampler, GKTexture, SamplerDescriptor, TextureData, TextureDescriptor};
 use crate::{BindGroupDescriptor, DrawFrame, GKBindGroup, GKBindGroupLayoutRef};
 use gk_sys::window::{GKWindow, WindowId};
 
-pub trait GKDevice<
-    DF: GKDrawFrame,
+pub trait GKDevice<'a,
+    DF: GKDrawFrame + 'a,
     RP: GKRenderPipeline,
     B: GKBuffer,
-    T: GKTexture,
+    T: GKTexture + 'a,
     S: GKSampler,
     BG: GKBindGroup,
     BGL: GKBindGroupLayoutRef,
->
-{
+> {
     fn new(attrs: GfxAttributes) -> Result<Self, String>
     where
         Self: Sized;
@@ -35,5 +35,9 @@ pub trait GKDevice<
     fn create_bind_group(&mut self, desc: BindGroupDescriptor) -> Result<BG, String>;
     fn resize(&mut self, id: WindowId, width: u32, height: u32) -> Result<(), String>;
     fn size(&self, id: WindowId) -> (u32, u32);
-    fn render(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String>;
+    fn render(
+        &mut self,
+        frame: impl Into<RenderTarget<'a, DF, T>>,
+        renderer: &Renderer,
+    ) -> Result<(), String>;
 }

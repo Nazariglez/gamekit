@@ -84,7 +84,7 @@ fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
 
     // Render to the frame
     gfx.render(&frame, &renderer).unwrap();
-    gfx.render_to(&frame, &renderer).unwrap();
+    // gfx.render_to(&frame, &renderer).unwrap();
 
     // Present frame to screen
     gfx.present(frame).unwrap();

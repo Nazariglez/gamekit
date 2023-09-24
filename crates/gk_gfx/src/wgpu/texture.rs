@@ -1,9 +1,9 @@
-use std::fmt::{Debug, Formatter};
-use crate::texture::{GKTexture, TextureId};
-use std::sync::Arc;
-use wgpu::{Texture as RawTexture, TextureView};
 use crate::frame::GKDrawFrame;
 use crate::render_target::RenderTarget;
+use crate::texture::{GKTexture, TextureId};
+use std::fmt::{Debug, Formatter};
+use std::sync::Arc;
+use wgpu::{Texture as RawTexture, TextureView};
 
 #[derive(Clone)]
 pub struct Texture {
@@ -33,7 +33,9 @@ impl Debug for Texture {
 }
 
 impl<'a, DF> Into<RenderTarget<'a, DF, Texture>> for &'a Texture
-    where DF: GKDrawFrame {
+where
+    DF: GKDrawFrame,
+{
     fn into(self) -> RenderTarget<'a, DF, Texture> {
         RenderTarget::Texture(self)
     }

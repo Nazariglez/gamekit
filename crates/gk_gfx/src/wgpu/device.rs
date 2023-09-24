@@ -9,6 +9,7 @@ use crate::bind_group::BindType;
 use crate::buffer::{BufferDescriptor, BufferUsage};
 use crate::device::GKDevice;
 use crate::pipeline::RenderPipelineDescriptor;
+use crate::render_target::RenderTarget;
 use crate::renderer::Renderer;
 use crate::texture::TextureDescriptor;
 use crate::wgpu::utils::{
@@ -41,7 +42,7 @@ pub struct Device {
 
 impl Plugin for Device {}
 
-impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef>
+impl<'a> GKDevice<'a, DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, BindGroupLayoutRef>
     for Device
 {
     fn new(attrs: GfxAttributes) -> Result<Self, String> {
@@ -418,8 +419,12 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
             .unwrap_or((0, 0))
     }
 
-    fn render(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
-        // TODO render to texture should create a new encoder per call
+    fn render(
+        &mut self,
+        frame: impl Into<RenderTarget<'a, DrawFrame, Texture>>,
+        renderer: &Renderer,
+    ) -> Result<(), String> {
+        /*// TODO render to texture should create a new encoder per call
         renderer
             .passes
             .iter()
@@ -528,7 +533,7 @@ impl GKDevice<DrawFrame, RenderPipeline, Buffer, Texture, Sampler, BindGroup, Bi
 
                 Ok(())
             })?;
-
+*/
         Ok(())
     }
 }

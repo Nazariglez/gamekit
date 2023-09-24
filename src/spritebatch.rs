@@ -269,7 +269,7 @@ impl SpriteBatch {
     pub fn flush<'a>(
         &'a mut self,
         gfx: &mut Gfx,
-        frame: &mut DrawFrame,
+        frame: &DrawFrame,
         mut renderer: Renderer<'a>,
     ) -> Result<(), String> {
         self.resize_gpu_buffers(gfx)?;

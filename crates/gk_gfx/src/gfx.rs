@@ -1,3 +1,4 @@
+use crate::render_target::RenderTarget;
 use crate::renderer::Renderer;
 use crate::{
     BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutId,
@@ -10,7 +11,6 @@ use crate::{GKDevice, RenderPipelineDescriptor};
 use gk_sys::window::{GKWindow, WindowId};
 use gk_sys::Plugin;
 use image::EncodableLayout;
-use crate::render_target::RenderTarget;
 
 pub struct Gfx {
     pub(crate) raw: Device,
@@ -18,7 +18,7 @@ pub struct Gfx {
 
 impl Plugin for Gfx {}
 
-impl Gfx {
+impl<'b> Gfx where Self: 'b {
     pub fn new(attrs: GfxAttributes) -> Result<Self, String> {
         let raw = Device::new(attrs)?;
         Ok(Self { raw })
@@ -82,16 +82,15 @@ impl Gfx {
         self.raw.size(id)
     }
 
-    pub fn render(&mut self, frame: &DrawFrame, renderer: &Renderer) -> Result<(), String> {
-        // TODO add a flag to check if there is work to present and avoid the call if not?
-        self.raw.render(frame, renderer)
-    }
-
-    pub fn render_to<'a>(&mut self, frame: impl Into<RenderTarget<'a, DrawFrame, Texture>>, renderer: &Renderer) -> Result<(), String> {
+    pub fn render(
+        &mut self,
+        frame: impl Into<RenderTarget<'b, DrawFrame, Texture>>,
+        renderer: &Renderer,
+    ) -> Result<(), String> {
         // TODO add a flag to check if there is work to present and avoid the call if not?
         // self.raw.render(frame, renderer)
-        println!("{:?}", frame.into());
-        Ok(())
+        // println!("{:?}", frame.into());
+        self.raw.render(frame, renderer)
     }
 
     pub fn present(&mut self, frame: DrawFrame) -> Result<(), String> {

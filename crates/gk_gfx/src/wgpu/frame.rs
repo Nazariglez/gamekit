@@ -1,11 +1,11 @@
 use crate::frame::GKDrawFrame;
+use crate::render_target::RenderTarget;
 use crate::wgpu::surface::Surface;
+use crate::GKTexture;
 use gk_sys::window::WindowId;
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use wgpu::{CommandEncoder, SurfaceTexture, TextureView};
-use crate::GKTexture;
-use crate::render_target::RenderTarget;
 
 pub struct DrawFrame {
     pub(crate) window_id: WindowId,
@@ -40,7 +40,9 @@ impl Drop for FramePresented {
 }
 
 impl<'a, T> Into<RenderTarget<'a, DrawFrame, T>> for &'a DrawFrame
-where T: GKTexture {
+where
+    T: GKTexture,
+{
     fn into(self) -> RenderTarget<'a, DrawFrame, T> {
         RenderTarget::Frame(self)
     }
