@@ -11,6 +11,7 @@ pub struct Texture {
     pub(crate) raw: Arc<RawTexture>,
     pub(crate) view: Arc<TextureView>,
     pub(crate) size: (u32, u32),
+    pub(crate) write: bool,
 }
 
 impl GKTexture for Texture {

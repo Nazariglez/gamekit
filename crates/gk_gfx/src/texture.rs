@@ -22,6 +22,7 @@ pub struct TextureDescriptor<'a> {
 pub enum TextureFormat {
     #[default]
     Rgba8UnormSrgb,
+    Bgra8UnormSrgb,
     // Depth16,
     Depth32Float,
 }

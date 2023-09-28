@@ -78,7 +78,9 @@ impl
         let encoder = self
             .ctx
             .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Frame Encode"),
+            });
         Ok(DrawFrame {
             window_id,
             surface: surface.clone(),
@@ -210,10 +212,11 @@ impl
                     push_constant_ranges: &[],
                 });
 
+        // TODO is this right? I don't see issues if we keep formats the same for now
         let swapchain_format = self
             .surfaces
             .iter()
-            .next()
+            .next() // get first surface
             .map_or(wgpu::TextureFormat::Rgba8UnormSrgb, |(_, surface)| {
                 surface.capabilities.formats[0]
             });
@@ -336,8 +339,9 @@ impl
         let texture = self.create_texture(
             TextureDescriptor {
                 label: Some("Create RenderTexture inner color texture"),
-                format: desc.format,
-                write: false,
+                // TODO allow more formats? this leads to panics dealing with pipeline vs texture vs surface formats
+                format: TextureFormat::Bgra8UnormSrgb,
+                write: true,
             },
             Some(TextureData {
                 bytes: &[],
@@ -606,6 +610,133 @@ impl
         frame: &RenderTexture,
         renderer: &Renderer,
     ) -> Result<(), String> {
+        debug_assert!(
+            frame.texture.write,
+            "Cannot write data to a static render texture"
+        );
+        let mut encoder = self
+            .ctx
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("RenderTexture Encoder"),
+            });
+
+        renderer
+            .passes
+            .iter()
+            .try_for_each(|rp| -> Result<(), String> {
+                let (uses_depth, uses_stencil) = rp
+                    .pipeline
+                    .map_or((false, false), |pip| (pip.uses_depth, pip.uses_stencil));
+
+                let color = Some(rp.clear_options.color.map_or_else(
+                    || wgpu::RenderPassColorAttachment {
+                        view: &frame.texture.view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Load,
+                            store: true,
+                        },
+                    },
+                    |color| wgpu::RenderPassColorAttachment {
+                        view: &frame.texture.view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: rp.clear_options.color.map_or(wgpu::LoadOp::Load, |color| {
+                                wgpu::LoadOp::Clear(wgpu_color(color))
+                            }),
+                            store: true,
+                        },
+                    },
+                ));
+
+                let depth = if uses_depth {
+                    Some(wgpu::Operations {
+                        load: rp
+                            .clear_options
+                            .depth
+                            .map_or(wgpu::LoadOp::Load, wgpu::LoadOp::Clear),
+                        store: true,
+                    })
+                } else {
+                    None
+                };
+
+                let stencil = if uses_stencil {
+                    Some(wgpu::Operations {
+                        load: rp
+                            .clear_options
+                            .stencil
+                            .map_or(wgpu::LoadOp::Load, |stencil| wgpu::LoadOp::Clear(stencil)),
+                        store: true,
+                    })
+                } else {
+                    None
+                };
+
+                let depth_stencil_attachment = frame.depth_texture.as_ref().and_then(|dt| {
+                    if depth.is_some() || stencil.is_some() {
+                        Some(wgpu::RenderPassDepthStencilAttachment {
+                            view: &dt.view,
+                            depth_ops: depth,
+                            stencil_ops: stencil,
+                        })
+                    } else {
+                        None
+                    }
+                });
+
+                let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: None,
+                    color_attachments: &[color],
+                    depth_stencil_attachment,
+                });
+
+                if let Some(pip) = rp.pipeline {
+                    rpass.set_pipeline(&pip.raw);
+
+                    let mut vertex_buffers_slot = 0;
+                    let mut indexed = false;
+                    rp.buffers.iter().for_each(|buff| match buff.usage {
+                        BufferUsage::Vertex => {
+                            rpass.set_vertex_buffer(vertex_buffers_slot, buff.raw.slice(..));
+                            vertex_buffers_slot += 1;
+                        }
+                        BufferUsage::Index => {
+                            debug_assert!(!indexed, "Cannot bind more than one Index buffer");
+                            indexed = true;
+                            rpass.set_index_buffer(buff.raw.slice(..), pip.index_format)
+                        }
+                        BufferUsage::Uniform => {}
+                    });
+
+                    rp.bind_groups.iter().enumerate().for_each(|(i, bg)| {
+                        rpass.set_bind_group(i as _, &bg.raw, &[]);
+                    });
+
+                    if let Some(sr) = rp.stencil_ref {
+                        rpass.set_stencil_reference(sr as _);
+                    }
+
+                    rp.vertices.iter().for_each(|vertices| {
+                        if !vertices.range.is_empty() {
+                            let instances = 0..vertices.instances.unwrap_or(1);
+                            if indexed {
+                                rpass.draw_indexed(vertices.range.clone(), 0, instances);
+                            } else {
+                                rpass.draw(vertices.range.clone(), instances);
+                            }
+                        }
+                    });
+                }
+
+                Ok(())
+            })?;
+
+        if !renderer.passes.is_empty() {
+            self.ctx.queue.submit(Some(encoder.finish()));
+        }
+
         Ok(())
     }
 }
@@ -678,6 +809,7 @@ fn create_texture(
         raw: Arc::new(raw),
         view: Arc::new(view),
         size: (size.width, size.height),
+        write: desc.write,
     })
 }
 

@@ -1,11 +1,13 @@
 use gamekit::app::App;
 use gamekit::gfx::{
-    BindGroup, BindGroupLayout, BindingType, BlendMode, Buffer, Color, GKRenderPipeline, GKTexture,
-    Gfx, IndexFormat, RenderPipeline, RenderTexture, Renderer, VertexFormat, VertexLayout,
+    BindGroup, BindGroupLayout, BindingType, BlendMode, Buffer, Color, GKRenderPipeline,
+    GKRenderTexture, GKTexture, Gfx, IndexFormat, RenderPipeline, RenderTexture, Renderer,
+    VertexFormat, VertexLayout,
 };
 use gamekit::prelude::*;
 use gamekit::sys::event::DrawEvent;
 use gamekit::time::Time;
+use std::ops::Range;
 
 // language=wgsl
 const SHADER: &str = r#"
@@ -45,9 +47,11 @@ struct State {
     pip: RenderPipeline,
     vbo: Buffer,
     ebo: Buffer,
-    bind_group: BindGroup,
+    texture_bind_group: BindGroup,
     rt: RenderTexture,
+    rt_bind_group: BindGroup,
     rt2: RenderTexture,
+    rt2_bind_group: BindGroup,
     texture_initiated: bool,
 }
 
@@ -55,6 +59,7 @@ impl State {
     fn new(gfx: &mut Gfx) -> Result<Self, String> {
         let pip = gfx
             .create_render_pipeline(SHADER)
+            .with_label("Image Pipeline")
             .with_vertex_layout(
                 VertexLayout::new()
                     .with_attr(0, VertexFormat::Float32x2)
@@ -76,7 +81,7 @@ impl State {
 
         let sampler = gfx.create_sampler().build()?;
 
-        let bind_group = gfx
+        let texture_bind_group = gfx
             .create_bind_group()
             .with_layout(pip.bind_group_layout_id(0)?)
             .with_texture(0, &texture)
@@ -89,7 +94,13 @@ impl State {
             0.9,  0.9,     1.0, 1.0,
             0.9, -0.9,     1.0, 0.0,
             -0.9, -0.9,    0.0, 0.0,
-            -0.9,  0.9,    0.0, 1.0
+            -0.9,  0.9,    0.0, 1.0,
+
+            //pos               //coords
+            0.8,  0.8,     1.0, 1.0,
+            0.8, -0.8,     1.0, 0.0,
+            -0.8, -0.8,    0.0, 0.0,
+            -0.8,  0.8,    0.0, 1.0
         ];
         let vbo = gfx.create_vertex_buffer(vertices).build()?;
 
@@ -97,6 +108,9 @@ impl State {
         let indices: &[u16] = &[
             0, 1, 3,
             1, 2, 3,
+
+            4, 5, 7,
+            5, 6, 7,
         ];
         let ebo = gfx.create_index_buffer(indices).build()?;
 
@@ -104,18 +118,35 @@ impl State {
             .create_render_texture()
             .with_size(texture.width(), texture.height())
             .build()?;
+
+        let rt_bind_group = gfx
+            .create_bind_group()
+            .with_layout(pip.bind_group_layout_id(0)?)
+            .with_texture(0, rt.texture())
+            .with_sampler(1, &sampler)
+            .build()?;
+
         let rt2 = gfx
             .create_render_texture()
             .with_size(texture.width(), texture.height())
+            .build()?;
+
+        let rt2_bind_group = gfx
+            .create_bind_group()
+            .with_layout(pip.bind_group_layout_id(0)?)
+            .with_texture(0, rt2.texture())
+            .with_sampler(1, &sampler)
             .build()?;
 
         Ok(State {
             pip,
             vbo,
             ebo,
-            bind_group,
+            texture_bind_group,
             rt,
+            rt_bind_group,
             rt2,
+            rt2_bind_group,
             texture_initiated: false,
         })
     }
@@ -133,19 +164,53 @@ fn main() -> Result<(), String> {
 fn on_draw(evt: &DrawEvent, gfx: &mut Gfx, state: &mut State) {
     let frame = gfx.create_frame(evt.window_id).unwrap();
 
-    // render to texture
-    let renderer = render_texture(state, None);
-    gfx.render(&state.rt, &renderer).unwrap();
+    if !state.texture_initiated {
+        for i in 0..30 {
+            // the first pass will draw the texture to the rt1
+            let tex = if i == 0 {
+                &state.texture_bind_group
+            } else {
+                &state.rt_bind_group
+            };
 
-    // render to frame
-    let renderer = render_texture(state, Some(Color::rgb(0.1, 0.2, 0.3)));
+            {
+                // draw rt1 to rt2
+                let renderer = render_texture(state, tex, 0..6, None);
+                gfx.render(&state.rt2, &renderer);
+
+                // draw rt2 to rt1
+                let renderer = render_texture(state, &state.rt2_bind_group, 0..6, None);
+                gfx.render(&state.rt, &renderer);
+            }
+
+            // swap render textures
+            std::mem::swap(&mut state.rt, &mut state.rt2);
+            std::mem::swap(&mut state.rt_bind_group, &mut state.rt2_bind_group);
+        }
+
+        // avoid to do this on each frame
+        state.texture_initiated = true;
+    }
+
+    // draw end result to the frame
+    let renderer = render_texture(
+        state,
+        &state.rt_bind_group,
+        0..6,
+        Some(Color::rgb(0.1, 0.2, 0.3)),
+    );
     gfx.render(&frame, &renderer).unwrap();
 
     // present the frame to the screen
     gfx.present(frame).unwrap();
 }
 
-fn render_texture(state: &State, clear_color: Option<Color>) -> Renderer {
+fn render_texture<'a>(
+    state: &'a State,
+    bg: &'a BindGroup,
+    range: Range<u32>,
+    clear_color: Option<Color>,
+) -> Renderer<'a> {
     let mut renderer = Renderer::new();
     let rpass = renderer.begin_pass();
 
@@ -156,8 +221,8 @@ fn render_texture(state: &State, clear_color: Option<Color>) -> Renderer {
     rpass
         .pipeline(&state.pip)
         .buffers(&[&state.vbo, &state.ebo])
-        .bindings(&[&state.bind_group])
-        .draw(0..6);
+        .bindings(&[bg])
+        .draw(range);
 
     renderer
 }

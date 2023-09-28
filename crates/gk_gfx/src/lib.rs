@@ -40,5 +40,6 @@ pub use config::*;
 pub use device::*;
 pub use gfx::*;
 pub use pipeline::*;
+pub use render_texture::*;
 pub use renderer::*;
 pub use texture::*;

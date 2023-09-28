@@ -13,7 +13,6 @@ pub trait GKRenderTexture {
 #[derive(Debug, Default, Copy, Clone)]
 pub struct RenderTextureDescriptor<'a> {
     pub label: Option<&'a str>,
-    pub format: TextureFormat,
     pub depth: bool,
     pub width: u32,
     pub height: u32,

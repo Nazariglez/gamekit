@@ -79,6 +79,7 @@ pub fn wgpu_primitive(primitive: Primitive) -> wgpu::PrimitiveTopology {
 pub fn wgpu_texture_format(format: TextureFormat) -> wgpu::TextureFormat {
     match format {
         TextureFormat::Rgba8UnormSrgb => wgpu::TextureFormat::Rgba8UnormSrgb,
+        TextureFormat::Bgra8UnormSrgb => wgpu::TextureFormat::Bgra8UnormSrgb,
         // TextureFormat::Depth16 => wgpu::TextureFormat::Depth16Unorm,
         TextureFormat::Depth32Float => wgpu::TextureFormat::Depth24PlusStencil8,
     }

@@ -444,11 +444,6 @@ impl<'a> RenderTextureBuilder<'a> {
         self
     }
 
-    pub fn with_format(mut self, format: TextureFormat) -> Self {
-        self.desc.format = format;
-        self
-    }
-
     pub fn with_depth(mut self, enabled: bool) -> Self {
         self.desc.depth = enabled;
         self
@@ -469,10 +464,6 @@ impl<'a> RenderTextureBuilder<'a> {
                 "RenderTexture size cannot be zero 'width={}', 'height={}'",
                 self.desc.width, self.desc.height
             ));
-        }
-
-        if matches!(self.desc.format, TextureFormat::Depth32Float) {
-            return Err("RenderTexture cannot use a depth format".to_owned());
         }
 
         gfx.raw.create_render_texture(desc)
