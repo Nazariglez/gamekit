@@ -1,0 +1,26 @@
+[package]
+name = "gk_gfx"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gk_sys.workspace = true
+gk_app.workspace = true
+gk_macro.workspace = true
+gk_profile.workspace = true
+
+raw-window-handle.workspace = true
+hashbrown.workspace = true
+log.workspace = true
+arrayvec.workspace = true
+bitflags.workspace = true
+
+puffin = { workspace = true, optional = true }
+
+wgpu = { version = "0.17.0", optional = true }
+pollster = "0.3.0"
+bytemuck = "1.13.1"
+image = { version = "0.24.6", features = ["png", "jpeg"] }
+
+[features]
+webgl = ["wgpu?/webgl"]

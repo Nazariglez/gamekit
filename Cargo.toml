@@ -11,11 +11,89 @@ repository = "https://github.com/Nazariglez/gamekit"
 license = "MIT OR Apache-2.0"
 description = "A set of helpers for making games with notan"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
+# optimize for speed and size
+opt-level = 2
+# link time optimization
 lto = true
+# remove debug symbols
+strip = true
+# do not parallelize optimizations
+codegen-units = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[package.metadata.docs.rs]
+all-features = true
+
+[workspace]
+members = ["crates/*"]
+
+[workspace.dependencies]
+# gamekit packages
+gk_sys = { path = "crates/gk_sys", version = "0.1.0" }
+gk_macro = { path = "./crates/gk_macro", version = "0.1.0" }
+gk_assets = { path = "./crates/gk_assets", version = "0.1.0" }
+gk_app = { path = "crates/gk_app", version = "0.1.0" }
+gk_gfx = { path = "./crates/gk_gfx", version = "0.1.0" }
+gk_math = { path = "./crates/gk_math", version = "0.1.0" }
+gk_profile = { path = "./crates/gk_profile", version = "0.1.0" }
+
+# deserialization/serialization
+serde = { version = "1.0", features = ["serde_derive"] }
+
+# common used deps
+log = "0.4.19"
+hashbrown = "0.14.0"
+anymap = "0.12.1"
+arrayvec = "0.7.4"
+raw-window-handle = "0.5.2"
+bitflags = "2.3.3"
+puffin = "0.16.0"
+parking_lot = "0.12.1"
+
+# wasm deps
+web-sys = "0.3.64"
+js-sys = "0.3.64"
+wasm-bindgen = "0.2.87"
 
 [dependencies]
-anymap = "0.12.1"
-# default-features=false...
-notan = { version = "0.9.3" }
+gk_sys.workspace = true
+gk_assets.workspace = true
+gk_app.workspace = true
+gk_macro.workspace = true
+gk_gfx.workspace = true
+gk_profile.workspace = true
+gk_math.workspace = true
+
+log.workspace = true
+anymap.workspace = true
+hashbrown.workspace = true
+
+# profilling
+puffin = { workspace = true, optional = true}
+
+# random
+fastrand = { version = "2.0.0", optional = true }
+
+simple_logger = "4.2.0"
+
+[features]
+default = ["basic", "winit", "wgpu"]
+# basic features for most apps
+basic = ["limited_memory"]
+# uses winit as backend
+winit = ["gk_app/winit"]
+# uses wgpu as renderer
+wgpu = ["gk_gfx/wgpu"]
+# use arrayvec instead of vec when possible
+limited_memory = ["gk_sys/limited_events"]
+# allow serialize and deserialize internal types
+serde = ["gk_sys/serde", "gk_app/serde"]
+# enable profiling using puffin
+puffin = ["dep:puffin", "gk_sys/puffin", "gk_gfx/puffin"]
+# re-export fastrand
+random = ["fastrand"]
+# force the use of webgl
+webgl = ["gk_gfx/webgl"]

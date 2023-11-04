@@ -1,0 +1,12 @@
+[package]
+name = "gk_math"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+glam = { version = "0.24.1", features = ["bytemuck"] }
+
+serde = { workspace = true, optional = true }
+
+[features]
+serde = ["dep:serde", "glam/serde"]
